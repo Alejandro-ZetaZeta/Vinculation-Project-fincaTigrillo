@@ -1,0 +1,97 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { LayoutDashboard, PawPrint, ClipboardList, Leaf, Menu, X } from 'lucide-react'
+import { useState } from 'react'
+
+const allNavItems = [
+  { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard, adminOnly: false },
+  { href: '/dashboard/animals', label: 'Registrar Animal', icon: PawPrint, adminOnly: true },
+  { href: '/dashboard/animals/list', label: 'Inventario', icon: ClipboardList, adminOnly: false },
+]
+
+export function Sidebar({ userRole }: { userRole: string }) {
+  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const isAdmin = userRole === 'admin'
+  const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin)
+
+  return (
+    <>
+      {/* Mobile toggle */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-xl bg-surface border border-border shadow-lg"
+        id="sidebar-toggle"
+      >
+        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-border flex flex-col transition-transform duration-300 ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
+      >
+        {/* Brand */}
+        <div className="p-6 border-b border-border">
+          <Link href="/dashboard" className="flex items-center gap-3 group" onClick={() => setMobileOpen(false)}>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <Leaf className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-bold text-foreground leading-tight">Finca Tigrillo</h2>
+              <p className="text-xs text-muted">Gestión Ganadera</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3 px-3">Menú Principal</p>
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || 
+              (item.href !== '/dashboard' && pathname.startsWith(item.href))
+            const Icon = item.icon
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  isActive
+                    ? 'bg-primary/10 text-primary shadow-sm'
+                    : 'text-muted hover:text-foreground hover:bg-surface-hover'
+                }`}
+              >
+                <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-primary' : ''}`} />
+                {item.label}
+                {isActive && (
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                )}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-border">
+          <div className="px-3 py-2 rounded-xl bg-primary/5">
+            <p className="text-xs text-muted">Rol actual</p>
+            <p className="text-sm font-semibold text-primary capitalize">{userRole === 'admin' ? '🛡️ Administrador' : '👁️ Visualizador'}</p>
+          </div>
+        </div>
+      </aside>
+    </>
+  )
+}
