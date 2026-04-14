@@ -62,7 +62,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   const isAdmin = user?.role === 'admin'
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">{category.name}</h1>
         <p className="text-muted mt-1">{category.description}</p>
@@ -96,18 +96,18 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             <Link
               key={type.id}
               href={isAdmin ? `/dashboard/animals/register/${type.slug}` : '#'}
-              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 transition-all duration-300 ${colors.bg} ${
-                isAdmin ? 'hover:shadow-xl hover:-translate-y-1 cursor-pointer' : 'opacity-80 cursor-default'
-              } animate-fade-in stagger-${i + 1}`}
+              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 ${colors.bg} ${
+                isAdmin ? 'cursor-pointer' : 'opacity-80 cursor-default'
+              }`}
               onClick={isAdmin ? undefined : (e) => e.preventDefault()}
             >
               {/* Icon */}
-              <div className={`w-16 h-16 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5 ${isAdmin ? 'group-hover:scale-110' : ''} transition-transform duration-300`}>
+              <div className={`w-16 h-16 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5`}>
                 <IconComponent className={`w-8 h-8 ${colors.text}`} />
               </div>
 
               {/* Content */}
-              <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 {type.name}
               </h3>
               <p className="text-sm text-muted leading-relaxed mb-4">
@@ -118,7 +118,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
               {isAdmin ? (
                 <p className="text-sm font-medium text-primary flex items-center gap-1">
                   Registrar {type.name}
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4" />
                 </p>
               ) : (
                 <p className="text-xs text-muted italic">Solo administradores pueden registrar</p>

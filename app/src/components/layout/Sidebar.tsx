@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, PawPrint, ClipboardList, Leaf, Menu, X } from 'lucide-react'
+import { LayoutDashboard, PawPrint, ClipboardList, Leaf, Menu, X, Users } from 'lucide-react'
 import { useState } from 'react'
 
 const allNavItems = [
   { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard, adminOnly: false },
   { href: '/dashboard/animals', label: 'Registrar Animal', icon: PawPrint, adminOnly: true },
   { href: '/dashboard/animals/list', label: 'Inventario', icon: ClipboardList, adminOnly: false },
+  { href: '/dashboard/students', label: 'Estudiantes', icon: Users, adminOnly: true },
 ]
 
 export function Sidebar({ userRole }: { userRole: string }) {
@@ -38,14 +39,15 @@ export function Sidebar({ userRole }: { userRole: string }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-border flex flex-col transition-transform duration-300 ${
+        id="app-sidebar"
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-border flex flex-col ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
       >
         {/* Brand */}
         <div className="p-6 border-b border-border">
           <Link href="/dashboard" className="flex items-center gap-3 group" onClick={() => setMobileOpen(false)}>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Leaf className="w-5 h-5 text-primary" />
             </div>
             <div>
@@ -68,9 +70,9 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
                   isActive
-                    ? 'bg-primary/10 text-primary shadow-sm'
+                    ? 'bg-primary/10 text-primary'
                     : 'text-muted hover:text-foreground hover:bg-surface-hover'
                 }`}
               >
@@ -88,7 +90,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
         <div className="p-4 border-t border-border">
           <div className="px-3 py-2 rounded-xl bg-primary/5">
             <p className="text-xs text-muted">Rol actual</p>
-            <p className="text-sm font-semibold text-primary capitalize">{userRole === 'admin' ? '🛡️ Administrador' : '👁️ Visualizador'}</p>
+            <p className="text-sm font-semibold text-primary capitalize">{userRole === 'admin' ? '🛡️ Administrador' : '👁️ Estudiante'}</p>
           </div>
         </div>
       </aside>

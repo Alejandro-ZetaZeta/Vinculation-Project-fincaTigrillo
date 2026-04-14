@@ -1,0 +1,17 @@
+{
+  // Disable VS Code's built-in CSS linter warnings for unknown at-rules.
+  // @theme, @utility, @variant, @source are valid Tailwind CSS v4 syntax
+  // but the standard CSS language server doesn't recognize them.
+  "css.lint.unknownAtRules": "ignore",
+
+  // Point VS Code to use the Tailwind CSS IntelliSense extension for .css files
+  // so you get proper autocomplete and validation instead.
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+
+  // Optional: associate .css files with Tailwind for better IntelliSense
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}

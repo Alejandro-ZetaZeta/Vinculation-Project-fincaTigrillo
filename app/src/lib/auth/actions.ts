@@ -12,9 +12,6 @@ export async function signIn(formData: FormData) {
   const { data, error } = await insforge.auth.signInWithPassword({ email, password })
 
   if (error) {
-    if (error.statusCode === 403) {
-      return { success: false, error: 'Email no verificado. Verifica tu correo antes de iniciar sesión.' }
-    }
     return { success: false, error: error.message || 'Credenciales inválidas.' }
   }
 
@@ -31,6 +28,8 @@ export async function signUp(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim()
   const password = String(formData.get('password') ?? '')
   const name = String(formData.get('name') ?? '').trim()
+  const career = String(formData.get('career') ?? '').trim() || null
+  const semester = String(formData.get('semester') ?? '').trim() || null
 
   const { data, error } = await insforge.auth.signUp({
     email,
@@ -40,55 +39,27 @@ export async function signUp(formData: FormData) {
   })
 
   if (error) {
-    return { success: false, error: error.message || 'Error al registrarse.', requireVerification: false }
+    return { success: false, error: error.message || 'Error al registrarse.' }
   }
 
+  // If verification is required (fallback), handle it
   if (data?.requireEmailVerification) {
-    return { success: true, requireVerification: true, email }
+    return { success: false, error: 'Verificación de correo requerida. Contacta al administrador.' }
   }
 
-  // No verification required, user is signed in
+  // User is signed in directly (verification disabled)
   if (data?.accessToken && data?.refreshToken) {
     await setAuthCookies(data.accessToken, data.refreshToken)
 
-    // Create user profile
+    // Create user profile with semester and career
     const authedClient = createInsForgeServerClient(data.accessToken)
     await authedClient.database.from('user_profiles').insert([{
       user_id: data.user?.id,
       role: 'viewer',
-      full_name: name
+      full_name: name,
+      semester: semester,
+      career: career
     }])
-  }
-
-  return { success: true, requireVerification: false }
-}
-
-export async function verifyEmail(email: string, otp: string) {
-  const insforge = createInsForgeServerClient()
-  const { data, error } = await insforge.auth.verifyEmail({ email, otp })
-
-  if (error) {
-    return { success: false, error: error.message || 'Código inválido o expirado.' }
-  }
-
-  if (data?.accessToken && data?.refreshToken) {
-    await setAuthCookies(data.accessToken, data.refreshToken)
-
-    // Create user profile for newly verified user
-    const authedClient = createInsForgeServerClient(data.accessToken)
-    const { data: existingProfile } = await authedClient.database
-      .from('user_profiles')
-      .select('id')
-      .eq('user_id', data.user?.id)
-      .maybeSingle()
-
-    if (!existingProfile) {
-      await authedClient.database.from('user_profiles').insert([{
-        user_id: data.user?.id,
-        role: 'viewer',
-        full_name: data.user?.profile?.name || ''
-      }])
-    }
   }
 
   return { success: true }
@@ -112,16 +83,18 @@ export async function getCurrentUser() {
   const { data, error } = await insforge.auth.getCurrentUser()
   if (error || !data?.user) return null
 
-  // Get user profile with role
+  // Get user profile with role, semester, career
   const { data: profile } = await insforge.database
     .from('user_profiles')
-    .select('role, full_name')
+    .select('role, full_name, semester, career')
     .eq('user_id', data.user.id)
     .maybeSingle()
 
   return {
     ...data.user,
     role: profile?.role || 'viewer',
-    fullName: profile?.full_name || data.user.profile?.name || ''
+    fullName: profile?.full_name || data.user.profile?.name || '',
+    semester: profile?.semester || null,
+    career: profile?.career || null
   }
 }
