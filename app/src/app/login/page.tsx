@@ -5,6 +5,7 @@ import { signIn } from '@/lib/auth/actions'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LogIn, Mail, Lock, Eye, EyeOff, Leaf } from 'lucide-react'
+import Image from "next/image";
 
 export default function LoginPage() {
   const [error, setError] = useState('')
@@ -32,8 +33,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-            <Leaf className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center full rounded-2xl bg-primary/10 mb-4 overflow-hidden">
+            <Image
+              src="/eloyAocelote1.png"
+              alt="Logo Finca Tigrillo"
+              width={80}
+              height={80}
+              className="object-contain"
+            />
           </div>
           <h1 className="text-3xl font-bold text-foreground">Finca Tigrillo</h1>
           <p className="text-muted mt-1 text-sm">Sistema de Gestión Ganadera</p>
