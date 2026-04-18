@@ -64,7 +64,7 @@ export function Header({ userName, userRole, userEmail }: HeaderProps) {
                 <p className="text-sm font-medium text-foreground">{userName}</p>
                 <p className="text-xs text-muted truncate">{userEmail}</p>
                 <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium capitalize">
-                  {userRole === 'admin' ? '🛡️ Admin' : '👁️ Estudiante'}
+                  {userRole === 'admin' ? 'Admin' : 'Estudiante'}
                 </span>
               </div>
               <div className="p-2">

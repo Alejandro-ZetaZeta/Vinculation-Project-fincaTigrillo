@@ -49,9 +49,8 @@ export function Sidebar({ userRole }: { userRole: string }) {
       {/* Sidebar */}
       <aside
         id="app-sidebar"
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-border flex flex-col ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0`}
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-border flex flex-col ${mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0`}
       >
         {/* Brand */}
         <div className="p-6 border-b border-border">
@@ -79,11 +78,10 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 key={item.href + item.label}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
-                  isActive
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted hover:text-foreground hover:bg-surface-hover'
-                }`}
+                  }`}
               >
                 <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-primary' : ''}`} />
                 {item.label}
@@ -99,7 +97,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
         <div className="p-4 border-t border-border">
           <div className="px-3 py-2 rounded-xl bg-primary/5">
             <p className="text-xs text-muted">Rol actual</p>
-            <p className="text-sm font-semibold text-primary capitalize">{userRole === 'admin' ? '🛡️ Administrador' : '👁️ Estudiante'}</p>
+            <p className="text-sm font-semibold text-primary capitalize">{userRole === 'admin' ? 'Administrador' : 'Estudiante'}</p>
           </div>
         </div>
       </aside>
