@@ -27,7 +27,7 @@ export default async function AnimalsListPage() {
     .order('display_order', { ascending: true })
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
@@ -59,13 +59,15 @@ export default async function AnimalsListPage() {
           <PawPrint className="w-12 h-12 text-muted/30 mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-foreground mb-1">Sin registros</h3>
           <p className="text-sm text-muted mb-4">Aún no se han registrado animales en la finca</p>
-          <Link
-            href="/dashboard/animals"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-colors"
-          >
-            <PawPrint className="w-4 h-4" />
-            Registrar primer animal
-          </Link>
+          {isAdmin && (
+            <Link
+              href="/dashboard/animals"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark"
+            >
+              <PawPrint className="w-4 h-4" />
+              Registrar primer animal
+            </Link>
+          )}
         </div>
       )}
     </div>

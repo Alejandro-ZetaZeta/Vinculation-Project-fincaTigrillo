@@ -33,7 +33,7 @@ export default async function AnimalsPage() {
     .order('display_order', { ascending: true })
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">Registrar Animal</h1>
         <p className="text-muted mt-1">Selecciona la categoría del animal que deseas registrar</p>
@@ -56,15 +56,15 @@ export default async function AnimalsPage() {
             <Link
               key={category.id}
               href={`/dashboard/animals/${category.slug}`}
-              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 transition-all duration-300 ${colors.bg} hover:shadow-xl hover:-translate-y-1 animate-fade-in stagger-${i + 1}`}
+              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 ${colors.bg}`}
             >
               {/* Icon */}
-              <div className={`w-16 h-16 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`w-16 h-16 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5`}>
                 <IconComponent className={`w-8 h-8 ${colors.text}`} />
               </div>
 
               {/* Content */}
-              <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 {category.name}
               </h3>
               <p className="text-sm text-muted leading-relaxed">
@@ -72,7 +72,7 @@ export default async function AnimalsPage() {
               </p>
 
               {/* Arrow */}
-              <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+              <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-background flex items-center justify-center">
                 <ArrowRight className="w-4 h-4 text-primary" />
               </div>
             </Link>

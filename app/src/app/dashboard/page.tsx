@@ -2,6 +2,7 @@ import { getCurrentUser } from '@/lib/auth/actions'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { getAccessToken } from '@/lib/auth/cookies'
 import { PawPrint, TrendingUp, CheckCircle, Clock } from 'lucide-react'
+import { StudentKanban } from '@/components/activities/StudentKanban'
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -44,7 +45,7 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       {/* Welcome */}
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
           return (
             <div
               key={stat.label}
-              className={`bg-surface border border-border rounded-2xl p-5 hover:shadow-lg transition-all duration-300 animate-fade-in stagger-${i + 1}`}
+              className="bg-surface border border-border rounded-2xl p-5"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
@@ -134,6 +135,14 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Student Kanban */}
+      {user?.role === 'viewer' && (
+        <div>
+          <h2 className="text-lg font-semibold mb-4 text-foreground">📋 Mis Actividades</h2>
+          <StudentKanban userId={user.id} />
+        </div>
+      )}
     </div>
   )
 }
