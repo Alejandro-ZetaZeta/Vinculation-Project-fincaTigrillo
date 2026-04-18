@@ -112,3 +112,31 @@ body {
   background: var(--surface);
   border: 1px solid var(--border-color);
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  .print-section {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+@media print {
+  /* Oculta el Sidebar y el Header en el papel */
+  aside, header, .no-print {
+    display: none !important;
+  }
+  /* Elimina márgenes innecesarios del layout de Next.js */
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .print-area {
+    width: 100%;
+  }
+}
