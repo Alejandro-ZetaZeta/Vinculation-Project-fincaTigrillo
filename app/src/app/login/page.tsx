@@ -4,14 +4,16 @@ import { useState, useTransition } from 'react'
 import { signIn } from '@/lib/auth/actions'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LogIn, Mail, Lock, Eye, EyeOff, Leaf } from 'lucide-react'
+import { LogIn, Mail, Lock, Eye, EyeOff, Leaf, Sun, Moon } from 'lucide-react'
 import Image from "next/image";
+import { useTheme } from '@/components/ThemeProvider'
 
 export default function LoginPage() {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const { theme, toggleTheme } = useTheme()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -29,7 +31,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
+      {/* Theme toggle */}
+      <button
+        onClick={toggleTheme}
+        className="absolute top-4 right-4 p-2.5 rounded-xl bg-surface border border-border text-muted hover:text-foreground hover:bg-surface-hover shadow-sm transition-all"
+        id="login-theme-toggle"
+        title={theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
+      >
+        {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+      </button>
+
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">

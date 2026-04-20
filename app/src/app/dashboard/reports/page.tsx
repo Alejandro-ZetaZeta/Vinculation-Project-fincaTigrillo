@@ -130,18 +130,18 @@ export default function ReportsPage() {
   const summaryData = module === 'todos' ? dbData : dbData.filter(a => (a.category_name || a.type || 'Otros') === module);
 
   return (
-    <div className="space-y-6 animate-fade-in p-4 md:p-8">
+    <div className="space-y-6 animate-fade-in p-4 md:p-8 overflow-hidden min-w-0">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
             Informes <span className="text-primary">& Gráficos Operativos</span>
           </h1>
           <p className="text-muted mt-1 text-sm">Visualización técnica de datos ganaderos extraídos de Insforge</p>
         </div>
         <button 
           onClick={() => window.print()}
-          className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
+          className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all w-full md:w-auto shrink-0"
         >
           <Printer className="w-5 h-5" />
           Imprimir Reporte Completo
@@ -197,11 +197,11 @@ export default function ReportsPage() {
         {/* ANÁLISIS PROFUNDO (Desglose Analítico) */}
         <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-sm print:border-slate-300">
           <div className="bg-primary/5 p-6 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Microscope className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-lg">Desglose Analítico del Inventario</h3>
+            <div className="flex items-center gap-3 min-w-0">
+              <Microscope className="w-5 h-5 text-primary shrink-0" />
+              <h3 className="font-bold text-lg truncate">Desglose Analítico del Inventario</h3>
             </div>
-            <div className="text-[10px] bg-white px-3 py-1 rounded-full border font-mono font-bold text-primary">REPORTE_TECNICO_{module.toUpperCase()}</div>
+            <div className="text-[10px] bg-white px-3 py-1 rounded-full border font-mono font-bold text-primary shrink-0 hidden sm:block">REPORTE_TECNICO_{module.toUpperCase()}</div>
           </div>
           
           <div className="p-6">
@@ -238,7 +238,7 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Bloques Analíticos Adicionales */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 no-print">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pt-4 no-print">
                   <AnalyticBox 
                     icon={<TrendingUp className="text-primary w-4 h-4" />} 
                     title="Tendencia Poblacional" 
@@ -259,7 +259,7 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Indicadores Técnicos de Pie de Reporte */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-border pt-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 border-t border-border pt-6">
                    <MetricLabel label="Ratio Actividad" value={(summaryData.filter(a => a.status === 'activo').length / summaryData.length).toFixed(2)} />
                    <MetricLabel label="Especies Activas" value={uniqueCategories.length} />
                    <MetricLabel label="Mortalidad Est." value="0.2%" />

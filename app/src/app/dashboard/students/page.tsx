@@ -28,7 +28,7 @@ export default async function StudentsPage() {
   })
 
   return (
-    <div className="space-y-8" id="students-page">
+    <div className="space-y-8 overflow-hidden min-w-0" id="students-page">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
           <Users className="w-7 h-7 text-primary" />

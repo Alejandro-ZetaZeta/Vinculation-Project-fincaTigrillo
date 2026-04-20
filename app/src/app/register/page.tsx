@@ -4,7 +4,8 @@ import { useState, useTransition } from 'react'
 import { signUp } from '@/lib/auth/actions'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { UserPlus, Mail, Lock, User, Eye, EyeOff, Leaf, GraduationCap, BookOpen } from 'lucide-react'
+import { UserPlus, Mail, Lock, User, Eye, EyeOff, Leaf, GraduationCap, BookOpen, Sun, Moon } from 'lucide-react'
+import { useTheme } from '@/components/ThemeProvider'
 
 const CAREERS = ['Agropecuaria', 'Agronegocios', 'Alimentos']
 const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
@@ -14,6 +15,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const { theme, toggleTheme } = useTheme()
 
   async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -41,7 +43,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative">
+      {/* Theme toggle */}
+      <button
+        onClick={toggleTheme}
+        className="absolute top-4 right-4 p-2.5 rounded-xl bg-surface border border-border text-muted hover:text-foreground hover:bg-surface-hover shadow-sm transition-all"
+        id="register-theme-toggle"
+        title={theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
+      >
+        {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+      </button>
+
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">

@@ -28,6 +28,8 @@ export default function RootLayout({
                 var t = localStorage.getItem('ft-theme');
                 if (t === 'dark' || t === 'light') {
                   document.documentElement.setAttribute('data-theme', t);
+                } else {
+                  document.documentElement.setAttribute('data-theme', 'light');
                 }
               })();
             `,
