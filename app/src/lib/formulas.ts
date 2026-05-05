@@ -186,7 +186,6 @@ export function calcFCR(totalFeedKg: number, weightGainKg: number): number {
 export const REPRODUCTIVE_EVENT_TYPES = [
   { value: 'monta_natural', label: 'Monta Natural' },
   { value: 'inseminacion', label: 'Inseminación Artificial' },
-  { value: 'confirmacion_prenez', label: 'Confirmación de Preñez' },
   { value: 'parto', label: 'Parto' },
   { value: 'aborto', label: 'Aborto' },
   { value: 'destete', label: 'Destete' },

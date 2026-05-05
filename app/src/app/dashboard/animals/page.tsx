@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { getAccessToken } from '@/lib/auth/cookies'
 import Link from 'next/link'
@@ -23,14 +24,22 @@ const categoryColors: Record<string, { bg: string; border: string; text: string;
   },
 }
 
-export default async function AnimalsPage() {
-  const accessToken = await getAccessToken()
-  const insforge = createInsForgeServerClient(accessToken)
+async function getCachedCategories(accessToken: string | undefined) {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('animal-catalog')
 
-  const { data: categories } = await insforge.database
+  const insforge = createInsForgeServerClient(accessToken)
+  const { data } = await insforge.database
     .from('animal_categories')
     .select('*')
     .order('display_order', { ascending: true })
+  return data || []
+}
+
+export default async function AnimalsPage() {
+  const accessToken = await getAccessToken()
+  const categories = await getCachedCategories(accessToken)
 
   return (
     <div className="space-y-8">
