@@ -138,10 +138,10 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
   }
 
   return (
-    <div className="space-y-4" id="students-client">
+    <div className="space-y-4 overflow-hidden min-w-0" id="students-client">
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center" id="students-filters">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center" id="students-filters">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
           <input
             type="text"
@@ -151,15 +151,15 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
             className="w-full pl-10 pr-4 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted" />
+        <div className="flex items-center gap-2 flex-wrap">
+          <Filter className="w-4 h-4 text-muted hidden sm:block" />
           <select value={filterCareer} onChange={e => setFilterCareer(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+            className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
             <option value="">Todas las carreras</option>
             {CAREERS.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <select value={filterSemester} onChange={e => setFilterSemester(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+            className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
             <option value="">Todos los semestres</option>
             {SEMESTERS.map(s => <option key={s} value={s}>{s}° Sem</option>)}
           </select>
@@ -168,7 +168,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
 
       {/* Actions bar */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-xl" id="students-actions-bar">
+        <div className="flex flex-wrap items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-xl" id="students-actions-bar">
           <span className="text-sm font-medium text-primary">{selected.size} seleccionado{selected.size > 1 ? 's' : ''}</span>
           <div className="flex-1" />
           {selected.size === 1 && (

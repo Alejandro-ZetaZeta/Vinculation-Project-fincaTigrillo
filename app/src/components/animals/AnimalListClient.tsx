@@ -190,8 +190,12 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
             id="search-animals"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
-              <X className="w-4 h-4" />
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground p-1"
+              aria-label="Limpiar búsqueda"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -225,24 +229,24 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs text-muted mb-1">Categoría</label>
-              <select value={filterCategory} onChange={(e) => { setFilterCategory(e.target.value); setFilterType('') }}
+              <label htmlFor="filter-category" className="block text-xs text-muted mb-1">Categoría</label>
+              <select id="filter-category" value={filterCategory} onChange={(e) => { setFilterCategory(e.target.value); setFilterType('') }}
                 className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <option value="">Todas</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">Tipo</label>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
+              <label htmlFor="filter-type" className="block text-xs text-muted mb-1">Tipo</label>
+              <select id="filter-type" value={filterType} onChange={(e) => setFilterType(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <option value="">Todos</option>
                 {filteredTypes.map(t => <option key={t.id} value={t.slug}>{t.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">Estado</label>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+              <label htmlFor="filter-status" className="block text-xs text-muted mb-1">Estado</label>
+              <select id="filter-status" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <option value="">Todos</option>
                 <option value="activo">Activo</option>
@@ -252,8 +256,8 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted mb-1">Sexo</label>
-              <select value={filterSex} onChange={(e) => setFilterSex(e.target.value)}
+              <label htmlFor="filter-sex" className="block text-xs text-muted mb-1">Sexo</label>
+              <select id="filter-sex" value={filterSex} onChange={(e) => setFilterSex(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <option value="">Todos</option>
                 <option value="macho">Macho</option>
@@ -304,17 +308,25 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                         </span>
                       </div>
                     </div>
-                    {expandedId === animal.id ? <ChevronUp className="w-4 h-4 text-muted flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted flex-shrink-0" />}
+                    {expandedId === animal.id ? <ChevronUp className="w-4 h-4 text-muted shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted shrink-0" />}
                   </button>
 
                   {/* Admin actions */}
                   {isAdmin && !isEditing && (
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <button onClick={() => startEdit(animal)} className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-primary/10 transition-colors" title="Editar">
-                        <Pencil className="w-4 h-4" />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => startEdit(animal)}
+                        className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-primary/10 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                        aria-label={`Editar ${animal.name || 'animal'}`}
+                      >
+                        <Pencil className="w-4 h-4" aria-hidden="true" />
                       </button>
-                      <button onClick={() => setDeleteConfirmId(animal.id)} className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors" title="Eliminar">
-                        <Trash2 className="w-4 h-4" />
+                      <button
+                        onClick={() => setDeleteConfirmId(animal.id)}
+                        className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                        aria-label={`Eliminar ${animal.name || 'animal'}`}
+                      >
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                   )}
@@ -322,18 +334,22 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
 
                 {/* Delete confirmation */}
                 {isDeleting && (
-                  <div className="px-4 pb-3 animate-scale-in">
+                  <div className="px-4 pb-3" role="alert" aria-live="assertive">
                     <div className="bg-danger/5 border border-danger/20 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
                       <p className="text-sm text-danger">¿Eliminar <strong>{animal.name || 'este animal'}</strong>? Esta acción no se puede deshacer.</p>
-                      <div className="flex gap-2 flex-shrink-0">
+                      <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => deleteAnimal(animal.id)}
                           disabled={loading}
                           className="px-3 py-1.5 rounded-lg bg-danger text-white text-xs font-medium hover:bg-danger/90 disabled:opacity-50 transition-colors"
+                          aria-busy={loading}
                         >
-                          {loading ? '...' : 'Eliminar'}
+                          {loading ? 'Eliminando…' : 'Eliminar'}
                         </button>
-                        <button onClick={() => setDeleteConfirmId(null)} className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted hover:text-foreground transition-colors">
+                        <button
+                          onClick={() => setDeleteConfirmId(null)}
+                          className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted hover:text-foreground transition-colors"
+                        >
                           Cancelar
                         </button>
                       </div>
@@ -403,9 +419,13 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                           <Detail label="Adquisición" value={animal.acquisition_type} />
                           <Detail label="F. Adquisición" value={formatDate(animal.acquisition_date)} />
                           <Detail label="Registrado" value={formatDate(animal.created_at)} />
-                          {animal.metadata && Object.entries(animal.metadata).map(([key, value]) => (
-                            <Detail key={key} label={key.replace(/_/g, ' ')} value={String(value)} />
-                          ))}
+                          {animal.metadata && Object.entries(animal.metadata)
+                            .filter(([key]) => key !== 'padre_id')  // hide raw UUID
+                            .map(([key, value]) => (
+                              <Detail key={key}
+                                label={key === 'padre_nombre' ? 'Padre' : key.replace(/_/g, ' ')}
+                                value={String(value)} />
+                            ))}
                         </div>
                         {animal.notes && (
                           <div className="mt-3 pt-3 border-t border-border">
@@ -444,10 +464,12 @@ function EditField({ label, name, value, onChange, type = 'text' }: {
   label: string; name: string; value: string | number | null | undefined
   onChange: (v: string) => void; type?: string
 }) {
+  const fieldId = `edit-field-${name}`
   return (
     <div>
-      <label className="block text-xs text-muted mb-1">{label}</label>
+      <label htmlFor={fieldId} className="block text-xs text-muted mb-1">{label}</label>
       <input
+        id={fieldId}
         name={name}
         type={type}
         value={String(value || '')}

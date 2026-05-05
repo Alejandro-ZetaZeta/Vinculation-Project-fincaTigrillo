@@ -1,142 +1,283 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────
+   FONT REGISTRATION
+───────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
+  --color-background:    var(--background);
+  --color-foreground:    var(--foreground);
+  --color-primary:       var(--primary);
   --color-primary-light: var(--primary-light);
-  --color-primary-dark: var(--primary-dark);
-  --color-accent: var(--accent);
-  --color-accent-light: var(--accent-light);
-  --color-surface: var(--surface);
+  --color-primary-dark:  var(--primary-dark);
+  --color-accent:        var(--accent);
+  --color-accent-light:  var(--accent-light);
+  --color-surface:       var(--surface);
   --color-surface-hover: var(--surface-hover);
-  --color-border: var(--border-color);
-  --color-muted: var(--muted);
-  --color-danger: var(--danger);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --color-border:        var(--border-color);
+  --color-muted:         var(--muted);
+  --color-danger:        var(--danger);
+  --color-success:       var(--success);
+  --color-warning:       var(--warning);
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Syne", system-ui, sans-serif;
 }
 
-/* ============================================
+/* ─────────────────────────────────────────────
    LIGHT MODE (default)
-   Change these to customize light theme
-   ============================================ */
+───────────────────────────────────────────── */
 :root,
 [data-theme="light"] {
-  /* id: light-background */
-  --background: #f5f5f4;
-  /* id: light-foreground */
-  --foreground: #1c1917;
-  /* id: light-primary */
-  --primary: #6b8f71;
-  /* id: light-primary-light */
-  --primary-light: #8fb996;
-  /* id: light-primary-dark */
-  --primary-dark: #4a6b4f;
-  /* id: light-accent */
-  --accent: #c2847a;
-  /* id: light-accent-light */
-  --accent-light: #dba69e;
-  /* id: light-surface */
-  --surface: #ffffff;
-  /* id: light-surface-hover */
-  --surface-hover: #f0eeec;
-  /* id: light-border */
-  --border-color: #d6d3d1;
-  /* id: light-muted */
-  --muted: #78716c;
-  /* id: light-danger */
-  --danger: #dc6b6b;
-  /* id: light-success */
-  --success: #6b8f71;
-  /* id: light-warning */
-  --warning: #d4a54a;
+  --background:     #f4f3f0;
+  --foreground:     #18181b;
+  --primary:        #4e7c55;
+  --primary-light:  #72a87a;
+  --primary-dark:   #355439;
+  --accent:         #b5624e;
+  --accent-light:   #d18878;
+  --surface:        #ffffff;
+  --surface-hover:  #eceae6;
+  --border-color:   #d8d5cf;
+  --muted:          #7a746c;
+  --danger:         #c94040;
+  --success:        #4e7c55;
+  --warning:        #c68b2a;
+
+  /* Sidebar specific */
+  --sidebar-bg:     #ffffff;
+  --sidebar-border: #e8e5df;
 }
 
-/* ============================================
+/* ─────────────────────────────────────────────
    DARK MODE
-   Change these to customize dark theme
-   ============================================ */
+───────────────────────────────────────────── */
 [data-theme="dark"] {
-  /* id: dark-background */
-  --background: #292524;
-  /* id: dark-foreground — bright white for readability */
-  --foreground: #fafaf9;
-  /* id: dark-primary */
-  --primary: #8fb996;
-  /* id: dark-primary-light */
-  --primary-light: #a7ccad;
-  /* id: dark-primary-dark */
-  --primary-dark: #6b8f71;
-  /* id: dark-accent */
-  --accent: #dba69e;
-  /* id: dark-accent-light */
-  --accent-light: #e8c1bb;
-  /* id: dark-surface */
-  --surface: #3a3533;
-  /* id: dark-surface-hover */
-  --surface-hover: #44403c;
-  /* id: dark-border */
-  --border-color: #57534e;
-  /* id: dark-muted */
-  --muted: #a8a29e;
-  /* id: dark-danger */
-  --danger: #f08080;
-  /* id: dark-success */
-  --success: #8fb996;
-  /* id: dark-warning */
-  --warning: #e0be6a;
+  --background:     #111110;
+  --foreground:     #f5f4f0;
+  --primary:        #7ab882;
+  --primary-light:  #9dd4a5;
+  --primary-dark:   #5a9962;
+  --accent:         #d4836e;
+  --accent-light:   #e8a898;
+  --surface:        #1e1d1b;
+  --surface-hover:  #2a2927;
+  --border-color:   #363430;
+  --muted:          #948f89;
+  --danger:         #e06060;
+  --success:        #7ab882;
+  --warning:        #d4a84a;
+
+  --sidebar-bg:     #161514;
+  --sidebar-border: #262422;
 }
 
-* {
+/* ─────────────────────────────────────────────
+   BASE
+───────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+/* ─────────────────────────────────────────────
+   FOCUS SYSTEM (WCAG 2.4.7 / 2.4.11)
+───────────────────────────────────────────── */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Ensure focused elements clear sticky header (WCAG 2.4.11) */
+:focus {
+  scroll-margin-top: 72px;
+  scroll-margin-bottom: 24px;
+}
+
+/* ─────────────────────────────────────────────
+   SKIP LINK (WCAG 2.4.1)
+───────────────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-link:focus-visible {
+  top: 0;
+  outline: 3px solid var(--primary-dark);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────
+   VISUALLY HIDDEN (WCAG 1.1)
+───────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 5px; height: 5px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: var(--border-color); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-/* Glass effect for login/register cards */
+/* ─────────────────────────────────────────────
+   GLASS / CARD
+───────────────────────────────────────────── */
 .glass {
   background: var(--surface);
   border: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  body {
-    background: white !important;
-  }
-  .print-section {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
+/* ─────────────────────────────────────────────
+   SIDEBAR TRANSITION
+───────────────────────────────────────────── */
+.sidebar-panel {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s ease;
 }
 
+.sidebar-panel.is-open {
+  box-shadow: 4px 0 32px rgba(0,0,0,0.15);
+}
+
+/* ─────────────────────────────────────────────
+   CALCULATOR INPUT
+───────────────────────────────────────────── */
+.input-calc {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--background);
+  border: 1.5px solid var(--border-color);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-calc:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* ─────────────────────────────────────────────
+   STAT CARD ACCENT LINE
+───────────────────────────────────────────── */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--primary);
+  border-radius: 99px 0 0 99px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────
+   NAV ITEM ACTIVE INDICATOR
+───────────────────────────────────────────── */
+.nav-item-active {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nav-item-idle {
+  color: var(--muted);
+  font-weight: 500;
+}
+.nav-item-idle:hover {
+  color: var(--foreground);
+  background: var(--surface-hover);
+}
+
+/* ─────────────────────────────────────────────
+   BADGE / STATUS PILLS
+───────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: capitalize;
+  line-height: 1.4;
+}
+
+/* ─────────────────────────────────────────────
+   DISPLAY FONT UTILITY
+───────────────────────────────────────────── */
+.font-display {
+  font-family: "Syne", system-ui, sans-serif;
+}
+
+/* ─────────────────────────────────────────────
+   PRINT
+───────────────────────────────────────────── */
 @media print {
-  /* Oculta el Sidebar y el Header en el papel */
-  aside, header, .no-print {
-    display: none !important;
-  }
-  /* Elimina márgenes innecesarios del layout de Next.js */
-  main {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  .print-area {
-    width: 100%;
+  aside, header, .no-print { display: none !important; }
+  body { background: white !important; }
+  main { margin: 0 !important; padding: 0 !important; }
+  .print-area { width: 100%; }
+}
+
+/* ─────────────────────────────────────────────
+   REDUCED MOTION (WCAG 2.3)
+───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

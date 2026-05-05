@@ -3,30 +3,41 @@ import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { cookies } from 'next/headers'
 
 // FUNCIÓN GET: Para obtener los datos que alimentan los gráficos e informes
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const accessToken = cookieStore.get('insforge_access_token')?.value
 
-    // Si no hay token, podrías denegar el acceso o usar un cliente anónimo
-    // Para reportes internos, generalmente requerimos el token
     if (!accessToken) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
     const insforge = createInsForgeServerClient(accessToken)
-    
-    // Consultamos la base de datos de Insforge
-    const { data, error } = await insforge.database
+
+    const { searchParams } = new URL(request.url)
+    const sexFilter = searchParams.get('sex')        // e.g. 'macho'
+    const typeSlug  = searchParams.get('type_slug')  // e.g. 'bovino'
+
+    let query = insforge.database
       .from('animals')
-      .select('*')
+      .select('*, animal_types(id, name, slug, animal_categories(id, name, slug))')
+      .eq('status', 'activo')
+
+    if (sexFilter)  query = query.eq('sex', sexFilter)
+
+    const { data, error } = await query
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(data)
-    
+    // Client-side type_slug filter (join column, not a DB column)
+    const filtered = typeSlug
+      ? (data || []).filter((a: Record<string, unknown> & { animal_types?: { slug?: string } }) => a.animal_types?.slug === typeSlug)
+      : data
+
+    return NextResponse.json(filtered)
+
   } catch (error) {
     console.error('Error en GET /api/animals:', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
