@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, PawPrint, ClipboardList, Leaf,
-  Menu, X, Users, ListTodo, Calculator, FileText
+  Menu, X, Users, ListTodo, Calculator, FileText, Brain
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -15,6 +15,7 @@ const allNavItems = [
   { href: '/dashboard/students',   label: 'Estudiantes',         icon: Users,           adminOnly: true,  viewerOnly: false },
   { href: '/dashboard/activities', label: 'Actividades',         icon: ListTodo,        adminOnly: true,  viewerOnly: false },
   { href: '/dashboard/activities', label: 'Mis Actividades',     icon: ListTodo,        adminOnly: false, viewerOnly: true  },
+  { href: '/dashboard/predicciones', label: 'Predicciones IA',   icon: Brain,           adminOnly: true,  viewerOnly: false },
   { href: '/dashboard/reports',    label: 'Informes Operativos', icon: FileText,        adminOnly: false, viewerOnly: false },
   { href: '/dashboard/calculators', label: 'Calculadoras',       icon: Calculator,      adminOnly: false, viewerOnly: false },
 ]
