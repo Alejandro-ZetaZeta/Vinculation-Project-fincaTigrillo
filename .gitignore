@@ -45,8 +45,10 @@ app/.agents
 .agents
 app/.agents
 app/.augment
+.claude
 app/.claude
 app/.cline
+.github/copilot*
 app/.github/copilot*
 app/.kilocode
 app/.qoder

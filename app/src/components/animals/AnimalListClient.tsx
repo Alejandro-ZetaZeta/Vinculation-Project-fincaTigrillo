@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Search, Filter, X, ChevronDown, ChevronUp, Pencil, Trash2, Save, XCircle } from 'lucide-react'
 
 interface Animal {
@@ -47,6 +48,34 @@ function formatDate(dateStr: string | null | undefined): string {
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const year = d.getFullYear()
   return `${day}/${month}/${year}`
+}
+
+function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types'>): string | null {
+  const sex = (animal.sex || '').toLowerCase()
+  const typeSlug = (animal.animal_types?.slug || '').toLowerCase()
+
+  if (typeSlug === 'bovino') {
+    if (sex === 'macho') return '/toro.svg'
+    if (sex === 'hembra') return '/vaca.svg'
+  }
+
+  if (typeSlug === 'porcino') {
+    if (sex === 'macho') return '/cerdo.svg'
+    if (sex === 'hembra') return '/cerda.svg'
+  }
+
+  if (typeSlug === 'aves-de-corral') {
+    if (sex === 'machos') return '/gallo.svg'
+    if (sex === 'hembras') return '/gallina.svg'
+    if (sex === 'mixto') return '/pollito.svg'
+  }
+
+  if (typeSlug === 'equino') {
+    if (sex === 'macho') return '/caballo.svg'
+    if (sex === 'hembra') return '/yegua.svg'
+  }
+
+  return null
 }
 
 export function AnimalListClient({ animals: initialAnimals, categories, types, isAdmin }: Props) {
@@ -278,6 +307,13 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
           {filteredAnimals.map((animal) => {
             const isEditing = editingId === animal.id
             const isDeleting = deleteConfirmId === animal.id
+            const animalIconSrc = getSexIconSrc(animal)
+            const sexOnlyIconSrc = (() => {
+              const sex = (animal.sex || '').toLowerCase()
+              if (sex === 'macho') return '/simmacho.svg'
+              if (sex === 'hembra') return '/simhembra.svg'
+              return null
+            })()
 
             return (
               <div key={animal.id} className="bg-surface border border-border rounded-xl overflow-hidden hover:shadow-md transition-all">
@@ -289,8 +325,23 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                   >
                     <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 items-center">
                       <div>
-                        <p className="text-sm font-semibold text-foreground">{animal.name || 'Sin nombre'}</p>
-                        <p className="text-xs text-muted">{animal.identification_code || '—'}</p>
+                        <div className="flex items-center gap-3 min-w-0">
+                          {animalIconSrc && (
+                            <div className="flex items-center justify-center w-7 h-7 md:w-7 md:h-7 shrink-0">
+                              <Image
+                                src={animalIconSrc}
+                                alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
+                                width={28}
+                                height={28}
+                                className="w-7 h-7 md:w-7 md:h-7 object-contain"
+                              />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground whitespace-normal break-all md:break-words leading-snug">{animal.name || 'Sin nombre'}</p>
+                            <p className="text-xs text-muted">{animal.identification_code || '—'}</p>
+                          </div>
+                        </div>
                       </div>
                       <div className="hidden md:block">
                         <p className="text-sm text-foreground">{animal.animal_types?.name}</p>
@@ -300,7 +351,20 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                         <p className="text-sm">{animal.breed || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-sm capitalize">{animal.sex || '—'}</p>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {sexOnlyIconSrc && (
+                            <div className="flex items-center justify-center w-7 h-7 md:w-7 md:h-7 shrink-0">
+                              <Image
+                                src={sexOnlyIconSrc}
+                                alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
+                                width={28}
+                                height={28}
+                                className="w-7 h-7 md:w-7 md:h-7 object-contain"
+                              />
+                            </div>
+                          )}
+                          <p className="text-sm capitalize">{animal.sex || '—'}</p>
+                        </div>
                       </div>
                       <div>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusColors[animal.status] || ''}`}>

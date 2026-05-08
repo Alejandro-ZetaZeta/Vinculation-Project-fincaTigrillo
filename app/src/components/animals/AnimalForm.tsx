@@ -78,12 +78,15 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
   'aves-de-corral': [
     { label: 'Nombre / Lote', name: 'name', type: 'text', placeholder: 'Ej: Lote-Gallinas-01' },
     { label: 'Especie', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Gallina ponedora, Pollo de engorde' },
-    { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
+    { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['machos', 'hembras', 'mixto'] },
     { label: 'Fecha de nacimiento / ingreso', name: 'birth_date', type: 'date' },
     { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Anillo o código de lote' },
     { label: 'Color de plumaje', name: 'color', type: 'text', placeholder: 'Ej: Rojo, Blanco' },
-    { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 2.5' },
-    { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['postura', 'engorde', 'doble propósito', 'ornamental'] },
+    { label: 'Peso promedio (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 0.5' },
+    { label: 'Número inicial de aves', name: 'meta_cantidad', type: 'number', required: true, placeholder: 'Ej: 100' },
+    { label: 'Mortalidad esperada (%)', name: 'meta_mortalidad_esperada_pct', type: 'number', placeholder: 'Ej: 5' },
+    { label: 'Etapa productiva', name: 'meta_etapa', type: 'select', required: true, options: ['pollitos', 'levante', 'producción/adultos'] },
+    { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['postura', 'engorde', 'doble propósito'] },
     { label: 'Producción huevos/semana', name: 'meta_produccion_huevos', type: 'number', placeholder: 'Ej: 5' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
@@ -112,6 +115,8 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   const [acquisitionType, setAcquisitionType] = useState('')
   const [acquisitionDate, setAcquisitionDate] = useState('')
   const [sireId, setSireId]                   = useState('')
+  const [avesEtapa, setAvesEtapa]             = useState('')
+  const [avesProposito, setAvesProposito]     = useState('')
 
   /* ── Sire list (male animals of same type) ── */
   const [sires, setSires]             = useState<SireOption[]>([])
@@ -164,6 +169,10 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
         metadata[key.replace('meta_', '')] = value
       } else if (baseFields.includes(key)) {
         animalData[key] = key === 'weight_kg' ? parseFloat(value as string) : value
+        
+        if (key === 'weight_kg' && typeSlug === 'aves-de-corral') {
+          metadata['peso_promedio_g'] = parseFloat(value as string) * 1000
+        }
       }
     }
 
@@ -258,11 +267,54 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                     <select id="sex" name="sex" required value={sex} onChange={e => handleSexChange(e.target.value)}
                       className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all capitalize">
                       <option value="">Seleccionar...</option>
-                      <option value="macho">macho</option>
-                      <option value="hembra">hembra</option>
+                      {field.options ? field.options.map(opt => <option key={opt} value={opt}>{opt}</option>) : (
+                         <>
+                           <option value="macho">macho</option>
+                           <option value="hembra">hembra</option>
+                         </>
+                      )}
                     </select>
                   </div>
                 )
+              }
+
+              /* ── Aves-de-corral: controlled etapa ── */
+              if (field.name === 'meta_etapa' && typeSlug === 'aves-de-corral') {
+                return (
+                  <div key={field.name}>
+                    <label htmlFor={field.name} className="block text-sm font-medium text-foreground mb-1.5">
+                      {field.label} {field.required && <span className="text-danger ml-1">*</span>}
+                    </label>
+                    <select id={field.name} name={field.name} required={field.required}
+                      value={avesEtapa} onChange={e => setAvesEtapa(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all capitalize">
+                      <option value="">Seleccionar...</option>
+                      {field.options?.map(opt => <option key={opt} value={opt} className="capitalize">{opt}</option>)}
+                    </select>
+                  </div>
+                )
+              }
+
+              /* ── Aves-de-corral: controlled proposito ── */
+              if (field.name === 'meta_proposito' && typeSlug === 'aves-de-corral') {
+                return (
+                  <div key={field.name}>
+                    <label htmlFor={field.name} className="block text-sm font-medium text-foreground mb-1.5">
+                      {field.label} {field.required && <span className="text-danger ml-1">*</span>}
+                    </label>
+                    <select id={field.name} name={field.name} required={field.required}
+                      value={avesProposito} onChange={e => setAvesProposito(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all capitalize">
+                      <option value="">Seleccionar...</option>
+                      {field.options?.map(opt => <option key={opt} value={opt} className="capitalize">{opt}</option>)}
+                    </select>
+                  </div>
+                )
+              }
+
+              /* ── Producción huevos: conditional ── */
+              if (field.name === 'meta_produccion_huevos') {
+                if (avesEtapa !== 'producción/adultos' || (avesProposito !== 'postura' && avesProposito !== 'doble propósito')) return null;
               }
 
               /* ── Propósito bovino: sex-aware ── */
