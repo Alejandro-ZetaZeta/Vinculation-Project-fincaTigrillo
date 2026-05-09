@@ -50,7 +50,7 @@ function formatDate(dateStr: string | null | undefined): string {
   return `${day}/${month}/${year}`
 }
 
-function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types'>): string | null {
+function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types' | 'metadata'>): string | null {
   const sex = (animal.sex || '').toLowerCase()
   const typeSlug = (animal.animal_types?.slug || '').toLowerCase()
 
@@ -65,8 +65,18 @@ function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types'>): string | n
   }
 
   if (typeSlug === 'aves-de-corral') {
-    if (sex === 'machos') return '/gallo.svg'
-    if (sex === 'hembras') return '/gallina.svg'
+    const etapaRaw = (animal.metadata as Record<string, unknown> | null | undefined)?.etapa
+    const etapa = typeof etapaRaw === 'string' ? etapaRaw.toLowerCase() : ''
+
+    if (etapa === 'pollitos' || etapa === 'levante') return '/pollito.svg'
+    if (etapa === 'producción/adultos' || etapa === 'produccion/adultos') {
+      if (sex === 'macho' || sex === 'machos') return '/gallo.svg'
+      if (sex === 'hembra' || sex === 'hembras' || sex === 'mixto') return '/gallina.svg'
+    }
+
+    // Fallback when etapa missing
+    if (sex === 'macho' || sex === 'machos') return '/gallo.svg'
+    if (sex === 'hembra' || sex === 'hembras') return '/gallina.svg'
     if (sex === 'mixto') return '/pollito.svg'
   }
 
@@ -136,7 +146,12 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     setEditData({
       name: animal.name || '',
       breed: animal.breed || '',
-      sex: animal.sex || '',
+      sex: (() => {
+        const s = (animal.sex || '').toLowerCase()
+        if (s === 'machos') return 'macho'
+        if (s === 'hembras') return 'hembra'
+        return s
+      })(),
       color: animal.color || '',
       weight_kg: animal.weight_kg,
       status: animal.status,
@@ -156,6 +171,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     try {
       const payload: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(editData)) {
+        if (key === 'sex' && (value === '' || value === null)) continue
         if (value !== '' && value !== null) {
           payload[key] = key === 'weight_kg' ? parseFloat(String(value)) : value
         } else {
@@ -310,8 +326,9 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
             const animalIconSrc = getSexIconSrc(animal)
             const sexOnlyIconSrc = (() => {
               const sex = (animal.sex || '').toLowerCase()
-              if (sex === 'macho') return '/simmacho.svg'
-              if (sex === 'hembra') return '/simhembra.svg'
+              if (sex === 'macho' || sex === 'machos') return '/simmacho.svg'
+              if (sex === 'hembra' || sex === 'hembras') return '/simhembra.svg'
+              if (sex === 'mixto') return '/simix.svg'
               return null
             })()
 
@@ -323,8 +340,8 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                     onClick={() => { setExpandedId(expandedId === animal.id ? null : animal.id); cancelEdit() }}
                     className="flex-1 flex items-center gap-4 text-left hover:bg-surface-hover rounded-lg transition-colors -m-1 p-1"
                   >
-                    <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 items-center">
-                      <div>
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 items-center min-w-0">
+                      <div className="min-w-0">
                         <div className="flex items-center gap-3 min-w-0">
                           {animalIconSrc && (
                             <div className="flex items-center justify-center w-7 h-7 md:w-7 md:h-7 shrink-0">
@@ -434,9 +451,18 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             <label className="block text-xs text-muted mb-1">Sexo</label>
                             <select value={String(editData.sex || '')} onChange={(e) => setEditData(p => ({...p, sex: e.target.value}))}
                               className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
-                              <option value="">—</option>
-                              <option value="macho">Macho</option>
-                              <option value="hembra">Hembra</option>
+                              {animal.animal_types?.slug === 'aves-de-corral' ? (
+                                <>
+                                  <option value="macho">Macho</option>
+                                  <option value="hembra">Hembra</option>
+                                  <option value="mixto">Mixto</option>
+                                </>
+                              ) : (
+                                <>
+                                  <option value="macho">Macho</option>
+                                  <option value="hembra">Hembra</option>
+                                </>
+                              )}
                             </select>
                           </div>
                           <EditField label="Color" name="color" value={editData.color} onChange={(v) => setEditData(p => ({...p, color: v}))} />

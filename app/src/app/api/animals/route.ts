@@ -76,6 +76,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     body.created_by = userData.user.id
 
+     // Normalize legacy/plural sex values coming from the client.
+     // DB constraint expects singular values (e.g. 'macho' / 'hembra').
+     if (typeof body.sex === 'string') {
+       const s = body.sex.toLowerCase()
+       if (s === 'machos') body.sex = 'macho'
+       if (s === 'hembras') body.sex = 'hembra'
+     }
+
     const { data, error } = await insforge.database
       .from('animals')
       .insert([body])

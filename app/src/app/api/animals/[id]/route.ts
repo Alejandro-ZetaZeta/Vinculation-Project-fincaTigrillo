@@ -37,6 +37,15 @@ export async function PUT(
     delete body.created_by
     delete body.created_at
 
+     // Normalize legacy/plural sex values; prevent setting sex to null/empty.
+     if (typeof body.sex === 'string') {
+       const s = body.sex.toLowerCase().trim()
+       if (s === 'machos') body.sex = 'macho'
+       if (s === 'hembras') body.sex = 'hembra'
+       if (s === '') delete body.sex
+     }
+     if (body.sex === null) delete body.sex
+
     const { data, error: dbError } = await client.database
       .from('animals')
       .update(body)

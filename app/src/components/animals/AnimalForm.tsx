@@ -267,11 +267,19 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                     <select id="sex" name="sex" required value={sex} onChange={e => handleSexChange(e.target.value)}
                       className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all capitalize">
                       <option value="">Seleccionar...</option>
-                      {field.options ? field.options.map(opt => <option key={opt} value={opt}>{opt}</option>) : (
-                         <>
-                           <option value="macho">macho</option>
-                           <option value="hembra">hembra</option>
-                         </>
+                      {typeSlug === 'aves-de-corral' ? (
+                        <>
+                          <option value="macho">machos</option>
+                          <option value="hembra">hembras</option>
+                          <option value="mixto">mixto</option>
+                        </>
+                      ) : field.options ? (
+                        field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)
+                      ) : (
+                        <>
+                          <option value="macho">macho</option>
+                          <option value="hembra">hembra</option>
+                        </>
                       )}
                     </select>
                   </div>
