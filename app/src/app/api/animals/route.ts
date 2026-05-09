@@ -76,6 +76,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     body.created_by = userData.user.id
 
+    // ── Verificar código de identificación duplicado ──────────────────────────
+    const identCode = (body.identification_code as string | undefined)?.trim()
+    if (identCode) {
+      const { data: existing, error: checkError } = await insforge.database
+        .from('animals')
+        .select('id, name, identification_code')
+        .eq('identification_code', identCode)
+        .limit(1)
+
+      if (checkError) {
+        return NextResponse.json({ error: 'Error al verificar código de identificación' }, { status: 500 })
+      }
+
+      if (existing && existing.length > 0) {
+        const dup = existing[0] as { id: string; name: string | null; identification_code: string }
+        return NextResponse.json(
+          { error: `El código "${identCode}" ya está en uso por el animal "${dup.name || dup.identification_code}". Cada animal debe tener un código único.` },
+          { status: 409 }
+        )
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
      // Normalize legacy/plural sex values coming from the client.
      // DB constraint expects singular values (e.g. 'macho' / 'hembra').
      if (typeof body.sex === 'string') {
