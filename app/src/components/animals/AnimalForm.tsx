@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, ArrowLeft, PawPrint, HeartPulse } from 'lucide-react'
+import { Save, ArrowLeft, PawPrint, HeartPulse, CheckCircle, XCircle, Loader } from 'lucide-react'
 import Link from 'next/link'
 
 /* ── Slugs that support reproductive tracking ── */
@@ -118,6 +118,39 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   const [avesEtapa, setAvesEtapa]             = useState('')
   const [avesProposito, setAvesProposito]     = useState('')
 
+  /* ── Identification code duplicate check ── */
+  const [identCode, setIdentCode]                     = useState('')
+  const [codeStatus, setCodeStatus]                   = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [codeTakenMsg, setCodeTakenMsg]               = useState('')
+  const debounceTimerRef                              = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const checkCode = useCallback(async (code: string) => {
+    const trimmed = code.trim()
+    if (!trimmed) { setCodeStatus('idle'); setCodeTakenMsg(''); return }
+    setCodeStatus('checking')
+    try {
+      const res = await fetch(`/api/animals/check-code?code=${encodeURIComponent(trimmed)}`)
+      const json = await res.json()
+      if (json.taken) {
+        setCodeStatus('taken')
+        setCodeTakenMsg(json.usedBy ? `Ya está en uso por "${json.usedBy}"` : 'Este código ya está en uso')
+      } else {
+        setCodeStatus('available')
+        setCodeTakenMsg('')
+      }
+    } catch {
+      setCodeStatus('idle')
+    }
+  }, [])
+
+  function handleIdentCodeChange(value: string) {
+    setIdentCode(value)
+    setCodeStatus('idle')
+    setCodeTakenMsg('')
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    debounceTimerRef.current = setTimeout(() => checkCode(value), 500)
+  }
+
   /* ── Sire list (male animals of same type) ── */
   const [sires, setSires]             = useState<SireOption[]>([])
   const [loadingSires, setLoadingSires] = useState(false)
@@ -156,6 +189,16 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
     e.preventDefault()
     setError('')
     setSuccess(false)
+
+    // Block if code is taken or still checking
+    if (codeStatus === 'taken') {
+      setError(codeTakenMsg || 'El código de identificación ya está en uso. Usa un código único.')
+      return
+    }
+    if (codeStatus === 'checking') {
+      setError('Espera mientras se verifica el código de identificación...')
+      return
+    }
 
     const formData = new FormData(e.currentTarget)
     const baseFields = ['name', 'breed', 'sex', 'birth_date', 'identification_code', 'color', 'weight_kg', 'acquisition_type', 'acquisition_date', 'notes', 'status']
@@ -363,6 +406,50 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                       <option value="compra">compra</option>
                       <option value="donacion">donacion</option>
                     </select>
+                  </div>
+                )
+              }
+
+              /* ── identification_code: controlled with live duplicate check ── */
+              if (field.name === 'identification_code') {
+                const borderColor =
+                  codeStatus === 'taken'     ? 'border-danger   focus:border-danger   focus:ring-danger/30' :
+                  codeStatus === 'available' ? 'border-success  focus:border-success  focus:ring-success/30' :
+                  'border-border focus:border-primary focus:ring-primary/30'
+
+                return (
+                  <div key="identification_code">
+                    <label htmlFor="identification_code" className="block text-sm font-medium text-foreground mb-1.5">
+                      {field.label}
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="identification_code"
+                        name="identification_code"
+                        type="text"
+                        value={identCode}
+                        onChange={e => handleIdentCodeChange(e.target.value)}
+                        placeholder={field.placeholder}
+                        className={`w-full px-4 py-2.5 pr-10 rounded-xl bg-background border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 transition-all ${borderColor}`}
+                      />
+                      {/* Status icon */}
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        {codeStatus === 'checking'  && <Loader    className="w-4 h-4 text-muted animate-spin" />}
+                        {codeStatus === 'available' && <CheckCircle className="w-4 h-4 text-success" />}
+                        {codeStatus === 'taken'     && <XCircle    className="w-4 h-4 text-danger" />}
+                      </span>
+                    </div>
+                    {/* Feedback message */}
+                    {codeStatus === 'available' && (
+                      <p className="mt-1 text-xs text-success flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" /> Código disponible
+                      </p>
+                    )}
+                    {codeStatus === 'taken' && (
+                      <p className="mt-1 text-xs text-danger flex items-center gap-1">
+                        <XCircle className="w-3 h-3" /> {codeTakenMsg}
+                      </p>
+                    )}
                   </div>
                 )
               }
