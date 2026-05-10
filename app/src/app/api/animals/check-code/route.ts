@@ -18,6 +18,14 @@ import { cookies } from 'next/headers'
  */
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const code    = searchParams.get('code')?.trim()
+    const exclude = searchParams.get('exclude')?.trim()   // optional: animal id being edited
+
+    if (!code) {
+      return NextResponse.json({ taken: false })
+    }
+
     const cookieStore = await cookies()
     const accessToken = cookieStore.get('insforge_access_token')?.value
 
@@ -26,14 +34,6 @@ export async function GET(request: NextRequest) {
     }
 
     const insforge = createInsForgeServerClient(accessToken)
-
-    const { searchParams } = new URL(request.url)
-    const code    = searchParams.get('code')?.trim()
-    const exclude = searchParams.get('exclude')?.trim()   // optional: animal id being edited
-
-    if (!code) {
-      return NextResponse.json({ taken: false })
-    }
 
     let query = insforge.database
       .from('animals')
@@ -60,7 +60,13 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ taken: false })
-  } catch (err) {
+  } catch (err: unknown) {
+    // Next.js can throw this during build/prerender to signal dynamic bailout.
+    // Don't swallow/log as app error.
+    if (typeof err === 'object' && err && 'digest' in err && (err as { digest?: string }).digest === 'NEXT_PRERENDER_INTERRUPTED') {
+      throw err
+    }
+
     console.error('check-code error:', err)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }

@@ -80,6 +80,16 @@ function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types' | 'metadata'>
     if (sex === 'mixto') return '/pollito.svg'
   }
 
+  if (typeSlug === 'patos') {
+    if (sex === 'macho') return '/pato.svg'
+    if (sex === 'hembra') return '/pata.svg'
+  }
+
+  if (typeSlug === 'caprino') {
+    if (sex === 'macho') return '/cabro.svg'
+    if (sex === 'hembra') return '/cabrita.svg'
+  }
+
   if (typeSlug === 'equino') {
     if (sex === 'macho') return '/caballo.svg'
     if (sex === 'hembra') return '/yegua.svg'
@@ -350,12 +360,12 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                                 alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
                                 width={28}
                                 height={28}
-                                className="w-7 h-7 md:w-7 md:h-7 object-contain"
+                                className="w-7 h-7 md:w-7 md:h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
                               />
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-foreground whitespace-normal break-all md:break-words leading-snug">{animal.name || 'Sin nombre'}</p>
+                            <p className="text-sm font-semibold text-foreground whitespace-normal break-all md:wrap-break-word leading-snug">{animal.name || 'Sin nombre'}</p>
                             <p className="text-xs text-muted">{animal.identification_code || '—'}</p>
                           </div>
                         </div>
@@ -376,7 +386,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                                 alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
                                 width={28}
                                 height={28}
-                                className="w-7 h-7 md:w-7 md:h-7 object-contain"
+                                className="w-7 h-7 md:w-7 md:h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
                               />
                             </div>
                           )}

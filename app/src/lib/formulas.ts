@@ -19,6 +19,7 @@ export const GESTATION_DAYS: Record<string, number> = {
   bovino: 283,
   equino: 340,
   porcino: 114,
+  caprino: 150,
   'aves-de-corral': 21, // Incubación, no gestación
 }
 
@@ -198,5 +199,7 @@ export const SPECIES_LABELS: Record<string, string> = {
   bovino: 'Bovino',
   equino: 'Equino',
   porcino: 'Porcino',
+  caprino: 'Caprino',
   'aves-de-corral': 'Aves de Corral',
+  patos: 'Patos',
 }

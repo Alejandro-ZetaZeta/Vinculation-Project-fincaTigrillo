@@ -6,13 +6,14 @@ import { Save, ArrowLeft, PawPrint, HeartPulse, CheckCircle, XCircle, Loader } f
 import Link from 'next/link'
 
 /* ── Slugs that support reproductive tracking ── */
-const REPRO_TYPES = ['bovino', 'equino', 'porcino']
+const REPRO_TYPES = ['bovino', 'equino', 'porcino', 'caprino']
 
 /* ── Label map for sire selector header ── */
 const SIRE_LABEL: Record<string, string> = {
   bovino:  'toro (bovino macho)',
   equino:  'semental (equino macho)',
   porcino: 'verraco (porcino macho)',
+  caprino: 'macho cabrio (caprino macho)',
 }
 
 /* ── Reproductive status options: sex-aware ── */
@@ -20,11 +21,13 @@ const REPRO_STATUS_HEMBRA: Record<string, string[]> = {
   bovino:  ['preñada', 'vacía', 'lactando', 'seca'],
   equino:  ['preñada', 'vacía', 'lactando'],
   porcino: ['preñada', 'vacía', 'lactando'],
+  caprino: ['preñada', 'vacía', 'lactando', 'seca'],
 }
 const REPRO_STATUS_MACHO: Record<string, string[]> = {
   bovino:  ['activo', 'no aplica'],
   equino:  ['activo', 'no aplica'],
   porcino: ['activo', 'no aplica'],
+  caprino: ['activo', 'no aplica'],
 }
 
 /* ── Propósito options for bovino: sex-aware ── */
@@ -88,6 +91,30 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Etapa productiva', name: 'meta_etapa', type: 'select', required: true, options: ['pollitos', 'levante', 'producción/adultos'] },
     { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['postura', 'engorde', 'doble propósito'] },
     { label: 'Producción huevos/semana', name: 'meta_produccion_huevos', type: 'number', placeholder: 'Ej: 5' },
+    { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
+  ],
+  'patos': [
+    { label: 'Nombre', name: 'name', type: 'text', placeholder: 'Ej: Pato-01' },
+    { label: 'Raza / Tipo', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Pekin, Criollo, Muscovy' },
+    { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
+    { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Anillo o código' },
+    { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Blanco, Café' },
+    { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 2.8' },
+    { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
+  ],
+  'caprino': [
+    { label: 'Nombre', name: 'name', type: 'text', placeholder: 'Ej: Canela' },
+    { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Boer, Saanen, Alpina' },
+    { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
+    { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Arete o microchip' },
+    { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Blanco, Negro' },
+    { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 45' },
+    { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['leche', 'carne', 'doble propósito', 'reproducción'] },
+    { label: 'Número de partos', name: 'meta_numero_partos', type: 'number_hembra_only', placeholder: '0' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
@@ -500,7 +527,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
               </div>
             )}
 
-            {/* ── Reproductive status: only for bovino / equino / porcino ── */}
+            {/* ── Reproductive status: only for repro types ── */}
             {isReproType && sex && (
               <div>
                 <label htmlFor="meta_estado_reproductivo" className="block text-sm font-medium text-foreground mb-1.5">
@@ -534,7 +561,13 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                 </div>
               ) : sires.length === 0 ? (
                 <p className="text-xs text-warning py-2">
-                  No hay {typeSlug === 'bovino' ? 'toros' : typeSlug === 'equino' ? 'sementales' : 'verracos'} registrados activos.
+                  No hay {
+                    typeSlug === 'bovino' ? 'toros' :
+                    typeSlug === 'equino' ? 'sementales' :
+                    typeSlug === 'porcino' ? 'verracos' :
+                    typeSlug === 'caprino' ? 'machos cabrios' :
+                    'machos'
+                  } registrados activos.
                   Puedes registrar el padre más tarde desde el módulo de eventos reproductivos.
                 </p>
               ) : (

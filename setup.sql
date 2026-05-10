@@ -110,4 +110,6 @@ INSERT INTO animal_types (category_id, name, slug, description, icon, display_or
   ((SELECT id FROM animal_categories WHERE slug = 'ganado-mayor'), 'Bovino', 'bovino', 'Ganado vacuno: vacas, toros, terneros', 'Milk', 1),
   ((SELECT id FROM animal_categories WHERE slug = 'ganado-mayor'), 'Equino', 'equino', 'Caballos, yeguas, potros, mulas, burros', 'Ribbon', 2),
   ((SELECT id FROM animal_categories WHERE slug = 'ganado-menor'), 'Porcino', 'porcino', 'Cerdos, lechones, cerdas de cría', 'Drumstick', 1),
-  ((SELECT id FROM animal_categories WHERE slug = 'ganado-menor'), 'Aves de Corral', 'aves-de-corral', 'Gallinas, pollos, gallos, patos, pavos', 'Egg', 2);
+  ((SELECT id FROM animal_categories WHERE slug = 'ganado-menor'), 'Caprino', 'caprino', 'Cabras, chivos y crías', 'Milk', 2),
+  ((SELECT id FROM animal_categories WHERE slug = 'ganado-menor'), 'Aves de Corral', 'aves-de-corral', 'Gallinas, pollos, gallos', 'Egg', 3),
+  ((SELECT id FROM animal_categories WHERE slug = 'ganado-menor'), 'Patos', 'patos', 'Patos domésticos registrados individualmente', 'Egg', 4);
