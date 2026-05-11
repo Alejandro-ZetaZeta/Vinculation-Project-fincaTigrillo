@@ -47,10 +47,10 @@ export default function CalculatorsClient({ isAdmin }: { isAdmin: boolean }) {
   const [loadingAnimals, setLoadingAnimals] = useState(true)
 
   useEffect(() => {
-    fetch('/api/animals?sex=hembra')
+    fetch('/api/animals')
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setAnimals(d) })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingAnimals(false))
   }, [])
 
@@ -115,9 +115,12 @@ function CalcParto() {
   const [date, setDate] = useState(toIso(new Date()))
   const result = calcFechaParto(new Date(date + 'T12:00:00'), species)
 
+  const isOviparous = species === 'aves-de-corral' || species === 'patos'
+  const periodLabel = isOviparous ? 'Incubación' : 'Gestación'
+
   return (
     <CalcCard title="Calculadora de Parto" icon={<Baby className="w-5 h-5 text-primary" />}
-      hint={`Gestación ${SPECIES_LABELS[species]}: ${GESTATION_DAYS[species]} días`}>
+      hint={`${periodLabel} ${SPECIES_LABELS[species]}: ${GESTATION_DAYS[species]} días`}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-muted mb-1">Especie</label>
@@ -128,7 +131,7 @@ function CalcParto() {
         <DateField label="Fecha de Monta" value={date} onChange={setDate} />
       </div>
       <ResultBox
-        label={species === 'aves-de-corral' ? 'Fecha estimada de eclosión' : 'Fecha estimada de parto'}
+        label={(species === 'aves-de-corral' || species === 'patos') ? 'Fecha estimada de eclosión' : 'Fecha estimada de parto'}
         value={fmtDate(result)} accent />
     </CalcCard>
   )
@@ -181,11 +184,7 @@ function CalcHuevos() {
       hint="Gallina ponedora comercial: ~0.75 huevos/día">
       <div className="grid grid-cols-2 gap-3">
         <NumField label="Gallinas ponedoras" value={hens} onChange={setHens} min={1} />
-        <div>
-          <label className="block text-xs font-medium text-muted mb-1">Tasa huevo/día</label>
-          <input type="number" step="0.05" min={0} max={1} value={rate}
-            onChange={e => setRate(+e.target.value)} className="input-calc" />
-        </div>
+        <NumField label="Tasa huevo/día" value={rate} onChange={setRate} min={0} step="0.05" />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <ResultBox label="Huevos/semana" value={`${weekly}`} accent />
@@ -253,19 +252,20 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
   const [error, setError] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  const [animalId, setAnimalId]   = useState('')
+  const [animalId, setAnimalId] = useState('')
   const [eventType, setEventType] = useState('monta_natural')
   const [eventDate, setEventDate] = useState(toIso(new Date()))
-  const [notes, setNotes]         = useState('')
-  const [sireId, setSireId]       = useState('')
-  const [sires, setSires]         = useState<AnimalOption[]>([])
+  const [notes, setNotes] = useState('')
+  const [sireId, setSireId] = useState('')
+  const [sires, setSires] = useState<AnimalOption[]>([])
   const [loadingSires, setLoadingSires] = useState(false)
+  const [deathCount, setDeathCount] = useState(1)
 
   useEffect(() => {
     fetch('/api/reproductive-events')
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setEvents(d) })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false))
   }, [])
 
@@ -278,7 +278,7 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
     fetch(`/api/animals?sex=macho&type_slug=${slug}`)
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setSires(d) })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingSires(false))
   }, [eventType, animalId, animals])
 
@@ -299,7 +299,7 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
           animal_id: animalId,
           event_type: eventType,
           event_date: eventDate,
-          notes: notes || null,
+          notes: eventType === 'muerte' ? `[Cantidad: ${deathCount}] ${notes}` : notes || null,
           species_slug: getSpeciesSlug(animalId),
           sire_id: (eventType === 'monta_natural' && sireId) ? sireId : null,
         })
@@ -308,7 +308,7 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
       if (!res.ok) { setError(result.error || 'Error al guardar'); return }
       const refreshed = await fetch('/api/reproductive-events').then(r => r.json())
       if (Array.isArray(refreshed)) setEvents(refreshed)
-      setShowForm(false); setNotes(''); setSireId('')
+      setShowForm(false); setNotes(''); setSireId(''); setAnimalId(''); setDeathCount(1);
     } catch { setError('Error de conexión') }
     finally { setSaving(false) }
   }
@@ -329,7 +329,11 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
     ? calcFechaParto(new Date(eventDate + 'T12:00:00'), getSpeciesSlug(animalId))
     : null
 
-  const showSireSelector = eventType === 'monta_natural' && !!animalId
+  const species = getSpeciesSlug(animalId)
+  const isLot = species === 'aves-de-corral' || species === 'patos'
+
+  const showSireSelector = eventType === 'monta_natural' && !!animalId && !isLot
+  const showDeathCount = eventType === 'muerte' && !!animalId
 
   return (
     <div className="space-y-4">
@@ -354,12 +358,20 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Hembra selector */}
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Animal (hembra)</label>
+              <label className="block text-xs font-medium text-muted mb-1">
+                {isLot ? 'Lote de Aves' : 'Animal (hembra)'}
+              </label>
               <select value={animalId} onChange={e => { setAnimalId(e.target.value); setSireId('') }} className="input-calc" required>
-                <option value="">Seleccionar hembra...</option>
-                {animals.filter(a => a.animal_types).map(a => (
+                <option value="">Seleccionar...</option>
+                {animals.filter(a => {
+                  const sex = a.sex?.toLowerCase();
+                  if (sex === 'macho') return false; // Eliminar machos explícitamente
+                  if (eventType === 'muerte') return true; 
+                  if (a.animal_types?.slug === 'aves-de-corral' || a.animal_types?.slug === 'patos') return true; 
+                  return sex === 'hembra';
+                }).map(a => (
                   <option key={a.id} value={a.id}>
-                    {a.name || a.identification_code || 'Sin nombre'} — {a.animal_types?.name}
+                    {a.name || a.identification_code || 'Sin nombre'} — {a.animal_types?.name} {a.sex ? `(${a.sex})` : ''}
                   </option>
                 ))}
               </select>
@@ -390,8 +402,12 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
               </div>
             )}
 
+            {showDeathCount && (
+              <NumField label="Cantidad de muertes" value={deathCount} onChange={setDeathCount} min={1} />
+            )}
+
             <DateField label="Fecha del Evento" value={eventDate} onChange={setEventDate} />
-            <div>
+            <div className={showDeathCount ? "col-span-1" : "col-span-1 sm:col-span-2"}>
               <label className="block text-xs font-medium text-muted mb-1">Notas (opcional)</label>
               <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
                 placeholder="Observaciones..." className="input-calc" />
@@ -418,12 +434,11 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
             <div key={ev.id} className="bg-surface border border-border rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    ev.event_type === 'parto' ? 'bg-success/10 text-success' :
-                    ev.event_type === 'aborto' ? 'bg-danger/10 text-danger' :
-                    ev.event_type === 'monta_natural' || ev.event_type === 'inseminacion' ? 'bg-primary/10 text-primary' :
-                    'bg-accent/10 text-accent'
-                  }`}>{eventLabel(ev.event_type)}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ev.event_type === 'parto' ? 'bg-success/10 text-success' :
+                      ev.event_type === 'aborto' || ev.event_type === 'muerte' ? 'bg-danger/10 text-danger' :
+                        ev.event_type === 'monta_natural' || ev.event_type === 'inseminacion' ? 'bg-primary/10 text-primary' :
+                          'bg-accent/10 text-accent'
+                    }`}>{eventLabel(ev.event_type)}</span>
                   <span className="text-sm font-semibold text-foreground truncate">
                     {ev.animals?.name || ev.animals?.identification_code || 'Animal'}
                   </span>
@@ -488,9 +503,8 @@ function CalcCard({ title, icon, hint, children }: {
 
 function ResultBox({ label, value, accent, warn }: { label: string; value: string; accent?: boolean; warn?: boolean }) {
   return (
-    <div className={`rounded-xl px-3 py-2.5 border ${
-      warn ? 'bg-warning/5 border-warning/20' : accent ? 'bg-primary/5 border-primary/20' : 'bg-background border-border'
-    }`}>
+    <div className={`rounded-xl px-3 py-2.5 border ${warn ? 'bg-warning/5 border-warning/20' : accent ? 'bg-primary/5 border-primary/20' : 'bg-background border-border'
+      }`}>
       <p className="text-[10px] font-bold text-muted uppercase tracking-wider">{label}</p>
       <p className={`text-lg font-bold ${warn ? 'text-warning' : accent ? 'text-primary' : 'text-foreground'}`}>{value}</p>
     </div>
@@ -508,13 +522,45 @@ function DateField({ label, value, onChange }: { label: string; value: string; o
   )
 }
 
-function NumField({ label, value, onChange, min }: {
-  label: string; value: number; onChange: (v: number) => void; min?: number
+function NumField({ label, value, onChange, min, step = "1" }: {
+  label: string; value: number; onChange: (v: number) => void; min?: number; step?: string
 }) {
+  const [inputValue, setInputValue] = useState(value.toString())
+
+  useEffect(() => {
+    if (parseFloat(inputValue) !== value) {
+      setInputValue(value.toString())
+    }
+  }, [value])
+
   return (
     <div>
       <label className="block text-xs font-medium text-muted mb-1">{label}</label>
-      <input type="number" min={min} value={value} onChange={e => onChange(+e.target.value)} className="input-calc" />
+      <input
+        type="number"
+        min={min}
+        step={step}
+        value={inputValue}
+        onChange={e => {
+          let val = e.target.value
+
+          // Si el valor era "0" y se escribió algo más, quitar el 0 inicial (ej: "05" -> "5")
+          if (inputValue === "0" && val.length > 1 && val.startsWith("0")) {
+            val = val.substring(1)
+          }
+
+          setInputValue(val)
+          onChange(val === '' ? 0 : +val)
+        }}
+        onBlur={() => {
+          if (inputValue === "" || inputValue === "-") {
+            setInputValue("0")
+            onChange(0)
+          }
+        }}
+        onFocus={e => e.target.select()}
+        className="input-calc"
+      />
     </div>
   )
 }

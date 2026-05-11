@@ -21,6 +21,7 @@ export const GESTATION_DAYS: Record<string, number> = {
   porcino: 114,
   caprino: 150,
   'aves-de-corral': 21, // Incubación, no gestación
+  patos: 35,            // Incubación promedio
 }
 
 // ─────────────────────────────────────────────
@@ -190,6 +191,7 @@ export const REPRODUCTIVE_EVENT_TYPES = [
   { value: 'parto', label: 'Parto' },
   { value: 'aborto', label: 'Aborto' },
   { value: 'destete', label: 'Destete' },
+  { value: 'muerte', label: 'Muerte / Baja' },
 ] as const
 
 export type ReproductiveEventType = typeof REPRODUCTIVE_EVENT_TYPES[number]['value']
