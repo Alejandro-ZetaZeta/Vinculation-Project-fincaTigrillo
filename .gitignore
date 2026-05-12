@@ -56,3 +56,15 @@ app/.qwen
 app/.roo
 app/.trae
 app/.windsurf
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.augment
+.cline
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf
