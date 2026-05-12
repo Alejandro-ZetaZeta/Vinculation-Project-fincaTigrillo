@@ -160,6 +160,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   }
 
   function startEdit(animal: Animal) {
+    const isPoultryBatch = animal.animal_types?.slug === 'aves-de-corral'
     setEditingId(animal.id)
     setEditData({
       name: animal.name || '',
@@ -171,7 +172,10 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
         return s
       })(),
       color: animal.color || '',
-      weight_kg: animal.weight_kg,
+      // UI for poultry batches is grams-first; DB stores kg.
+      weight_kg: isPoultryBatch
+        ? (animal.weight_kg == null ? null : Math.round(animal.weight_kg * 1000))
+        : animal.weight_kg,
       status: animal.status,
       notes: animal.notes || '',
       identification_code: animal.identification_code || '',
@@ -187,11 +191,17 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   async function saveEdit(animalId: string) {
     setLoading(true)
     try {
+      const typeSlug = animals.find(a => a.id === animalId)?.animal_types?.slug
       const payload: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(editData)) {
         if (key === 'sex' && (value === '' || value === null)) continue
         if (value !== '' && value !== null) {
-          payload[key] = key === 'weight_kg' ? parseFloat(String(value)) : value
+          if (key === 'weight_kg') {
+            const n = parseFloat(String(value))
+            payload[key] = typeSlug === 'aves-de-corral' ? (n / 1000) : n
+          } else {
+            payload[key] = value
+          }
         } else {
           payload[key] = null
         }
@@ -484,7 +494,15 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             </select>
                           </div>
                           <EditField label="Color" name="color" value={editData.color} onChange={(v) => setEditData(p => ({...p, color: v}))} />
-                          <EditField label="Peso (kg)" name="weight_kg" value={editData.weight_kg} onChange={(v) => setEditData(p => ({...p, weight_kg: v}))} type="number" />
+                          <EditField
+                            label={animal.animal_types?.slug === 'aves-de-corral' ? 'Peso (g)' : 'Peso (kg)'}
+                            name="weight_kg"
+                            value={editData.weight_kg}
+                            onChange={(v) => setEditData(p => ({ ...p, weight_kg: v }))}
+                            type="number"
+                            step={animal.animal_types?.slug === 'aves-de-corral' ? '1' : '0.01'}
+                            min={animal.animal_types?.slug === 'aves-de-corral' ? 0 : undefined}
+                          />
                           <EditField label="Identificación" name="identification_code" value={editData.identification_code} onChange={(v) => setEditData(p => ({...p, identification_code: v}))} />
                           <div>
                             <label className="block text-xs text-muted mb-1">Estado</label>
@@ -522,13 +540,20 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                           <Detail label="Raza" value={animal.breed} />
                           <Detail label="Sexo" value={animal.sex} />
                           <Detail label="Color" value={animal.color} />
-                          <Detail label="Peso" value={animal.weight_kg ? `${animal.weight_kg} kg` : null} />
+                          <Detail
+                            label="Peso"
+                            value={animal.weight_kg != null
+                              ? (animal.animal_types?.slug === 'aves-de-corral'
+                                ? `${Math.round(animal.weight_kg * 1000)} g`
+                                : `${animal.weight_kg} kg`)
+                              : null}
+                          />
                           <Detail label="Nacimiento" value={formatDate(animal.birth_date)} />
                           <Detail label="Adquisición" value={animal.acquisition_type} />
                           <Detail label="F. Adquisición" value={formatDate(animal.acquisition_date)} />
                           <Detail label="Registrado" value={formatDate(animal.created_at)} />
                           {animal.metadata && Object.entries(animal.metadata)
-                            .filter(([key]) => key !== 'padre_id')  // hide raw UUID
+                            .filter(([key]) => key !== 'padre_id' && key !== 'peso_promedio_g')  // hide raw UUID + legacy derived weight
                             .map(([key, value]) => (
                               <Detail key={key}
                                 label={key === 'padre_nombre' ? 'Padre' : key.replace(/_/g, ' ')}
@@ -778,9 +803,9 @@ function Detail({ label, value }: { label: string; value: string | null | undefi
   )
 }
 
-function EditField({ label, name, value, onChange, type = 'text' }: {
+function EditField({ label, name, value, onChange, type = 'text', step, min }: {
   label: string; name: string; value: string | number | null | undefined
-  onChange: (v: string) => void; type?: string
+  onChange: (v: string) => void; type?: string; step?: string; min?: string | number
 }) {
   const fieldId = `edit-field-${name}`
   return (
@@ -792,7 +817,8 @@ function EditField({ label, name, value, onChange, type = 'text' }: {
         type={type}
         value={String(value || '')}
         onChange={(e) => onChange(e.target.value)}
-        step={type === 'number' ? '0.01' : undefined}
+        step={type === 'number' ? (step ?? '0.01') : undefined}
+        min={min}
         className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
       />
     </div>

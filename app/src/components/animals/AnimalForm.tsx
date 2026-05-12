@@ -85,7 +85,7 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Fecha de nacimiento / ingreso', name: 'birth_date', type: 'date' },
     { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Anillo o código de lote' },
     { label: 'Color de plumaje', name: 'color', type: 'text', placeholder: 'Ej: Rojo, Blanco' },
-    { label: 'Peso promedio (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 0.5' },
+    { label: 'Peso promedio (g)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 850' },
     { label: 'Número inicial de aves', name: 'meta_cantidad', type: 'number', required: true, placeholder: 'Ej: 100' },
     { label: 'Mortalidad esperada (%)', name: 'meta_mortalidad_esperada_pct', type: 'number', placeholder: 'Ej: 5' },
     { label: 'Etapa productiva', name: 'meta_etapa', type: 'select', required: true, options: ['pollitos', 'levante', 'producción/adultos'] },
@@ -238,10 +238,11 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
       if (key.startsWith('meta_')) {
         metadata[key.replace('meta_', '')] = value
       } else if (baseFields.includes(key)) {
-        animalData[key] = key === 'weight_kg' ? parseFloat(value as string) : value
-        
-        if (key === 'weight_kg' && typeSlug === 'aves-de-corral') {
-          metadata['peso_promedio_g'] = parseFloat(value as string) * 1000
+        if (key === 'weight_kg') {
+          const n = parseFloat(value as string)
+          animalData[key] = typeSlug === 'aves-de-corral' ? (n / 1000) : n
+        } else {
+          animalData[key] = value
         }
       }
     }
@@ -507,9 +508,18 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                     <textarea id={field.name} name={field.name} rows={3} placeholder={field.placeholder}
                       className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none" />
                   ) : (
-                    <input id={field.name} name={field.name} type={field.type} required={field.required}
-                      placeholder={field.placeholder} step={field.type === 'number' ? '0.01' : undefined}
-                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                    <input
+                      id={field.name}
+                      name={field.name}
+                      type={field.type}
+                      required={field.required}
+                      placeholder={field.placeholder}
+                      step={field.type === 'number'
+                        ? (typeSlug === 'aves-de-corral' && field.name === 'weight_kg' ? '1' : '0.01')
+                        : undefined}
+                      min={typeSlug === 'aves-de-corral' && field.name === 'weight_kg' ? '0' : undefined}
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    />
                   )}
                 </div>
               )

@@ -35,6 +35,7 @@ interface ReproEvent {
   id: string; animal_id: string; event_type: string; event_date: string
   expected_due_date: string | null; notes: string | null; created_at: string
   sire_id?: string | null; sire_name?: string | null
+  quantity?: number | null
   animals?: { name: string | null; identification_code: string | null; animal_types: { name: string; slug: string } }
 }
 
@@ -252,6 +253,7 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
   const [error, setError] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
+  const [eventMode, setEventMode] = useState<'reproductivo' | 'lote_avicola'>('reproductivo')
   const [animalId, setAnimalId] = useState('')
   const [eventType, setEventType] = useState('monta_natural')
   const [eventDate, setEventDate] = useState(toIso(new Date()))
@@ -271,7 +273,7 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
 
   // Fetch sires when monta_natural + animal selected
   useEffect(() => {
-    if (eventType !== 'monta_natural' || !animalId) { setSires([]); setSireId(''); return }
+    if (eventMode !== 'reproductivo' || eventType !== 'monta_natural' || !animalId) { setSires([]); setSireId(''); return }
     const slug = animals.find(a => a.id === animalId)?.animal_types?.slug
     if (!slug) return
     setLoadingSires(true)
@@ -280,7 +282,7 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
       .then(d => { if (Array.isArray(d)) setSires(d) })
       .catch(() => { })
       .finally(() => setLoadingSires(false))
-  }, [eventType, animalId, animals])
+  }, [eventMode, eventType, animalId, animals])
 
   function getSpeciesSlug(aid: string) {
     return animals.find(a => a.id === aid)?.animal_types?.slug || ''
@@ -299,7 +301,8 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
           animal_id: animalId,
           event_type: eventType,
           event_date: eventDate,
-          notes: eventType === 'muerte' ? `[Cantidad: ${deathCount}] ${notes}` : notes || null,
+          notes: notes || null,
+          quantity: eventType === 'muerte' ? deathCount : null,
           species_slug: getSpeciesSlug(animalId),
           sire_id: (eventType === 'monta_natural' && sireId) ? sireId : null,
         })
@@ -329,11 +332,12 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
     ? calcFechaParto(new Date(eventDate + 'T12:00:00'), getSpeciesSlug(animalId))
     : null
 
-  const species = getSpeciesSlug(animalId)
-  const isLot = species === 'aves-de-corral' || species === 'patos'
-
-  const showSireSelector = eventType === 'monta_natural' && !!animalId && !isLot
+  const showSireSelector = eventMode === 'reproductivo' && eventType === 'monta_natural' && !!animalId
   const showDeathCount = eventType === 'muerte' && !!animalId
+
+  const availableEventTypes = eventMode === 'lote_avicola'
+    ? REPRODUCTIVE_EVENT_TYPES.filter(t => t.value === 'muerte')
+    : REPRODUCTIVE_EVENT_TYPES.filter(t => t.value !== 'muerte')
 
   return (
     <div className="space-y-4">
@@ -356,19 +360,42 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
         <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-2xl p-5 space-y-4">
           {error && <div className="bg-danger/10 border border-danger/20 text-danger rounded-xl px-4 py-2 text-sm">{error}</div>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Modo */}
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1">Modo</label>
+              <select
+                value={eventMode}
+                onChange={e => {
+                  const next = e.target.value as 'reproductivo' | 'lote_avicola'
+                  setEventMode(next)
+                  setAnimalId('')
+                  setSireId('')
+                  setNotes('')
+                  setDeathCount(1)
+                  setEventType(next === 'lote_avicola' ? 'muerte' : 'monta_natural')
+                }}
+                className="input-calc"
+              >
+                <option value="reproductivo">Evento reproductivo (hembras)</option>
+                <option value="lote_avicola">Evento de lote avicola</option>
+              </select>
+            </div>
+
             {/* Hembra selector */}
             <div>
               <label className="block text-xs font-medium text-muted mb-1">
-                {isLot ? 'Lote de Aves' : 'Animal (hembra)'}
+                {eventMode === 'lote_avicola' ? 'Lote de Aves' : 'Animal (hembra)'}
               </label>
               <select value={animalId} onChange={e => { setAnimalId(e.target.value); setSireId('') }} className="input-calc" required>
                 <option value="">Seleccionar...</option>
                 {animals.filter(a => {
-                  const sex = a.sex?.toLowerCase();
-                  if (sex === 'macho') return false; // Eliminar machos explícitamente
-                  if (eventType === 'muerte') return true; 
-                  if (a.animal_types?.slug === 'aves-de-corral' || a.animal_types?.slug === 'patos') return true; 
-                  return sex === 'hembra';
+                  if (eventMode === 'lote_avicola') {
+                    return a.animal_types?.slug === 'aves-de-corral'
+                  }
+                  // Reproductivo: solo hembras individuales (no lote avicola)
+                  if (a.animal_types?.slug === 'aves-de-corral') return false
+                  const sex = a.sex?.toLowerCase()
+                  return sex === 'hembra'
                 }).map(a => (
                   <option key={a.id} value={a.id}>
                     {a.name || a.identification_code || 'Sin nombre'} — {a.animal_types?.name} {a.sex ? `(${a.sex})` : ''}
@@ -378,12 +405,19 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
             </div>
 
             {/* Tipo evento */}
-            <div>
-              <label className="block text-xs font-medium text-muted mb-1">Tipo de Evento</label>
-              <select value={eventType} onChange={e => { setEventType(e.target.value); setSireId('') }} className="input-calc">
-                {REPRODUCTIVE_EVENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </div>
+            {eventMode === 'reproductivo' ? (
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Tipo de Evento</label>
+                <select value={eventType} onChange={e => { setEventType(e.target.value); setSireId('') }} className="input-calc">
+                  {availableEventTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">Tipo de Evento</label>
+                <input className="input-calc" value={availableEventTypes[0]?.label || 'Muerte / Baja'} readOnly />
+              </div>
+            )}
 
             {/* Sire selector — monta natural only */}
             {showSireSelector && (
@@ -428,7 +462,7 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
         </form>
       )}
 
-      {events.length > 0 ? (
+          {events.length > 0 ? (
         <div className="space-y-2">
           {events.map(ev => (
             <div key={ev.id} className="bg-surface border border-border rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -450,6 +484,9 @@ function EventosTab({ animals, loadingAnimals, isAdmin }: {
                     <span className="text-primary font-medium">Parto est.: {fmtDate(ev.expected_due_date)}</span>
                   )}
                   {ev.sire_name && <span className="font-medium text-foreground">Semental: {ev.sire_name}</span>}
+                  {ev.event_type === 'muerte' && typeof ev.quantity === 'number' && (
+                    <span className="font-medium text-danger">Cantidad: {ev.quantity}</span>
+                  )}
                   {ev.notes && <span className="italic truncate max-w-[200px]">{ev.notes}</span>}
                 </div>
               </div>
