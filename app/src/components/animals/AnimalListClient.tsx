@@ -119,7 +119,65 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   const [editData, setEditData] = useState<Record<string, string | number | null>>({})
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [poultryCounts, setPoultryCounts] = useState<Record<string, { loading: boolean; initial: number | null; deaths: number | null; remaining: number | null }>>({})
   const router = useRouter()
+
+  function parseInitialPoultryCount(a: Animal): number | null {
+    const raw = (a.metadata as Record<string, unknown> | null | undefined)?.cantidad
+    const n = typeof raw === 'number' ? raw : parseInt(String(raw ?? ''), 10)
+    return Number.isFinite(n) ? n : null
+  }
+
+  useEffect(() => {
+    if (!expandedId) return
+    const a = animals.find(x => x.id === expandedId)
+    if (!a) return
+    if (a.animal_types?.slug !== 'aves-de-corral') return
+
+    const initial = parseInitialPoultryCount(a)
+    setPoultryCounts(prev => ({
+      ...prev,
+      [expandedId]: {
+        loading: true,
+        initial,
+        deaths: prev[expandedId]?.deaths ?? null,
+        remaining: prev[expandedId]?.remaining ?? null,
+      }
+    }))
+
+    fetch(`/api/reproductive-events?animal_id=${encodeURIComponent(expandedId)}`)
+      .then(r => r.json())
+      .then((events: unknown) => {
+        if (!Array.isArray(events)) return
+        const deaths = events.reduce((sum: number, ev: any) => {
+          if (ev?.event_type !== 'muerte') return sum
+          const qRaw = ev?.quantity
+          const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
+          return sum + q
+        }, 0)
+        const remaining = initial == null ? null : (initial - deaths)
+        setPoultryCounts(prev => ({
+          ...prev,
+          [expandedId]: {
+            loading: false,
+            initial,
+            deaths,
+            remaining: remaining == null ? null : Math.max(remaining, 0),
+          }
+        }))
+      })
+      .catch(() => {
+        setPoultryCounts(prev => ({
+          ...prev,
+          [expandedId]: {
+            loading: false,
+            initial,
+            deaths: null,
+            remaining: null,
+          }
+        }))
+      })
+  }, [expandedId, animals])
 
   const filteredTypes = useMemo(() => {
     if (!filterCategory) return types
@@ -548,12 +606,43 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                                 : `${animal.weight_kg} kg`)
                               : null}
                           />
+                          {animal.animal_types?.slug === 'aves-de-corral' && (
+                            <>
+                              <Detail
+                                label="Cantidad inicial"
+                                value={(() => {
+                                  const initial = parseInitialPoultryCount(animal)
+                                  return initial == null ? null : String(initial)
+                                })()}
+                              />
+                              <Detail
+                                label="Bajas acumuladas"
+                                value={(() => {
+                                  const c = poultryCounts[animal.id]
+                                  if (!c || c.loading) return 'Calculando...'
+                                  return c.deaths == null ? null : String(c.deaths)
+                                })()}
+                              />
+                              <Detail
+                                label="Cantidad actual"
+                                value={(() => {
+                                  const c = poultryCounts[animal.id]
+                                  if (!c || c.loading) return 'Calculando...'
+                                  return c.remaining == null ? null : String(c.remaining)
+                                })()}
+                              />
+                            </>
+                          )}
                           <Detail label="Nacimiento" value={formatDate(animal.birth_date)} />
                           <Detail label="Adquisición" value={animal.acquisition_type} />
                           <Detail label="F. Adquisición" value={formatDate(animal.acquisition_date)} />
                           <Detail label="Registrado" value={formatDate(animal.created_at)} />
                           {animal.metadata && Object.entries(animal.metadata)
-                            .filter(([key]) => key !== 'padre_id' && key !== 'peso_promedio_g')  // hide raw UUID + legacy derived weight
+                            .filter(([key]) => {
+                              if (key === 'padre_id' || key === 'peso_promedio_g') return false
+                              if (animal.animal_types?.slug === 'aves-de-corral' && key === 'cantidad') return false
+                              return true
+                            })  // hide raw UUID + legacy derived weight + poultry initial count (shown explicitly)
                             .map(([key, value]) => (
                               <Detail key={key}
                                 label={key === 'padre_nombre' ? 'Padre' : key.replace(/_/g, ' ')}
