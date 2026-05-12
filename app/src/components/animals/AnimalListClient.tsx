@@ -1,9 +1,17 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Search, Filter, X, ChevronDown, ChevronUp, Pencil, Trash2, Save, XCircle } from 'lucide-react'
+import {
+  Search, Filter, X, ChevronDown, ChevronUp, Pencil, Trash2, Save, XCircle,
+  Scale, History, TrendingUp, Calendar, Loader2, Plus
+} from 'lucide-react'
+import { Chart, registerables } from 'chart.js'
+
+if (typeof window !== 'undefined') {
+  Chart.register(...registerables)
+}
 
 interface Animal {
   id: string
@@ -527,6 +535,21 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                                 value={String(value)} />
                             ))}
                         </div>
+                        {/* Weight History Section — Only for specific types */}
+                        {['bovino', 'equino', 'porcino', 'caprino'].includes(animal.animal_types?.slug) && (
+                          <div className="mt-6 pt-6 border-t border-border">
+                            <WeightHistorySection
+                              animalId={animal.id}
+                              isAdmin={isAdmin}
+                              onWeightUpdated={(newWeight) => {
+                                setAnimals(prev => prev.map(a =>
+                                  a.id === animal.id ? { ...a, weight_kg: newWeight } : a
+                                ))
+                              }}
+                            />
+                          </div>
+                        )}
+
                         {animal.notes && (
                           <div className="mt-3 pt-3 border-t border-border">
                             <p className="text-xs text-muted mb-1">Notas</p>
@@ -545,6 +568,201 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
         <div className="bg-surface border border-border rounded-2xl p-8 text-center">
           <Search className="w-8 h-8 text-muted/30 mx-auto mb-2" />
           <p className="text-sm text-muted">No se encontraron resultados con los filtros actuales</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
+  animalId: string; isAdmin: boolean; onWeightUpdated: (w: number) => void
+}) {
+  const [weights, setWeights] = useState<{ id: string; weight_kg: number; recorded_at: string; notes: string | null }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [newWeight, setNewWeight] = useState('')
+  const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0])
+  const [newNotes, setNewNotes] = useState('')
+  const chartRef = useRef<HTMLCanvasElement>(null)
+  const chartInstance = useRef<Chart | null>(null)
+
+  useEffect(() => {
+    fetch(`/api/animals/${animalId}/weights`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d.data)) setWeights(d.data) })
+      .finally(() => setLoading(false))
+  }, [animalId])
+
+  useEffect(() => {
+    if (!chartRef.current || weights.length === 0) return
+    const ctx = chartRef.current.getContext('2d')
+    if (!ctx) return
+
+    if (chartInstance.current) chartInstance.current.destroy()
+
+    chartInstance.current = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: weights.map(w => {
+          const d = new Date(w.recorded_at)
+          return d.toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })
+        }),
+        datasets: [{
+          label: 'Peso (kg)',
+          data: weights.map(w => w.weight_kg),
+          borderColor: '#61810b',
+          backgroundColor: '#61810b22',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#61810b'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: false, grid: { color: '#e2e8f033' } },
+          x: { grid: { display: false } }
+        }
+      }
+    })
+
+    return () => chartInstance.current?.destroy()
+  }, [weights])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newWeight || !newDate) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/animals/${animalId}/weights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weight_kg: parseFloat(newWeight),
+          recorded_at: newDate,
+          notes: newNotes
+        })
+      })
+      if (res.ok) {
+        const result = await res.json()
+        const updatedWeights = [...weights, result.data].sort((a, b) =>
+          new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
+        )
+        setWeights(updatedWeights)
+        onWeightUpdated(parseFloat(newWeight))
+        setShowForm(false)
+        setNewWeight('')
+        setNewNotes('')
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <Scale className="w-4 h-4 text-primary" />
+          Historial de Peso
+        </h4>
+        {isAdmin && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="text-xs font-medium text-primary hover:text-primary-dark flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-lg transition-colors"
+          >
+            {showForm ? <X className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+            {showForm ? 'Cancelar' : 'Registrar Peso'}
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="bg-background border border-border rounded-xl p-4 animate-scale-in space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-muted uppercase mb-1">Peso (kg)</label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={newWeight}
+                onChange={e => setNewWeight(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-muted uppercase mb-1">Fecha</label>
+              <input
+                type="date"
+                required
+                value={newDate}
+                onChange={e => setNewDate(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold text-muted uppercase mb-1">Notas (opcional)</label>
+            <input
+              type="text"
+              value={newNotes}
+              onChange={e => setNewNotes(e.target.value)}
+              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              placeholder="Ej: Destete, cambio de lote..."
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-dark transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Guardar Registro
+          </button>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-6 text-muted"><Loader2 className="w-5 h-5 animate-spin" /></div>
+      ) : weights.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-background border border-border rounded-xl p-3 h-48 relative">
+            <canvas ref={chartRef}></canvas>
+          </div>
+          <div className="bg-background border border-border rounded-xl overflow-hidden flex flex-col h-48">
+            <div className="px-3 py-2 border-b border-border bg-surface text-[10px] font-bold uppercase text-muted flex items-center gap-2">
+              <History className="w-3 h-3" /> Últimos registros
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {[...weights].reverse().map(w => (
+                <div key={w.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-surface transition-colors">
+                  <div>
+                    <p className="text-xs font-bold text-foreground">{w.weight_kg} kg</p>
+                    <p className="text-[10px] text-muted">{new Date(w.recorded_at).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: '2-digit' })}</p>
+                  </div>
+                  {w.notes && (
+                    <div className="group relative">
+                      <TrendingUp className="w-3 h-3 text-primary/40" />
+                      <span className="absolute bottom-full right-0 mb-2 w-32 p-2 bg-foreground text-background text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        {w.notes}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-surface/50 border border-dashed border-border rounded-xl p-8 text-center">
+          <TrendingUp className="w-8 h-8 text-muted/20 mx-auto mb-2" />
+          <p className="text-xs text-muted">No hay historial de peso registrado para este animal.</p>
         </div>
       )}
     </div>
