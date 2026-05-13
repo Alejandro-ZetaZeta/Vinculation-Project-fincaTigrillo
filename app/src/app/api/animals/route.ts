@@ -17,11 +17,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const sexFilter = searchParams.get('sex')        // e.g. 'macho'
     const typeSlug  = searchParams.get('type_slug')  // e.g. 'bovino'
+    const statusFilter = searchParams.get('status')  // e.g. 'all' o 'activo'
 
     let query = insforge.database
       .from('animals')
       .select('*, animal_types(id, name, slug, animal_categories(id, name, slug))')
-      .eq('status', 'activo')
+
+    if (statusFilter !== 'all') {
+      query = query.eq('status', statusFilter || 'activo')
+    }
 
     if (sexFilter)  query = query.eq('sex', sexFilter)
 

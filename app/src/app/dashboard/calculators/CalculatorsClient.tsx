@@ -1,10 +1,19 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Calculator, Baby, Wheat, Egg, HeartPulse, Scale,
-  Plus, Trash2, Calendar, Info, Loader2, ChevronUp, Lock
+  Plus, Trash2, Calendar, Info, Loader2, ChevronUp, Lock, Settings2
 } from 'lucide-react'
+
+// ─── Sistema de unidades de peso ───────────────────────────────
+export type WeightUnit = 'gr' | 'kg' | 'lb'
+
+export const WEIGHT_UNITS: { value: WeightUnit; label: string; symbol: string; fromKg: (v: number) => number; toKg: (v: number) => number }[] = [
+  { value: 'gr',     label: 'Gramos',      symbol: 'g',   fromKg: v => v * 1000, toKg: v => v / 1000 },
+  { value: 'kg',     label: 'Kilogramos',  symbol: 'kg',  fromKg: v => v,        toKg: v => v },
+  { value: 'lb',     label: 'Libras',      symbol: 'lb',  fromKg: v => v * 2.20462, toKg: v => v / 2.20462 },
+]
 import {
   calcFechaParto, calcConsumoDiario, calcSacosSemanales,
   calcProduccionHuevosSemanal, calcIntervaloEntreParto,
@@ -140,18 +149,54 @@ function CalcParto() {
 
 /* ─── Calculadora de Alimento ─── */
 function CalcAlimento() {
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg')
+  const prevUnitRef = useRef(weightUnit)
+
   const [species, setSpecies] = useState('bovino')
   const [count, setCount] = useState(10)
-  const [weight, setWeight] = useState(450)
-  const [sackKg, setSackKg] = useState(DEFAULT_SACK_WEIGHT_KG)
+  const [weightInUnit, setWeightInUnit] = useState(450)
+  const [sackInUnit, setSackInUnit] = useState(DEFAULT_SACK_WEIGHT_KG)
 
-  const daily = calcConsumoDiario(weight, species)
-  const sacks = calcSacosSemanales(count, daily, sackKg)
-  const totalKg = count * daily * 7
+  useEffect(() => {
+    if (prevUnitRef.current !== weightUnit) {
+      const oldDef = WEIGHT_UNITS.find(u => u.value === prevUnitRef.current)!
+      const newDef = WEIGHT_UNITS.find(u => u.value === weightUnit)!
+      
+      const wKg = oldDef.toKg(weightInUnit)
+      const sKg = oldDef.toKg(sackInUnit)
+      
+      setWeightInUnit(Number(newDef.fromKg(wKg).toFixed(2)))
+      setSackInUnit(Number(newDef.fromKg(sKg).toFixed(2)))
+      
+      prevUnitRef.current = weightUnit
+    }
+  }, [weightUnit, weightInUnit, sackInUnit])
+
+  const unitDef = WEIGHT_UNITS.find(u => u.value === weightUnit)!
+  const weightKg = unitDef.toKg(weightInUnit)
+  const sackKg   = unitDef.toKg(sackInUnit)
+
+  const dailyKg  = calcConsumoDiario(weightKg, species)
+  const dailyU   = unitDef.fromKg(dailyKg)
+  const totalKgW = count * dailyKg * 7
+  const totalU   = unitDef.fromKg(totalKgW)
+  const sacks    = calcSacosSemanales(count, dailyKg, sackKg)
+
+  const sym = unitDef.symbol
 
   return (
     <CalcCard title="Consumo de Alimento" icon={<Wheat className="w-5 h-5 text-primary" />}
-      hint="Basado en % Materia Seca Ingerida (DMI)">
+      hint={`Basado en % Materia Seca Ingerida (DMI)`}>
+      <div className="flex gap-2 bg-surface border border-border p-1.5 rounded-xl w-fit mb-1">
+        {WEIGHT_UNITS.map(u => (
+          <button key={u.value} onClick={() => setWeightUnit(u.value)}
+            className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+              weightUnit === u.value ? 'bg-primary text-white shadow-sm' : 'text-muted hover:bg-background'
+            }`}>
+            {u.label}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-muted mb-1">Especie</label>
@@ -160,12 +205,14 @@ function CalcAlimento() {
           </select>
         </div>
         <NumField label="Cantidad animales" value={count} onChange={setCount} min={1} />
-        {species !== 'aves-de-corral' && <NumField label="Peso promedio (kg)" value={weight} onChange={setWeight} min={1} />}
-        <NumField label="Peso saco (kg)" value={sackKg} onChange={setSackKg} min={1} />
+        {species !== 'aves-de-corral' && (
+          <NumField label={`Peso promedio (${sym})`} value={weightInUnit} onChange={setWeightInUnit} min={0} />
+        )}
+        <NumField label={`Peso saco (${sym})`} value={sackInUnit} onChange={setSackInUnit} min={0} />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-        <ResultBox label="kg/animal/día" value={`${daily.toFixed(2)} kg`} />
-        <ResultBox label="Total semanal" value={`${totalKg.toFixed(1)} kg`} />
+        <ResultBox label={`${sym}/animal/día`} value={`${dailyU.toFixed(2)} ${sym}`} />
+        <ResultBox label={`Total semanal`}     value={`${totalU.toFixed(1)} ${sym}`} />
         <div className="col-span-2 md:col-span-1">
           <ResultBox label="Sacos/semana" value={`${sacks}`} accent />
         </div>

@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, PawPrint, ClipboardList, Leaf,
-  Menu, X, Users, ListTodo, Calculator, FileText, Syringe
+  Menu, X, Users, ListTodo, Calculator, FileText, Brain,
+  ChevronLeft, ChevronRight, PanelLeft, PanelLeftClose, Syringe
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const allNavItems = [
   { href: '/dashboard',            label: 'Inicio',              icon: LayoutDashboard, adminOnly: false, viewerOnly: false },
@@ -23,7 +25,21 @@ const allNavItems = [
 export function Sidebar({ userRole }: { userRole: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const isAdmin = userRole === 'admin'
+
+  useEffect(() => {
+    const wrapper = document.getElementById('main-content-wrapper')
+    if (wrapper) {
+      if (isCollapsed) {
+        wrapper.classList.remove('md:ml-64')
+        wrapper.classList.add('md:ml-[72px]')
+      } else {
+        wrapper.classList.remove('md:ml-[72px]')
+        wrapper.classList.add('md:ml-64')
+      }
+    }
+  }, [isCollapsed])
 
   const navItems = allNavItems.filter(item => {
     if (item.adminOnly && !isAdmin) return false
@@ -64,32 +80,50 @@ export function Sidebar({ userRole }: { userRole: string }) {
         aria-label="Menú principal de la aplicación"
         className={[
           'sidebar-panel',
-          'fixed inset-y-0 left-0 z-40 w-64 flex flex-col',
+          'fixed inset-y-0 left-0 z-40 flex flex-col transition-all duration-300',
+          isCollapsed ? 'w-[72px]' : 'w-64',
           mobileOpen ? 'translate-x-0 is-open' : '-translate-x-full',
           'md:translate-x-0',
         ].join(' ')}
       >
-        {/* Brand */}
-        <div className="px-5 py-5 border-b border-(--sidebar-border)">
+        {/* Brand & Toggle */}
+        <div className={`px-4 py-5 border-b border-(--sidebar-border) flex ${isCollapsed ? 'flex-col items-center gap-4' : 'items-center justify-between'}`}>
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 group rounded-lg p-1 -m-1"
+            className={`flex items-center gap-3 group rounded-lg p-1 -m-1 ${isCollapsed ? 'justify-center' : ''}`}
             onClick={() => setMobileOpen(false)}
             aria-label="Finca Tigrillo — Ir al inicio"
           >
-            <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/25 transition-colors">
-              <Leaf className="w-4.5 h-4.5 text-primary" aria-hidden="true" />
+            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors overflow-hidden">
+              <Image
+                src="/eloyAocelote1.png"
+                alt="Logo"
+                width={28}
+                height={28}
+                className="object-contain"
+              />
             </div>
-            <div>
-              <p className="font-display font-700 text-sm text-foreground leading-tight tracking-tight">Finca Tigrillo</p>
-              <p className="text-[11px] text-muted leading-tight mt-0.5">Gestión Ganadera</p>
-            </div>
+            {!isCollapsed && (
+              <div className="whitespace-nowrap opacity-100 transition-opacity duration-300">
+                <p className="font-display font-700 text-sm text-foreground leading-tight tracking-tight">Finca Tigrillo</p>
+                <p className="text-[11px] text-muted leading-tight mt-0.5">Gestión Ganadera</p>
+              </div>
+            )}
           </Link>
+          
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hidden md:flex p-1.5 rounded-lg text-muted hover:text-foreground bg-muted/10 hover:bg-muted/20 border border-transparent hover:border-border transition-all items-center justify-center shrink-0"
+            aria-label={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}
+            title={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}
+          >
+            {isCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+          </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto" aria-label="Secciones principales">
-          <p className="text-[10px] font-semibold text-muted uppercase tracking-widest mb-2 px-3">Menú</p>
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden" aria-label="Secciones principales">
+          {!isCollapsed && <p className="text-[10px] font-semibold text-muted uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Menú</p>}
 
           {navItems.map((item) => {
             const isActive = pathname === item.href ||
@@ -103,14 +137,19 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 onClick={() => setMobileOpen(false)}
                 aria-current={isActive ? 'page' : undefined}
                 className={[
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all',
+                  'flex items-center gap-3 py-2.5 rounded-xl text-sm transition-all relative group',
                   isActive ? 'nav-item-active' : 'nav-item-idle',
+                  isCollapsed ? 'px-0 justify-center' : 'px-3'
                 ].join(' ')}
+                title={isCollapsed ? item.label : undefined}
               >
                 <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span>{item.label}</span>
-                {isActive && (
+                {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                {isActive && !isCollapsed && (
                   <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden="true" />
+                )}
+                {isActive && isCollapsed && (
+                  <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden="true" />
                 )}
               </Link>
             )
@@ -118,17 +157,19 @@ export function Sidebar({ userRole }: { userRole: string }) {
         </nav>
 
         {/* User role footer */}
-        <div className="px-3 py-4 border-t border-(--sidebar-border)">
-          <div className="px-3 py-2.5 rounded-xl bg-primary/8 flex items-center gap-2.5">
+        <div className={`px-3 py-4 border-t border-(--sidebar-border) ${isCollapsed ? 'flex justify-center' : ''}`}>
+          <div className={`rounded-xl bg-primary/8 flex items-center ${isCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5 gap-2.5'}`} title={isCollapsed ? `Rol: ${isAdmin ? 'Administrador' : 'Estudiante'}` : undefined}>
             <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-              <Leaf className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+              <Image src="/eloyAocelote1.png" alt="Role" width={16} height={16} className="object-contain opacity-80" />
             </div>
-            <div>
-              <p className="text-[10px] text-muted leading-none mb-0.5">Rol actual</p>
-              <p className="text-xs font-semibold text-primary capitalize">
-                {isAdmin ? 'Administrador' : 'Estudiante'}
-              </p>
-            </div>
+            {!isCollapsed && (
+              <div className="whitespace-nowrap">
+                <p className="text-[10px] text-muted leading-none mb-0.5">Rol actual</p>
+                <p className="text-xs font-semibold text-primary capitalize">
+                  {isAdmin ? 'Administrador' : 'Estudiante'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </aside>

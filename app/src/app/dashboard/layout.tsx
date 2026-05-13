@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth/actions'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
+import { EntryAnimation } from '@/components/layout/EntryAnimation'
 
 /*
   DashboardShell reads cookies via getCurrentUser — this makes it dynamic.
@@ -14,18 +15,23 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!user) redirect('/login')
 
   return (
-    <div className="min-h-screen flex bg-background">
-      <a href="#main-content" className="skip-link">
+    <div className="min-h-screen flex bg-background print:block print:bg-white print:min-h-0 print:h-auto">
+      <EntryAnimation />
+      <a href="#main-content" className="skip-link print:hidden">
         Saltar al contenido principal
       </a>
 
-      <Sidebar userRole={user.role} />
+      <div className="print:hidden">
+        <Sidebar userRole={user.role} />
+      </div>
 
-      <div className="flex-1 flex flex-col min-h-screen min-w-0 md:ml-64">
-        <Header userName={user.fullName} userRole={user.role} userEmail={user.email} />
+      <div id="main-content-wrapper" className="flex-1 flex flex-col min-h-screen min-w-0 md:ml-64 print:ml-0 print:block print:min-h-0 print:h-auto transition-all duration-300">
+        <div className="print:hidden">
+          <Header userName={user.fullName} userRole={user.role} userEmail={user.email} />
+        </div>
         <main
           id="main-content"
-          className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden"
+          className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden print:overflow-visible print:p-0 print:block"
           tabIndex={-1}
         >
           {children}

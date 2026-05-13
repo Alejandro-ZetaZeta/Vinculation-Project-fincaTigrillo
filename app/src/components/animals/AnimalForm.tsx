@@ -49,6 +49,8 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Propósito', name: 'meta_proposito', type: 'select_sex_bovino', options: [] },
     { label: 'Número de partos', name: 'meta_numero_partos', type: 'number_hembra_only', placeholder: '0' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
+    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'equino': [
@@ -63,6 +65,8 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Estado de doma', name: 'meta_doma', type: 'select', options: ['domado', 'en proceso', 'sin domar'] },
     { label: 'Alzada (cm)', name: 'meta_alzada_cm', type: 'number', placeholder: 'Ej: 150' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
+    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'porcino': [
@@ -76,6 +80,8 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Etapa', name: 'meta_etapa', type: 'select', options: ['lechón', 'levante', 'ceba', 'reproductor'] },
     { label: 'Número de camada', name: 'meta_numero_camada', type: 'number', placeholder: '0' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
+    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'aves-de-corral': [
@@ -92,6 +98,8 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['postura', 'engorde', 'doble propósito'] },
     { label: 'Producción huevos/semana', name: 'meta_produccion_huevos', type: 'number', placeholder: 'Ej: 5' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
+    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'patos': [

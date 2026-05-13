@@ -43,6 +43,7 @@ app/next-env.d.ts
 app/.insforge
 app/.agents
 .agents
+.claude
 app/.agents
 app/.augment
 .claude
