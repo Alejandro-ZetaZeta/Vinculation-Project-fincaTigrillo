@@ -564,10 +564,10 @@ export default function ReportsPage() {
         </div>
       )}
 
-      <table className="w-full print-area">
-        <thead className="hidden print:table-header-group">
-          <tr>
-            <th className="pb-6">
+      <div className="w-full print:table print-area">
+        <div className="hidden print:table-header-group">
+          <div className="print:table-row">
+            <div className="print:table-cell pb-6">
               <div className="flex items-center justify-between border-b-2 border-border/60 pb-4 text-left">
                 <div className="flex items-center gap-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -582,12 +582,12 @@ export default function ReportsPage() {
                   <p className="uppercase font-mono font-bold mt-1">REF: {filterModule}_{filterPeriod}</p>
                 </div>
               </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="print:table-row-group">
-          <tr>
-            <td>
+            </div>
+          </div>
+        </div>
+        <div className="print:table-row-group">
+          <div className="print:table-row">
+            <div className="print:table-cell">
               <div className="space-y-6 md:space-y-8 print:space-y-6">
         {/* Resumen Superior */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 print:grid-cols-4 print:gap-2">
@@ -768,10 +768,10 @@ export default function ReportsPage() {
           </div>
         </div>
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
