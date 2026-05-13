@@ -1,7 +1,7 @@
 'use client'
 
 import { signOut } from '@/lib/auth/actions'
-import { LogOut, User, Sun, Moon } from 'lucide-react'
+import { LogOut, User, Sun, Moon, Palette } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useTheme } from '@/components/ThemeProvider'
 
@@ -14,7 +14,7 @@ interface HeaderProps {
 export function Header({ userName, userRole, userEmail }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const { theme, toggleTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -47,16 +47,25 @@ export function Header({ userName, userRole, userEmail }: HeaderProps) {
       {/* Right actions */}
       <div className="flex items-center gap-1.5">
 
-        {/* Theme toggle */}
+        {/* Theme toggles */}
         <button
-          onClick={toggleTheme}
+          onClick={() => setTheme('uleam')}
+          className={`p-2.5 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center mr-1 ${theme === 'uleam' ? 'bg-primary/10 text-primary' : 'text-muted hover:text-foreground hover:bg-surface-hover'}`}
+          title="Tema Uleam (Material Design 3)"
+          aria-label="Cambiar a tema Uleam"
+        >
+          <Palette className="w-4 h-4" aria-hidden="true" />
+        </button>
+        <button
+          onClick={() => theme === 'dark' ? setTheme('light') : setTheme('dark')}
           className="p-2.5 rounded-xl text-muted hover:text-foreground hover:bg-surface-hover transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           id="theme-toggle"
-          aria-label={theme === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+          aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
         >
-          {theme === 'light'
-            ? <Moon className="w-4 h-4" aria-hidden="true" />
-            : <Sun  className="w-4 h-4" aria-hidden="true" />
+          {theme === 'dark'
+            ? <Sun className="w-4 h-4" aria-hidden="true" />
+            : <Moon className="w-4 h-4" aria-hidden="true" />
           }
         </button>
 

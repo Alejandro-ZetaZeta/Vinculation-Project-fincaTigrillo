@@ -2,14 +2,16 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark'
+type Theme = 'light' | 'dark' | 'uleam'
 
 const ThemeContext = createContext<{
   theme: Theme
   toggleTheme: () => void
+  setTheme: (t: Theme) => void
 }>({
   theme: 'light',
   toggleTheme: () => {},
+  setTheme: () => {},
 })
 
 export function useTheme() {
@@ -22,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('ft-theme') as Theme | null
-    if (stored === 'dark' || stored === 'light') {
+    if (stored === 'dark' || stored === 'light' || stored === 'uleam') {
       setTheme(stored)
     }
     setMounted(true)
@@ -45,7 +47,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   )

@@ -71,6 +71,29 @@
 }
 
 /* ─────────────────────────────────────────────
+   ULEAM (Material Design 3)
+───────────────────────────────────────────── */
+[data-theme="uleam"] {
+  --background:     #fcfcff;
+  --foreground:     #1a1c1e;
+  --primary:        #ba1a1a; /* Uleam Red */
+  --primary-light:  #ff5449;
+  --primary-dark:   #93000a;
+  --accent:         #0055a4; /* Uleam Blue */
+  --accent-light:   #4285f4;
+  --surface:        #ffffff;
+  --surface-hover:  #f0f1f3;
+  --border-color:   #e1e2e5;
+  --muted:          #74777f;
+  --danger:         #ba1a1a;
+  --success:        #2e7d32; /* Uleam Green */
+  --warning:        #b58d00;
+
+  --sidebar-bg:     #fdfbff;
+  --sidebar-border: #e1e2e5;
+}
+
+/* ─────────────────────────────────────────────
    BASE
 ───────────────────────────────────────────── */
 *, *::before, *::after {

@@ -113,6 +113,8 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
       status: animal.status,
       notes: animal.notes || '',
       identification_code: animal.identification_code || '',
+      meta_estado_vacunacion: (animal.metadata?.estado_vacunacion as string) || '',
+      meta_fecha_vacunacion: (animal.metadata?.fecha_vacunacion as string) || '',
     })
     setExpandedId(animal.id)
   }
@@ -126,12 +128,23 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     setLoading(true)
     try {
       const payload: Record<string, unknown> = {}
+      const metadataUpdates: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(editData)) {
-        if (value !== '' && value !== null) {
-          payload[key] = key === 'weight_kg' ? parseFloat(String(value)) : value
+        if (key.startsWith('meta_')) {
+          const metaKey = key.replace('meta_', '')
+          metadataUpdates[metaKey] = value === '' ? null : value
         } else {
-          payload[key] = null
+          if (value !== '' && value !== null) {
+            payload[key] = key === 'weight_kg' ? parseFloat(String(value)) : value
+          } else {
+            payload[key] = null
+          }
         }
+      }
+
+      const animalToEdit = animals.find(a => a.id === animalId)
+      if (animalToEdit) {
+        payload.metadata = { ...(animalToEdit.metadata || {}), ...metadataUpdates }
       }
 
       const res = await fetch(`/api/animals/${animalId}`, {
@@ -145,9 +158,16 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
         setEditData({})
         router.refresh()
         // Optimistic update
-        setAnimals(prev => prev.map(a =>
-          a.id === animalId ? { ...a, ...payload } as Animal : a
-        ))
+        setAnimals(prev => prev.map(a => {
+          if (a.id === animalId) {
+            return { 
+              ...a, 
+              ...payload, 
+              metadata: payload.metadata as Record<string, unknown> 
+            } as Animal
+          }
+          return a
+        }))
       }
     } finally {
       setLoading(false)
@@ -388,6 +408,17 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                               <option value="transferido">Transferido</option>
                             </select>
                           </div>
+                          <div>
+                            <label className="block text-xs text-muted mb-1">Estado Vacunación</label>
+                            <select value={String(editData.meta_estado_vacunacion || '')} onChange={(e) => setEditData(p => ({...p, meta_estado_vacunacion: e.target.value}))}
+                              className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
+                              <option value="">—</option>
+                              <option value="no vacunado">No vacunado</option>
+                              <option value="programado">Programado</option>
+                              <option value="vacunado">Vacunado</option>
+                            </select>
+                          </div>
+                          <EditField label="Fecha Vacunación" name="meta_fecha_vacunacion" value={editData.meta_fecha_vacunacion} onChange={(v) => setEditData(p => ({...p, meta_fecha_vacunacion: v}))} type="date" />
                         </div>
                         <div>
                           <label className="block text-xs text-muted mb-1">Notas</label>
