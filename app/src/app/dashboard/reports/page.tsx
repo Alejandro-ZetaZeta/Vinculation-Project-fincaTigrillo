@@ -316,7 +316,7 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in p-4 md:p-8 print:p-0 print:m-0 print:block print:space-y-4 print:overflow-visible min-w-0 print:w-full print:h-auto">
+    <div className="space-y-6 animate-fade-in p-3 sm:p-4 md:p-8 print:p-0 print:m-0 print:block print:space-y-4 print:overflow-visible min-w-0 w-full print:w-full print:h-auto overflow-x-hidden">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
         <div className="min-w-0">
@@ -443,19 +443,19 @@ export default function ReportsPage() {
           </div>
 
           {/* Input personalizado */}
-          <div className="p-5 border-b border-border">
-            <div className="flex gap-2">
+          <div className="p-4 sm:p-5 border-b border-border">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={userQuestion}
                 onChange={e => setUserQuestion(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && requestAIAnalysis()}
-                placeholder="Haz una pregunta específica sobre los datos de la finca..."
-                className="flex-1 px-4 py-2.5 bg-background border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="Haz una pregunta sobre los datos..."
+                className="flex-1 min-w-0 px-4 py-2.5 bg-background border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
               <button onClick={() => requestAIAnalysis()}
                 disabled={aiLoading}
-                className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-all flex items-center gap-2 text-sm">
+                className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-all flex items-center justify-center gap-2 text-sm shrink-0 w-full sm:w-auto">
                 {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Analizar
               </button>
@@ -602,35 +602,35 @@ export default function ReportsPage() {
         </div>
 
         {/* Gráficos */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 print:grid-cols-2 print:gap-x-6 print:gap-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 print:grid-cols-2 print:gap-x-6 print:gap-y-8">
           <CChart title="Especies" icon={<PieChart className="w-4 h-4" />}>
-            {summaryData.length > 0 ? <canvas ref={pieChartRef} /> : <Empty text="Sin datos" />}
+            {summaryData.length > 0 ? <canvas ref={pieChartRef} className="max-w-full" /> : <Empty text="Sin datos" />}
           </CChart>
           <CChart title="Estado General" icon={<PieChart className="w-4 h-4" />}>
-            {summaryData.length > 0 ? <canvas ref={statusChartRef} /> : <Empty text="Sin datos" />}
+            {summaryData.length > 0 ? <canvas ref={statusChartRef} className="max-w-full" /> : <Empty text="Sin datos" />}
           </CChart>
           <CChart title="Demografía Género" icon={<PieChart className="w-4 h-4" />}>
-            {summaryData.length > 0 ? <canvas ref={sexChartRef} /> : <Empty text="Sin datos" />}
+            {summaryData.length > 0 ? <canvas ref={sexChartRef} className="max-w-full" /> : <Empty text="Sin datos" />}
           </CChart>
           <CChart title="Volumen vs Activos" icon={<BarChart3 className="w-4 h-4" />}>
-            {summaryData.length > 0 ? <canvas ref={barChartRef} /> : <Empty text="Sin datos" />}
+            {summaryData.length > 0 ? <canvas ref={barChartRef} className="max-w-full" /> : <Empty text="Sin datos" />}
           </CChart>
           <CChart title="Estado Vacunación" icon={<ShieldCheck className="w-4 h-4" />}>
-            {summaryData.length > 0 ? <canvas ref={vaccineChartRef} /> : <Empty text="Sin datos" />}
+            {summaryData.length > 0 ? <canvas ref={vaccineChartRef} className="max-w-full" /> : <Empty text="Sin datos" />}
           </CChart>
           <CChart title="Tipo Adquisición" icon={<TrendingUp className="w-4 h-4" />}>
-            {summaryData.length > 0 ? <canvas ref={acqChartRef} /> : <Empty text="Sin datos" />}
+            {summaryData.length > 0 ? <canvas ref={acqChartRef} className="max-w-full" /> : <Empty text="Sin datos" />}
           </CChart>
         </div>
 
         {/* Desglose Analítico */}
         <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-sm print:break-inside-avoid print:mt-8">
-          <div className="bg-primary/5 p-6 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Microscope className="w-5 h-5 text-primary shrink-0" />
-              <h3 className="font-bold text-lg">Desglose Analítico del Inventario</h3>
+          <div className="bg-primary/5 p-4 sm:p-6 border-b border-border flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <Microscope className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
+              <h3 className="font-bold text-base sm:text-lg truncate">Desglose Analítico del Inventario</h3>
             </div>
-            <div className="text-[10px] bg-white px-3 py-1 rounded-full border font-mono font-bold text-primary hidden sm:block">
+            <div className="text-[10px] bg-white px-3 py-1 rounded-full border font-mono font-bold text-primary hidden sm:block shrink-0">
               REPORTE_{filterModule.toUpperCase()}_{filterPeriod.toUpperCase()}
             </div>
           </div>
@@ -778,21 +778,21 @@ export default function ReportsPage() {
 
 function SCard({ label, value, sub, color }: any) {
   return (
-    <div className="bg-surface border border-border p-4 md:p-5 rounded-2xl shadow-sm flex flex-col justify-between print:break-inside-avoid print:shadow-none print:border-border/50 transition-transform hover:scale-[1.02]">
-      <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-muted uppercase tracking-widest truncate">{label}</p>
-      <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${color} my-2 truncate print:text-xl`}>{value}</p>
-      <p className="text-xs sm:text-sm text-muted font-medium truncate">{sub}</p>
+    <div className="bg-surface border border-border p-3 sm:p-4 md:p-5 rounded-2xl shadow-sm flex flex-col justify-between print:break-inside-avoid print:shadow-none print:border-border/50 transition-transform hover:scale-[1.02] min-w-0 overflow-hidden">
+      <p className="text-[9px] sm:text-[11px] md:text-xs font-black text-muted uppercase tracking-widest truncate">{label}</p>
+      <p className={`text-lg sm:text-2xl md:text-3xl font-bold ${color} my-1.5 truncate print:text-xl`}>{value}</p>
+      <p className="text-[10px] sm:text-xs text-muted font-medium truncate">{sub}</p>
     </div>
   );
 }
 
 function CChart({ title, icon, children }: any) {
   return (
-    <div className="bg-surface border border-border p-4 sm:p-5 rounded-2xl flex flex-col shadow-sm print:p-4 print:border print:border-border/50 print:shadow-none print:break-inside-avoid overflow-hidden">
+    <div className="bg-surface border border-border p-3 sm:p-5 rounded-2xl flex flex-col shadow-sm print:p-4 print:border print:border-border/50 print:shadow-none print:break-inside-avoid overflow-hidden min-w-0">
       <div className="flex items-center justify-center gap-2 mb-3 border-b border-border/50 pb-2 text-foreground/80 shrink-0">
         {icon}<h3 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest truncate">{title}</h3>
       </div>
-      <div className="relative w-full h-[250px] sm:h-[280px] print:h-[280px] flex items-center justify-center">
+      <div className="relative w-full h-[200px] xs:h-[230px] sm:h-[260px] md:h-[280px] print:h-[280px] flex items-center justify-center">
         {children}
       </div>
     </div>
