@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, ArrowLeft, PawPrint, HeartPulse, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { Save, ArrowLeft, PawPrint, HeartPulse, CheckCircle, XCircle, Loader, Syringe } from 'lucide-react'
 import Link from 'next/link'
 
 /* ── Slugs that support reproductive tracking ── */
@@ -133,6 +133,8 @@ interface AnimalFormProps {
 export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryName }: AnimalFormProps) {
   const [error, setError]     = useState('')
   const [success, setSuccess] = useState(false)
+  const [newAnimalId, setNewAnimalId] = useState<string | null>(null)
+  const [showBirthVaxPrompt, setShowBirthVaxPrompt] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -275,6 +277,17 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
         }
 
         setSuccess(true)
+        const createdId = result?.data?.id as string | undefined
+        if (createdId) setNewAnimalId(createdId)
+
+        const isBirth = (String(animalData['acquisition_type'] ?? '').toLowerCase() === 'nacimiento')
+        const isCalf = typeSlug === 'bovino'
+
+        if (createdId && isBirth && isCalf) {
+          setShowBirthVaxPrompt(true)
+          return
+        }
+
         setTimeout(() => { router.push('/dashboard/animals/list') }, 1500)
       } catch {
         setError('Error de conexión. Intenta de nuevo.')
@@ -312,7 +325,37 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
         {success && (
           <div className="mb-6 bg-success/10 border border-success/20 text-success rounded-xl px-4 py-3 text-sm animate-scale-in flex items-center gap-2">
             <PawPrint className="w-4 h-4" />
-            ¡Animal registrado exitosamente! Redirigiendo...
+            {showBirthVaxPrompt ? '¡Animal registrado exitosamente!' : '¡Animal registrado exitosamente! Redirigiendo...'}
+          </div>
+        )}
+
+        {success && showBirthVaxPrompt && newAnimalId && (
+          <div className="mb-6 bg-primary/10 border border-primary/20 text-foreground rounded-xl px-4 py-4 text-sm animate-scale-in">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                <Syringe className="w-4 h-4 text-primary" aria-hidden="true" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold">Un nuevo ternero ha sido registrado.</p>
+                <p className="text-muted mt-0.5">¿Quieres programar su esquema inicial de vacunación?</p>
+                <div className="mt-3 flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/dashboard/animals/list?assignVaccine=1&animalId=${encodeURIComponent(newAnimalId)}`)}
+                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark"
+                  >
+                    Sí, programar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/dashboard/animals/list')}
+                    className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-surface-hover"
+                  >
+                    No, ir al inventario
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         {error && (

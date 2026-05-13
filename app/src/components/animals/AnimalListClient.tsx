@@ -1,13 +1,16 @@
+
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import {
   Search, Filter, X, ChevronDown, ChevronUp, Pencil, Trash2, Save, XCircle,
-  Scale, History, TrendingUp, Calendar, Loader2, Plus
+  Scale, History, TrendingUp, Loader2, Plus
 } from 'lucide-react'
 import { Chart, registerables } from 'chart.js'
+import { AnimalVaccinationProfile } from '@/components/vaccines/AnimalVaccinationProfile'
+import { AssignVaccineModal } from '@/components/vaccines/AssignVaccineModal'
 
 if (typeof window !== 'undefined') {
   Chart.register(...registerables)
@@ -29,6 +32,7 @@ interface Animal {
   metadata: Record<string, unknown>
   created_at: string
   animal_types: {
+    id: string
     name: string
     slug: string
     animal_categories: {
@@ -121,6 +125,24 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   const [loading, setLoading] = useState(false)
   const [poultryCounts, setPoultryCounts] = useState<Record<string, { loading: boolean; initial: number | null; deaths: number | null; remaining: number | null }>>({})
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignAnimal, setAssignAnimal] = useState<{ id: string; typeId: string | null } | null>(null)
+
+  useEffect(() => {
+    const shouldOpen = searchParams.get('assignVaccine') === '1'
+    const targetId = searchParams.get('animalId')
+    if (!shouldOpen || !targetId) return
+    const exists = animals.find(a => a.id === targetId)
+    if (!exists) return
+
+    setExpandedId(targetId)
+    setAssignAnimal({ id: targetId, typeId: exists.animal_types?.id ?? null })
+    setAssignOpen(true)
+    // Clear params to avoid reopening on refresh.
+    router.replace('/dashboard/animals/list')
+  }, [searchParams, animals, router])
 
   function parseInitialPoultryCount(a: Animal): number | null {
     const raw = (a.metadata as Record<string, unknown> | null | undefined)?.cantidad
@@ -149,7 +171,8 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
       .then(r => r.json())
       .then((events: unknown) => {
         if (!Array.isArray(events)) return
-        const deaths = events.reduce((sum: number, ev: any) => {
+        const typed = events as Array<{ event_type?: unknown; quantity?: unknown }>
+        const deaths = typed.reduce((sum: number, ev) => {
           if (ev?.event_type !== 'muerte') return sum
           const qRaw = ev?.quantity
           const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
@@ -308,6 +331,15 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
 
   return (
     <div className="space-y-4">
+      <AssignVaccineModal
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        defaultAnimalIds={assignAnimal ? [assignAnimal.id] : []}
+        defaultTypeId={assignAnimal?.typeId ?? null}
+        isAdmin={isAdmin}
+        title="Programar vacunación"
+      />
+
       {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -663,6 +695,14 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             />
                           </div>
                         )}
+
+                        <div className="mt-6 pt-6 border-t border-border">
+                          <AnimalVaccinationProfile
+                            animalId={animal.id}
+                            animalTypeId={animal.animal_types?.id ?? null}
+                            isAdmin={isAdmin}
+                          />
+                        </div>
 
                         {animal.notes && (
                           <div className="mt-3 pt-3 border-t border-border">
