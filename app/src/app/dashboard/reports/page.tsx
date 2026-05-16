@@ -19,6 +19,26 @@ interface AIAnalysis {
   report_date: string;
 }
 
+interface AnimalData {
+  id: string;
+  name?: string;
+  identification_code?: string;
+  type?: string;
+  category_name?: string;
+  animal_types?: { name: string };
+  status?: string;
+  sex?: string;
+  acquisition_type?: string;
+  birth_date?: string;
+  weight?: number;
+  weight_kg?: number;
+  metadata?: {
+    estado_vacunacion?: string;
+    estado_reproductivo?: string;
+  };
+  created_at: string;
+}
+
 export default function ReportsPage() {
   const [filterPeriod, setFilterPeriod] = useState('all');
   const [filterModule, setFilterModule] = useState('todos');
@@ -28,7 +48,7 @@ export default function ReportsPage() {
   const [filterVaccine, setFilterVaccine] = useState('todos');
   const [showFilters, setShowFilters] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [dbData, setDbData] = useState<any[]>([]);
+  const [dbData, setDbData] = useState<AnimalData[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorApi, setErrorApi] = useState<string | null>(null);
 
@@ -97,7 +117,7 @@ export default function ReportsPage() {
       return true;
     });
 
-    const distribution = filteredData.reduce((acc: any, a: any) => {
+    const distribution = filteredData.reduce((acc: Record<string, number>, a: AnimalData) => {
       const label = a.animal_types?.name || a.category_name || a.type || 'Otros';
       acc[label] = (acc[label] || 0) + 1;
       return acc;
@@ -295,7 +315,7 @@ export default function ReportsPage() {
 
   const animalsWithBirthDate = summaryData.filter(a => a.birth_date);
   const avgAgeMonths = animalsWithBirthDate.length > 0
-    ? animalsWithBirthDate.reduce((sum, a) => sum + (now.getTime() - new Date(a.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 30.44), 0) / animalsWithBirthDate.length
+    ? animalsWithBirthDate.reduce((sum, a) => sum + (now.getTime() - new Date(a.birth_date!).getTime()) / (1000 * 60 * 60 * 24 * 30.44), 0) / animalsWithBirthDate.length
     : 0;
   const avgAgeText = avgAgeMonths > 0 ? `${avgAgeMonths.toFixed(1)} meses` : 'N/D';
 
@@ -330,14 +350,14 @@ export default function ReportsPage() {
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => requestAIAnalysis()}
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-violet-500 dark:to-indigo-400 text-white px-5 py-3 rounded-xl shadow-md hover:shadow-lg transition-all text-sm font-bold"
+            className="flex items-center justify-center gap-2 bg-linear-to-r from-violet-600 to-indigo-600 dark:from-violet-500 dark:to-indigo-400 text-white px-5 py-3 rounded-xl shadow-md hover:shadow-lg transition-all text-sm font-bold"
           >
             <Bot className="w-4 h-4" />
             Analizar con IA
           </button>
           <button
             onClick={() => window.print()}
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-200 dark:to-slate-400 text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-md hover:shadow-lg transition-all text-sm font-bold"
+            className="flex items-center justify-center gap-2 bg-linear-to-r from-slate-700 to-slate-900 dark:from-slate-200 dark:to-slate-400 text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-md hover:shadow-lg transition-all text-sm font-bold"
           >
             <Printer className="w-4 h-4" />
             Imprimir
@@ -418,8 +438,8 @@ export default function ReportsPage() {
       {/* Panel IA */}
       {showAiPanel && (
         <div className="bg-surface border border-violet-200 rounded-2xl overflow-hidden shadow-sm no-print">
-          <div className="bg-gradient-to-r from-violet-600/10 to-primary/10 p-5 border-b border-border flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-violet-600 to-primary flex items-center justify-center">
+          <div className="bg-linear-to-r from-violet-600/10 to-primary/10 p-5 border-b border-border flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-linear-to-r from-violet-600 to-primary flex items-center justify-center">
               <Bot className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
@@ -466,7 +486,7 @@ export default function ReportsPage() {
           <div className="p-5">
             {aiLoading && (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-violet-600 to-primary flex items-center justify-center animate-pulse">
+                <div className="w-12 h-12 rounded-2xl bg-linear-to-r from-violet-600 to-primary flex items-center justify-center animate-pulse">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <p className="text-sm text-muted">Analizando datos de la finca con IA...</p>
@@ -482,13 +502,13 @@ export default function ReportsPage() {
             {aiAnalysis && !aiLoading && (
               <div className="space-y-6">
                 {/* Summary */}
-                <div className="bg-gradient-to-r from-violet-600/5 to-primary/5 border border-primary/20 rounded-xl p-5">
+                <div className="bg-linear-to-r from-violet-600/5 to-primary/5 border border-primary/20 rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-4 h-4 text-primary" />
                     <span className="text-xs font-bold uppercase text-primary">Resumen Ejecutivo IA</span>
                   </div>
                   <div className="text-sm leading-relaxed text-foreground space-y-2">
-                    {aiAnalysis.summary.split('\n').map((line, idx) => (
+                    {aiAnalysis.summary.split('\n').map((line: string, idx: number) => (
                       <p key={idx}>{line}</p>
                     ))}
                   </div>
@@ -499,7 +519,7 @@ export default function ReportsPage() {
                   <div>
                     <p className="text-xs font-bold text-muted uppercase mb-3">KPIs Detectados</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {aiAnalysis.kpis.map((kpi, i) => (
+                      {aiAnalysis.kpis.map((kpi: any, i: number) => (
                         <div key={i} className="bg-background border border-border rounded-xl p-3 shadow-sm">
                           <p className="text-[10px] font-bold text-muted uppercase">{kpi.label}</p>
                           <p className={`text-lg font-bold ${kpi.trend === 'positivo' ? 'text-success' : kpi.trend === 'negativo' ? 'text-danger' : 'text-primary'}`}>{kpi.value}</p>
@@ -515,7 +535,7 @@ export default function ReportsPage() {
                   <div>
                     <p className="text-xs font-bold text-muted uppercase mb-3">Hallazgos</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {aiAnalysis.insights.map((ins, i) => (
+                      {aiAnalysis.insights.map((ins: any, i: number) => (
                         <div key={i} className="bg-background border border-border rounded-xl p-4 flex gap-3 shadow-sm hover:shadow-md transition-shadow">
                           <span className="text-xl shrink-0">{ins.icon}</span>
                           <div>
@@ -533,7 +553,7 @@ export default function ReportsPage() {
                   <div>
                     <p className="text-xs font-bold text-muted uppercase mb-3">Recomendaciones</p>
                     <div className="space-y-2">
-                      {aiAnalysis.recommendations.map((rec, i) => (
+                      {aiAnalysis.recommendations.map((rec: any, i: number) => (
                         <div key={i} className={`flex gap-3 p-3.5 rounded-xl border ${
                           rec.priority === 'urgente' ? 'bg-red-500/10 border-red-500/20' :
                           rec.priority === 'normal' ? 'bg-yellow-500/10 border-yellow-500/20' :
@@ -590,7 +610,7 @@ export default function ReportsPage() {
             <td>
               <div className="space-y-6 md:space-y-8 print:space-y-6">
         {/* Resumen Superior */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 print:grid-cols-4 print:gap-2">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 print:grid-cols-4 print:gap-2">
           <SCard label="Población" value={summaryData.length} sub="Registros en vista" color="text-primary" />
           <SCard label="Operatividad" value={operativity} sub="Tasa Activa" color="text-success" />
           <SCard label="M/H/Mix" value={`${machosCount}/${hembrasCount}/${mixtosCount}`} sub="Distribución género" color="text-accent" />
@@ -774,19 +794,19 @@ export default function ReportsPage() {
       </table>
     </div>
   );
-}
+} 
 
-function SCard({ label, value, sub, color }: any) {
+function SCard({ label, value, sub, color }: { label: string; value: string | number; sub: string; color: string }) {
   return (
     <div className="bg-surface border border-border p-3 sm:p-4 md:p-5 rounded-2xl shadow-sm flex flex-col justify-between print:break-inside-avoid print:shadow-none print:border-border/50 transition-transform hover:scale-[1.02] min-w-0 overflow-hidden">
-      <p className="text-[9px] sm:text-[11px] md:text-xs font-black text-muted uppercase tracking-widest truncate">{label}</p>
-      <p className={`text-lg sm:text-2xl md:text-3xl font-bold ${color} my-1.5 truncate print:text-xl`}>{value}</p>
-      <p className="text-[10px] sm:text-xs text-muted font-medium truncate">{sub}</p>
+      <p className="text-[10px] sm:text-[11px] md:text-xs font-black text-muted uppercase tracking-widest wrap-break-word leading-tight">{label}</p>
+      <p className={`text-xl sm:text-2xl md:text-3xl font-bold ${color} my-2 break-all sm:wrap-break-word print:text-xl leading-none`}>{value}</p>
+      <p className="text-[10px] sm:text-xs text-muted font-medium wrap-break-word leading-tight mt-auto">{sub}</p>
     </div>
   );
 }
 
-function CChart({ title, icon, children }: any) {
+function CChart({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="bg-surface border border-border p-3 sm:p-5 rounded-2xl flex flex-col shadow-sm print:p-4 print:border print:border-border/50 print:shadow-none print:break-inside-avoid overflow-hidden min-w-0">
       <div className="flex items-center justify-center gap-2 mb-3 border-b border-border/50 pb-2 text-foreground/80 shrink-0">
@@ -799,7 +819,7 @@ function CChart({ title, icon, children }: any) {
   );
 }
 
-function ABox({ icon, title, text }: any) {
+function ABox({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <div className="p-5 bg-background border border-border rounded-2xl space-y-3">
       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-tighter">{icon} {title}</div>
@@ -808,7 +828,7 @@ function ABox({ icon, title, text }: any) {
   );
 }
 
-function ML({ label, value }: any) {
+function ML({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex flex-col">
       <span className="text-[9px] font-bold text-muted-foreground uppercase">{label}</span>

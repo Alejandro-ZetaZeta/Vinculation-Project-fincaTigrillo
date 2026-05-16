@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import {
   Search, Filter, X, ChevronDown, ChevronUp, Pencil, Trash2, Save, XCircle,
-  Scale, History, TrendingUp, Loader2, Plus
+  Scale, History, TrendingUp, Loader2, Plus, CheckCircle, Loader
 } from 'lucide-react'
 import { Chart, registerables } from 'chart.js'
 import { AnimalVaccinationProfile } from '@/components/vaccines/AnimalVaccinationProfile'
@@ -121,6 +121,10 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editData, setEditData] = useState<Record<string, string | number | null>>({})
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editCodeStatus, setEditCodeStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [editCodeMsg, setEditCodeMsg] = useState('')
+  const editCodeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [poultryCounts, setPoultryCounts] = useState<Record<string, { loading: boolean; initial: number | null; deaths: number | null; remaining: number | null }>>({})
@@ -240,8 +244,35 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     setFilterSex('')
   }
 
+  function handleEditCodeChange(animalId: string, value: string) {
+    setEditData(p => ({ ...p, identification_code: value }))
+    setEditCodeStatus('idle')
+    setEditCodeMsg('')
+    if (editCodeDebounceRef.current) clearTimeout(editCodeDebounceRef.current)
+    if (!value.trim()) return
+    editCodeDebounceRef.current = setTimeout(async () => {
+      setEditCodeStatus('checking')
+      try {
+        const res = await fetch(`/api/animals/check-code?code=${encodeURIComponent(value.trim())}&exclude=${encodeURIComponent(animalId)}`)
+        const json = await res.json()
+        if (json.taken) {
+          setEditCodeStatus('taken')
+          setEditCodeMsg(json.usedBy ? `Ya está en uso por "${json.usedBy}"` : 'Este código ya está en uso')
+        } else {
+          setEditCodeStatus('available')
+          setEditCodeMsg('')
+        }
+      } catch {
+        setEditCodeStatus('idle')
+      }
+    }, 500)
+  }
+
   function startEdit(animal: Animal) {
     const isPoultryBatch = animal.animal_types?.slug === 'aves-de-corral'
+    setEditError(null)
+    setEditCodeStatus('idle')
+    setEditCodeMsg('')
     setEditingId(animal.id)
     setEditData({
       name: animal.name || '',
@@ -269,12 +300,18 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   function cancelEdit() {
     setEditingId(null)
     setEditData({})
+    setEditError(null)
+    setEditCodeStatus('idle')
+    setEditCodeMsg('')
   }
 
   async function saveEdit(animalId: string) {
+    if (editCodeStatus === 'taken' || editCodeStatus === 'checking') return
     setLoading(true)
+    setEditError(null)
     try {
       const typeSlug = animals.find(a => a.id === animalId)?.animal_types?.slug
+      const isPoultry = typeSlug === 'aves-de-corral'
       const payload: Record<string, unknown> = {}
       const metadataUpdates: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(editData)) {
@@ -283,7 +320,13 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
           metadataUpdates[metaKey] = value === '' ? null : value
         } else {
           if (value !== '' && value !== null) {
-            payload[key] = key === 'weight_kg' ? parseFloat(String(value)) : value
+            if (key === 'weight_kg') {
+              const raw = parseFloat(String(value))
+              // UI stores poultry weight in grams; DB expects kg
+              payload[key] = isNaN(raw) ? null : (isPoultry ? raw / 1000 : raw)
+            } else {
+              payload[key] = value
+            }
           } else {
             payload[key] = null
           }
@@ -301,22 +344,23 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
         body: JSON.stringify(payload),
       })
 
-      if (res.ok) {
-        setEditingId(null)
-        setEditData({})
-        router.refresh()
-        // Optimistic update
-        setAnimals(prev => prev.map(a => {
-          if (a.id === animalId) {
-            return { 
-              ...a, 
-              ...payload, 
-              metadata: payload.metadata as Record<string, unknown> 
-            } as Animal
-          }
-          return a
-        }))
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}))
+        setEditError(result.error || `Error al guardar (${res.status})`)
+        return
       }
+
+      setEditingId(null)
+      setEditData({})
+      setEditError(null)
+      setEditCodeStatus('idle')
+      router.refresh()
+      setAnimals(prev => prev.map(a => {
+        if (a.id === animalId) {
+          return { ...a, ...payload, metadata: payload.metadata as Record<string, unknown> } as Animal
+        }
+        return a
+      }))
     } finally {
       setLoading(false)
     }
@@ -576,9 +620,14 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                     {isEditing ? (
                       /* Edit mode */
                       <div className="space-y-4">
+                        {editError && (
+                          <div className="bg-danger/10 border border-danger/20 text-danger rounded-xl px-4 py-2 text-sm">
+                            {editError}
+                          </div>
+                        )}
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                           <EditField label="Nombre" name="name" value={editData.name} onChange={(v) => setEditData(p => ({...p, name: v}))} />
-                          <EditField label="Raza" name="breed" value={editData.breed} onChange={(v) => setEditData(p => ({...p, breed: v}))} />
+                          <EditField label="Raza *" name="breed" value={editData.breed} onChange={(v) => setEditData(p => ({...p, breed: v}))} />
                           <div>
                             <label className="block text-xs text-muted mb-1">Sexo</label>
                             <select value={String(editData.sex || '')} onChange={(e) => setEditData(p => ({...p, sex: e.target.value}))}
@@ -607,7 +656,29 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             step={animal.animal_types?.slug === 'aves-de-corral' ? '1' : '0.01'}
                             min={animal.animal_types?.slug === 'aves-de-corral' ? 0 : undefined}
                           />
-                          <EditField label="Identificación" name="identification_code" value={editData.identification_code} onChange={(v) => setEditData(p => ({...p, identification_code: v}))} />
+                          {/* Identification code with live duplicate check */}
+                          <div>
+                            <label className="block text-xs text-muted mb-1">Identificación *</label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={String(editData.identification_code || '')}
+                                onChange={e => handleEditCodeChange(animal.id, e.target.value)}
+                                className={`w-full px-3 py-1.5 pr-8 rounded-lg bg-background border text-sm focus:outline-none focus:ring-2 transition-all
+                                  ${editCodeStatus === 'taken'     ? 'border-danger  focus:ring-danger/30' :
+                                    editCodeStatus === 'available' ? 'border-success focus:ring-success/30' :
+                                    'border-border focus:ring-primary/30'}`}
+                              />
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                {editCodeStatus === 'checking'  && <Loader       className="w-3.5 h-3.5 text-muted animate-spin" />}
+                                {editCodeStatus === 'available' && <CheckCircle  className="w-3.5 h-3.5 text-success" />}
+                                {editCodeStatus === 'taken'     && <XCircle      className="w-3.5 h-3.5 text-danger" />}
+                              </span>
+                            </div>
+                            {editCodeStatus === 'taken' && (
+                              <p className="mt-0.5 text-[10px] text-danger">{editCodeMsg}</p>
+                            )}
+                          </div>
                           <div>
                             <label className="block text-xs text-muted mb-1">Estado</label>
                             <select value={String(editData.status || '')} onChange={(e) => setEditData(p => ({...p, status: e.target.value}))}
@@ -636,10 +707,13 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             rows={2} className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
                         </div>
                         <div className="flex gap-2 pt-1">
-                          <button onClick={() => saveEdit(animal.id)} disabled={loading}
-                            className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors flex items-center gap-1.5">
+                          <button
+                            onClick={() => saveEdit(animal.id)}
+                            disabled={loading || editCodeStatus === 'taken' || editCodeStatus === 'checking'}
+                            className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors flex items-center gap-1.5"
+                          >
                             {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                            Guardar
+                            {editCodeStatus === 'checking' ? 'Verificando…' : 'Guardar'}
                           </button>
                           <button onClick={cancelEdit} className="px-4 py-1.5 rounded-lg border border-border text-sm text-muted hover:text-foreground transition-colors flex items-center gap-1.5">
                             <XCircle className="w-3.5 h-3.5" /> Cancelar

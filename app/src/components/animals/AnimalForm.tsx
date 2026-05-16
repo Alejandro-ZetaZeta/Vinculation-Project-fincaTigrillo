@@ -43,7 +43,7 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Brahman, Holstein' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
     { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Chapeta o hierro' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Chapeta o hierro' },
     { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Negro, Pardo' },
     { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 450' },
     { label: 'Propósito', name: 'meta_proposito', type: 'select_sex_bovino', options: [] },
@@ -58,7 +58,7 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Criollo, Paso Fino' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
     { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Hierro o microchip' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Hierro o microchip' },
     { label: 'Color / Capa', name: 'color', type: 'text', placeholder: 'Ej: Alazán, Moro' },
     { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 400' },
     { label: 'Tipo de uso', name: 'meta_uso', type: 'select', options: ['carga', 'monta', 'reproducción', 'trabajo'] },
@@ -74,7 +74,7 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Landrace, Pietrain' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
     { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Arete o muesca' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Arete o muesca' },
     { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Blanco, Rosado' },
     { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 90' },
     { label: 'Etapa', name: 'meta_etapa', type: 'select', options: ['lechón', 'levante', 'ceba', 'reproductor'] },
@@ -89,7 +89,7 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Especie', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Gallina ponedora, Pollo de engorde' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['machos', 'hembras', 'mixto'] },
     { label: 'Fecha de nacimiento / ingreso', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Anillo o código de lote' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Anillo o código de lote' },
     { label: 'Color de plumaje', name: 'color', type: 'text', placeholder: 'Ej: Rojo, Blanco' },
     { label: 'Peso promedio (g)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 850' },
     { label: 'Número inicial de aves', name: 'meta_cantidad', type: 'number', required: true, placeholder: 'Ej: 100' },
@@ -107,7 +107,7 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Raza / Tipo', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Pekin, Criollo, Muscovy' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
     { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Anillo o código' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Anillo o código' },
     { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Blanco, Café' },
     { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 2.8' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
@@ -118,7 +118,7 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Boer, Saanen, Alpina' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
     { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Arete o microchip' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Arete o microchip' },
     { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Blanco, Negro' },
     { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 45' },
     { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['leche', 'carne', 'doble propósito', 'reproducción'] },
@@ -227,6 +227,11 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
     setError('')
     setSuccess(false)
 
+    // Require identification_code
+    if (!identCode.trim()) {
+      setError('El código de identificación es obligatorio.')
+      return
+    }
     // Block if code is taken or still checking
     if (codeStatus === 'taken') {
       setError(codeTakenMsg || 'El código de identificación ya está en uso. Usa un código único.')
@@ -514,6 +519,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                         id="identification_code"
                         name="identification_code"
                         type="text"
+                        required
                         value={identCode}
                         onChange={e => handleIdentCodeChange(e.target.value)}
                         placeholder={field.placeholder}
