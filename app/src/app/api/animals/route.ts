@@ -17,11 +17,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const sexFilter = searchParams.get('sex')        // e.g. 'macho'
     const typeSlug  = searchParams.get('type_slug')  // e.g. 'bovino'
+    const statusFilter = searchParams.get('status')  // e.g. 'all' o 'activo'
 
     let query = insforge.database
       .from('animals')
       .select('*, animal_types(id, name, slug, animal_categories(id, name, slug))')
-      .eq('status', 'activo')
+
+    if (statusFilter !== 'all') {
+      query = query.eq('status', statusFilter || 'activo')
+    }
 
     if (sexFilter)  query = query.eq('sex', sexFilter)
 
@@ -75,6 +79,37 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     body.created_by = userData.user.id
+
+    // ── Verificar código de identificación duplicado ──────────────────────────
+    const identCode = (body.identification_code as string | undefined)?.trim()
+    if (identCode) {
+      const { data: existing, error: checkError } = await insforge.database
+        .from('animals')
+        .select('id, name, identification_code')
+        .eq('identification_code', identCode)
+        .limit(1)
+
+      if (checkError) {
+        return NextResponse.json({ error: 'Error al verificar código de identificación' }, { status: 500 })
+      }
+
+      if (existing && existing.length > 0) {
+        const dup = existing[0] as { id: string; name: string | null; identification_code: string }
+        return NextResponse.json(
+          { error: `El código "${identCode}" ya está en uso por el animal "${dup.name || dup.identification_code}". Cada animal debe tener un código único.` },
+          { status: 409 }
+        )
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+     // Normalize legacy/plural sex values coming from the client.
+     // DB constraint expects singular values (e.g. 'macho' / 'hembra').
+     if (typeof body.sex === 'string') {
+       const s = body.sex.toLowerCase()
+       if (s === 'machos') body.sex = 'macho'
+       if (s === 'hembras') body.sex = 'hembra'
+     }
 
     const { data, error } = await insforge.database
       .from('animals')

@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 app/.env*
+.env*
 
 # vercel
 app/.vercel
@@ -43,10 +44,13 @@ app/next-env.d.ts
 app/.insforge
 app/.agents
 .agents
+.claude
 app/.agents
 app/.augment
+.claude
 app/.claude
 app/.cline
+.github/copilot*
 app/.github/copilot*
 app/.kilocode
 app/.qoder
@@ -54,3 +58,15 @@ app/.qwen
 app/.roo
 app/.trae
 app/.windsurf
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.augment
+.cline
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf

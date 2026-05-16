@@ -38,7 +38,7 @@ async function getCachedAnimals(accessToken: string | undefined) {
   const insforge = createInsForgeServerClient(accessToken)
   const { data } = await insforge.database
     .from('animals')
-    .select('*, animal_types(name, slug, animal_categories(name, slug))')
+    .select('*, animal_types(id, name, slug, animal_categories(name, slug))')
     .order('created_at', { ascending: false })
 
   return data || []

@@ -1,18 +1,19 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, ArrowLeft, PawPrint, HeartPulse } from 'lucide-react'
+import { Save, ArrowLeft, PawPrint, HeartPulse, CheckCircle, XCircle, Loader, Syringe } from 'lucide-react'
 import Link from 'next/link'
 
 /* ── Slugs that support reproductive tracking ── */
-const REPRO_TYPES = ['bovino', 'equino', 'porcino']
+const REPRO_TYPES = ['bovino', 'equino', 'porcino', 'caprino']
 
 /* ── Label map for sire selector header ── */
 const SIRE_LABEL: Record<string, string> = {
   bovino:  'toro (bovino macho)',
   equino:  'semental (equino macho)',
   porcino: 'verraco (porcino macho)',
+  caprino: 'macho cabrio (caprino macho)',
 }
 
 /* ── Reproductive status options: sex-aware ── */
@@ -20,11 +21,13 @@ const REPRO_STATUS_HEMBRA: Record<string, string[]> = {
   bovino:  ['preñada', 'vacía', 'lactando', 'seca'],
   equino:  ['preñada', 'vacía', 'lactando'],
   porcino: ['preñada', 'vacía', 'lactando'],
+  caprino: ['preñada', 'vacía', 'lactando', 'seca'],
 }
 const REPRO_STATUS_MACHO: Record<string, string[]> = {
   bovino:  ['activo', 'no aplica'],
   equino:  ['activo', 'no aplica'],
   porcino: ['activo', 'no aplica'],
+  caprino: ['activo', 'no aplica'],
 }
 
 /* ── Propósito options for bovino: sex-aware ── */
@@ -40,12 +43,14 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Brahman, Holstein' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
     { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Chapeta o hierro' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Chapeta o hierro' },
     { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Negro, Pardo' },
     { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 450' },
     { label: 'Propósito', name: 'meta_proposito', type: 'select_sex_bovino', options: [] },
     { label: 'Número de partos', name: 'meta_numero_partos', type: 'number_hembra_only', placeholder: '0' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
+    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'equino': [
@@ -53,13 +58,15 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Criollo, Paso Fino' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
     { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Hierro o microchip' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Hierro o microchip' },
     { label: 'Color / Capa', name: 'color', type: 'text', placeholder: 'Ej: Alazán, Moro' },
     { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 400' },
     { label: 'Tipo de uso', name: 'meta_uso', type: 'select', options: ['carga', 'monta', 'reproducción', 'trabajo'] },
     { label: 'Estado de doma', name: 'meta_doma', type: 'select', options: ['domado', 'en proceso', 'sin domar'] },
     { label: 'Alzada (cm)', name: 'meta_alzada_cm', type: 'number', placeholder: 'Ej: 150' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
+    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'porcino': [
@@ -67,24 +74,55 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Landrace, Pietrain' },
     { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
     { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Arete o muesca' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Arete o muesca' },
     { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Blanco, Rosado' },
     { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 90' },
     { label: 'Etapa', name: 'meta_etapa', type: 'select', options: ['lechón', 'levante', 'ceba', 'reproductor'] },
     { label: 'Número de camada', name: 'meta_numero_camada', type: 'number', placeholder: '0' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
+    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'aves-de-corral': [
     { label: 'Nombre / Lote', name: 'name', type: 'text', placeholder: 'Ej: Lote-Gallinas-01' },
     { label: 'Especie', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Gallina ponedora, Pollo de engorde' },
-    { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
+    { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['machos', 'hembras', 'mixto'] },
     { label: 'Fecha de nacimiento / ingreso', name: 'birth_date', type: 'date' },
-    { label: 'Código de identificación', name: 'identification_code', type: 'text', placeholder: 'Anillo o código de lote' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Anillo o código de lote' },
     { label: 'Color de plumaje', name: 'color', type: 'text', placeholder: 'Ej: Rojo, Blanco' },
-    { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 2.5' },
-    { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['postura', 'engorde', 'doble propósito', 'ornamental'] },
+    { label: 'Peso promedio (g)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 850' },
+    { label: 'Número inicial de aves', name: 'meta_cantidad', type: 'number', required: true, placeholder: 'Ej: 100' },
+    { label: 'Mortalidad esperada (%)', name: 'meta_mortalidad_esperada_pct', type: 'number', placeholder: 'Ej: 5' },
+    { label: 'Etapa productiva', name: 'meta_etapa', type: 'select', required: true, options: ['pollitos', 'levante', 'producción/adultos'] },
+    { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['postura', 'engorde', 'doble propósito'] },
     { label: 'Producción huevos/semana', name: 'meta_produccion_huevos', type: 'number', placeholder: 'Ej: 5' },
+    { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
+    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
+    { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
+  ],
+  'patos': [
+    { label: 'Nombre', name: 'name', type: 'text', placeholder: 'Ej: Pato-01' },
+    { label: 'Raza / Tipo', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Pekin, Criollo, Muscovy' },
+    { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
+    { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Anillo o código' },
+    { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Blanco, Café' },
+    { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 2.8' },
+    { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
+    { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
+  ],
+  'caprino': [
+    { label: 'Nombre', name: 'name', type: 'text', placeholder: 'Ej: Canela' },
+    { label: 'Raza', name: 'breed', type: 'text', required: true, placeholder: 'Ej: Boer, Saanen, Alpina' },
+    { label: 'Sexo', name: 'sex', type: 'select', required: true, options: ['macho', 'hembra'] },
+    { label: 'Fecha de nacimiento', name: 'birth_date', type: 'date' },
+    { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Arete o microchip' },
+    { label: 'Color', name: 'color', type: 'text', placeholder: 'Ej: Blanco, Negro' },
+    { label: 'Peso (kg)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 45' },
+    { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['leche', 'carne', 'doble propósito', 'reproducción'] },
+    { label: 'Número de partos', name: 'meta_numero_partos', type: 'number_hembra_only', placeholder: '0' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
@@ -103,6 +141,8 @@ interface AnimalFormProps {
 export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryName }: AnimalFormProps) {
   const [error, setError]     = useState('')
   const [success, setSuccess] = useState(false)
+  const [newAnimalId, setNewAnimalId] = useState<string | null>(null)
+  const [showBirthVaxPrompt, setShowBirthVaxPrompt] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -112,6 +152,41 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   const [acquisitionType, setAcquisitionType] = useState('')
   const [acquisitionDate, setAcquisitionDate] = useState('')
   const [sireId, setSireId]                   = useState('')
+  const [avesEtapa, setAvesEtapa]             = useState('')
+  const [avesProposito, setAvesProposito]     = useState('')
+
+  /* ── Identification code duplicate check ── */
+  const [identCode, setIdentCode]                     = useState('')
+  const [codeStatus, setCodeStatus]                   = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [codeTakenMsg, setCodeTakenMsg]               = useState('')
+  const debounceTimerRef                              = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const checkCode = useCallback(async (code: string) => {
+    const trimmed = code.trim()
+    if (!trimmed) { setCodeStatus('idle'); setCodeTakenMsg(''); return }
+    setCodeStatus('checking')
+    try {
+      const res = await fetch(`/api/animals/check-code?code=${encodeURIComponent(trimmed)}`)
+      const json = await res.json()
+      if (json.taken) {
+        setCodeStatus('taken')
+        setCodeTakenMsg(json.usedBy ? `Ya está en uso por "${json.usedBy}"` : 'Este código ya está en uso')
+      } else {
+        setCodeStatus('available')
+        setCodeTakenMsg('')
+      }
+    } catch {
+      setCodeStatus('idle')
+    }
+  }, [])
+
+  function handleIdentCodeChange(value: string) {
+    setIdentCode(value)
+    setCodeStatus('idle')
+    setCodeTakenMsg('')
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    debounceTimerRef.current = setTimeout(() => checkCode(value), 500)
+  }
 
   /* ── Sire list (male animals of same type) ── */
   const [sires, setSires]             = useState<SireOption[]>([])
@@ -152,6 +227,21 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
     setError('')
     setSuccess(false)
 
+    // Require identification_code
+    if (!identCode.trim()) {
+      setError('El código de identificación es obligatorio.')
+      return
+    }
+    // Block if code is taken or still checking
+    if (codeStatus === 'taken') {
+      setError(codeTakenMsg || 'El código de identificación ya está en uso. Usa un código único.')
+      return
+    }
+    if (codeStatus === 'checking') {
+      setError('Espera mientras se verifica el código de identificación...')
+      return
+    }
+
     const formData = new FormData(e.currentTarget)
     const baseFields = ['name', 'breed', 'sex', 'birth_date', 'identification_code', 'color', 'weight_kg', 'acquisition_type', 'acquisition_date', 'notes', 'status']
 
@@ -163,7 +253,12 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
       if (key.startsWith('meta_')) {
         metadata[key.replace('meta_', '')] = value
       } else if (baseFields.includes(key)) {
-        animalData[key] = key === 'weight_kg' ? parseFloat(value as string) : value
+        if (key === 'weight_kg') {
+          const n = parseFloat(value as string)
+          animalData[key] = typeSlug === 'aves-de-corral' ? (n / 1000) : n
+        } else {
+          animalData[key] = value
+        }
       }
     }
 
@@ -195,6 +290,17 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
         }
 
         setSuccess(true)
+        const createdId = result?.data?.id as string | undefined
+        if (createdId) setNewAnimalId(createdId)
+
+        const isBirth = (String(animalData['acquisition_type'] ?? '').toLowerCase() === 'nacimiento')
+        const isCalf = typeSlug === 'bovino'
+
+        if (createdId && isBirth && isCalf) {
+          setShowBirthVaxPrompt(true)
+          return
+        }
+
         setTimeout(() => { router.push('/dashboard/animals/list') }, 1500)
       } catch {
         setError('Error de conexión. Intenta de nuevo.')
@@ -232,7 +338,37 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
         {success && (
           <div className="mb-6 bg-success/10 border border-success/20 text-success rounded-xl px-4 py-3 text-sm animate-scale-in flex items-center gap-2">
             <PawPrint className="w-4 h-4" />
-            ¡Animal registrado exitosamente! Redirigiendo...
+            {showBirthVaxPrompt ? '¡Animal registrado exitosamente!' : '¡Animal registrado exitosamente! Redirigiendo...'}
+          </div>
+        )}
+
+        {success && showBirthVaxPrompt && newAnimalId && (
+          <div className="mb-6 bg-primary/10 border border-primary/20 text-foreground rounded-xl px-4 py-4 text-sm animate-scale-in">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                <Syringe className="w-4 h-4 text-primary" aria-hidden="true" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold">Un nuevo ternero ha sido registrado.</p>
+                <p className="text-muted mt-0.5">¿Quieres programar su esquema inicial de vacunación?</p>
+                <div className="mt-3 flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/dashboard/animals/list?assignVaccine=1&animalId=${encodeURIComponent(newAnimalId)}`)}
+                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark"
+                  >
+                    Sí, programar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/dashboard/animals/list')}
+                    className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-surface-hover"
+                  >
+                    No, ir al inventario
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         {error && (
@@ -258,11 +394,62 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                     <select id="sex" name="sex" required value={sex} onChange={e => handleSexChange(e.target.value)}
                       className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all capitalize">
                       <option value="">Seleccionar...</option>
-                      <option value="macho">macho</option>
-                      <option value="hembra">hembra</option>
+                      {typeSlug === 'aves-de-corral' ? (
+                        <>
+                          <option value="macho">machos</option>
+                          <option value="hembra">hembras</option>
+                          <option value="mixto">mixto</option>
+                        </>
+                      ) : field.options ? (
+                        field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)
+                      ) : (
+                        <>
+                          <option value="macho">macho</option>
+                          <option value="hembra">hembra</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 )
+              }
+
+              /* ── Aves-de-corral: controlled etapa ── */
+              if (field.name === 'meta_etapa' && typeSlug === 'aves-de-corral') {
+                return (
+                  <div key={field.name}>
+                    <label htmlFor={field.name} className="block text-sm font-medium text-foreground mb-1.5">
+                      {field.label} {field.required && <span className="text-danger ml-1">*</span>}
+                    </label>
+                    <select id={field.name} name={field.name} required={field.required}
+                      value={avesEtapa} onChange={e => setAvesEtapa(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all capitalize">
+                      <option value="">Seleccionar...</option>
+                      {field.options?.map(opt => <option key={opt} value={opt} className="capitalize">{opt}</option>)}
+                    </select>
+                  </div>
+                )
+              }
+
+              /* ── Aves-de-corral: controlled proposito ── */
+              if (field.name === 'meta_proposito' && typeSlug === 'aves-de-corral') {
+                return (
+                  <div key={field.name}>
+                    <label htmlFor={field.name} className="block text-sm font-medium text-foreground mb-1.5">
+                      {field.label} {field.required && <span className="text-danger ml-1">*</span>}
+                    </label>
+                    <select id={field.name} name={field.name} required={field.required}
+                      value={avesProposito} onChange={e => setAvesProposito(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all capitalize">
+                      <option value="">Seleccionar...</option>
+                      {field.options?.map(opt => <option key={opt} value={opt} className="capitalize">{opt}</option>)}
+                    </select>
+                  </div>
+                )
+              }
+
+              /* ── Producción huevos: conditional ── */
+              if (field.name === 'meta_produccion_huevos') {
+                if (avesEtapa !== 'producción/adultos' || (avesProposito !== 'postura' && avesProposito !== 'doble propósito')) return null;
               }
 
               /* ── Propósito bovino: sex-aware ── */
@@ -315,6 +502,51 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                 )
               }
 
+              /* ── identification_code: controlled with live duplicate check ── */
+              if (field.name === 'identification_code') {
+                const borderColor =
+                  codeStatus === 'taken'     ? 'border-danger   focus:border-danger   focus:ring-danger/30' :
+                  codeStatus === 'available' ? 'border-success  focus:border-success  focus:ring-success/30' :
+                  'border-border focus:border-primary focus:ring-primary/30'
+
+                return (
+                  <div key="identification_code">
+                    <label htmlFor="identification_code" className="block text-sm font-medium text-foreground mb-1.5">
+                      {field.label}
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="identification_code"
+                        name="identification_code"
+                        type="text"
+                        required
+                        value={identCode}
+                        onChange={e => handleIdentCodeChange(e.target.value)}
+                        placeholder={field.placeholder}
+                        className={`w-full px-4 py-2.5 pr-10 rounded-xl bg-background border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 transition-all ${borderColor}`}
+                      />
+                      {/* Status icon */}
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        {codeStatus === 'checking'  && <Loader    className="w-4 h-4 text-muted animate-spin" />}
+                        {codeStatus === 'available' && <CheckCircle className="w-4 h-4 text-success" />}
+                        {codeStatus === 'taken'     && <XCircle    className="w-4 h-4 text-danger" />}
+                      </span>
+                    </div>
+                    {/* Feedback message */}
+                    {codeStatus === 'available' && (
+                      <p className="mt-1 text-xs text-success flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" /> Código disponible
+                      </p>
+                    )}
+                    {codeStatus === 'taken' && (
+                      <p className="mt-1 text-xs text-danger flex items-center gap-1">
+                        <XCircle className="w-3 h-3" /> {codeTakenMsg}
+                      </p>
+                    )}
+                  </div>
+                )
+              }
+
               /* ── Default render ── */
               const colSpan = field.type === 'textarea' ? 'md:col-span-2' : ''
               return (
@@ -333,9 +565,18 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                     <textarea id={field.name} name={field.name} rows={3} placeholder={field.placeholder}
                       className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none" />
                   ) : (
-                    <input id={field.name} name={field.name} type={field.type} required={field.required}
-                      placeholder={field.placeholder} step={field.type === 'number' ? '0.01' : undefined}
-                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                    <input
+                      id={field.name}
+                      name={field.name}
+                      type={field.type}
+                      required={field.required}
+                      placeholder={field.placeholder}
+                      step={field.type === 'number'
+                        ? (typeSlug === 'aves-de-corral' && field.name === 'weight_kg' ? '1' : '0.01')
+                        : undefined}
+                      min={typeSlug === 'aves-de-corral' && field.name === 'weight_kg' ? '0' : undefined}
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    />
                   )}
                 </div>
               )
@@ -353,7 +594,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
               </div>
             )}
 
-            {/* ── Reproductive status: only for bovino / equino / porcino ── */}
+            {/* ── Reproductive status: only for repro types ── */}
             {isReproType && sex && (
               <div>
                 <label htmlFor="meta_estado_reproductivo" className="block text-sm font-medium text-foreground mb-1.5">
@@ -387,7 +628,13 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                 </div>
               ) : sires.length === 0 ? (
                 <p className="text-xs text-warning py-2">
-                  No hay {typeSlug === 'bovino' ? 'toros' : typeSlug === 'equino' ? 'sementales' : 'verracos'} registrados activos.
+                  No hay {
+                    typeSlug === 'bovino' ? 'toros' :
+                    typeSlug === 'equino' ? 'sementales' :
+                    typeSlug === 'porcino' ? 'verracos' :
+                    typeSlug === 'caprino' ? 'machos cabrios' :
+                    'machos'
+                  } registrados activos.
                   Puedes registrar el padre más tarde desde el módulo de eventos reproductivos.
                 </p>
               ) : (

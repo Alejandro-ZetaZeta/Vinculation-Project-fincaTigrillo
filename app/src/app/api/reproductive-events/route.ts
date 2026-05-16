@@ -40,8 +40,8 @@ export async function GET(request: NextRequest) {
     const animalIds = [...new Set((events || []).map((e: { animal_id: string }) => e.animal_id))]
     const sireIds   = [...new Set((events || []).filter((e: { sire_id?: string }) => e.sire_id).map((e: { sire_id: string }) => e.sire_id))]
 
-    let animalsMap: Record<string, { name: string | null; identification_code: string | null; animal_types: { name: string; slug: string } | null }> = {}
-    let siresMap: Record<string, string> = {}
+    const animalsMap: Record<string, { name: string | null; identification_code: string | null; animal_types: { name: string; slug: string } | null }> = {}
+    const siresMap: Record<string, string> = {}
 
     if (animalIds.length > 0) {
       const { data: animalsData } = await auth.client.database
@@ -104,10 +104,58 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { animal_id, event_type, event_date, notes, species_slug, sire_id } = body
+    const { animal_id, event_type, event_date, notes, species_slug, sire_id, quantity } = body
 
     if (!animal_id || !event_type || !event_date) {
       return NextResponse.json({ error: 'Campos requeridos: animal_id, event_type, event_date' }, { status: 400 })
+    }
+
+    // Fetch target animal to enforce business rules server-side.
+    const { data: animalRow, error: animalErr } = await auth.client.database
+      .from('animals')
+      .select('id, sex, status, metadata, animal_types(slug)')
+      .eq('id', animal_id)
+      .maybeSingle()
+
+    if (animalErr) {
+      return NextResponse.json({ error: animalErr.message || 'Error al validar animal' }, { status: 400 })
+    }
+    if (!animalRow) {
+      return NextResponse.json({ error: 'Animal no encontrado' }, { status: 404 })
+    }
+
+    const animalTypes = (animalRow as unknown as { animal_types?: { slug?: string } | { slug?: string }[] | null }).animal_types
+    const typeSlug = Array.isArray(animalTypes) ? (animalTypes[0]?.slug ?? undefined) : (animalTypes?.slug ?? undefined)
+    const sexRaw = (animalRow as unknown as { sex?: unknown }).sex
+    const sex = typeof sexRaw === 'string' ? sexRaw.toLowerCase() : null
+
+    const isPoultryBatch = typeSlug === 'aves-de-corral'
+    const reproductiveTypes = new Set([
+      'monta_natural',
+      'inseminacion',
+      'confirmacion_prenez',
+      'parto',
+      'aborto',
+      'destete',
+    ])
+
+    if (event_type === 'muerte') {
+      // Mortality events are only for poultry batches.
+      if (!isPoultryBatch) {
+        return NextResponse.json({ error: 'El evento de mortalidad solo aplica a lotes de aves de corral' }, { status: 400 })
+      }
+      const q = typeof quantity === 'number' ? quantity : parseInt(String(quantity ?? ''), 10)
+      if (!Number.isFinite(q) || q <= 0) {
+        return NextResponse.json({ error: 'Cantidad inválida para mortalidad' }, { status: 400 })
+      }
+    } else if (reproductiveTypes.has(event_type)) {
+      // Reproductive events require a female individual (not a poultry batch).
+      if (isPoultryBatch) {
+        return NextResponse.json({ error: 'Los eventos reproductivos no aplican a lotes avícolas' }, { status: 400 })
+      }
+      if (sex !== 'hembra') {
+        return NextResponse.json({ error: 'Los eventos reproductivos solo aplican a hembras' }, { status: 400 })
+      }
     }
 
     // Calcular fecha estimada de parto si es monta o inseminación
@@ -125,6 +173,7 @@ export async function POST(request: NextRequest) {
       event_date,
       expected_due_date,
       notes: notes || null,
+      quantity: event_type === 'muerte' ? (typeof quantity === 'number' ? quantity : parseInt(String(quantity ?? ''), 10)) : null,
       sire_id: (event_type === 'monta_natural' && sire_id) ? sire_id : null,
       created_by: userData.user.id,
     }
@@ -139,6 +188,38 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('POST reproductive_events DB error:', JSON.stringify(error))
       return NextResponse.json({ error: error.message || 'Error al guardar evento' }, { status: 400 })
+    }
+
+    // If a poultry batch reaches 0 after a mortality event, set its status to 'muerto'.
+    if (event_type === 'muerte' && typeSlug === 'aves-de-corral') {
+      const meta = (animalRow as unknown as { metadata?: Record<string, unknown> | null }).metadata
+      const initialRaw = meta?.cantidad
+      const initial = typeof initialRaw === 'number' ? initialRaw : parseInt(String(initialRaw ?? ''), 10)
+
+      if (Number.isFinite(initial) && initial >= 0) {
+        const { data: deathsData } = await auth.client.database
+          .from('reproductive_events')
+          .select('quantity')
+          .eq('animal_id', animal_id)
+          .eq('event_type', 'muerte')
+
+        const totalDeaths = Array.isArray(deathsData)
+          ? deathsData.reduce((sum: number, row: unknown) => {
+            const qRaw = (row as { quantity?: unknown } | null)?.quantity
+            const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
+            return sum + q
+          }, 0)
+          : 0
+
+        const remaining = initial - totalDeaths
+        const statusRaw = (animalRow as unknown as { status?: unknown }).status
+        if (remaining <= 0 && statusRaw !== 'muerto') {
+          await auth.client.database
+            .from('animals')
+            .update({ status: 'muerto' })
+            .eq('id', animal_id)
+        }
+      }
     }
 
     return NextResponse.json({ data: data?.[0] }, { status: 201 })

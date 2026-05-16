@@ -37,6 +37,18 @@ const typeColors: Record<string, { bg: string; border: string; text: string; ico
     text: 'text-yellow-600 dark:text-yellow-400',
     iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
   },
+  'patos': {
+    bg: 'hover:bg-cyan-50 dark:hover:bg-cyan-950/20',
+    border: 'border-cyan-200 dark:border-cyan-800/40 hover:border-cyan-300',
+    text: 'text-cyan-600 dark:text-cyan-400',
+    iconBg: 'bg-cyan-100 dark:bg-cyan-900/30',
+  },
+  'caprino': {
+    bg: 'hover:bg-lime-50 dark:hover:bg-lime-950/20',
+    border: 'border-lime-200 dark:border-lime-800/40 hover:border-lime-300',
+    text: 'text-lime-700 dark:text-lime-400',
+    iconBg: 'bg-lime-100 dark:bg-lime-900/30',
+  },
 }
 
 export default async function CategoryPage({ params }: { params: Promise<{ categorySlug: string }> }) {

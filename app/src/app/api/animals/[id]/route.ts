@@ -37,6 +37,39 @@ export async function PUT(
     delete body.created_by
     delete body.created_at
 
+    // ── Verificar código de identificación duplicado (excluyendo el propio animal) ──
+    const identCode = (body.identification_code as string | undefined)?.trim()
+    if (identCode) {
+      const { data: existing, error: checkError } = await client.database
+        .from('animals')
+        .select('id, name, identification_code')
+        .eq('identification_code', identCode)
+        .neq('id', id)
+        .limit(1)
+
+      if (checkError) {
+        return NextResponse.json({ error: 'Error al verificar código de identificación' }, { status: 500 })
+      }
+
+      if (existing && existing.length > 0) {
+        const dup = existing[0] as { id: string; name: string | null; identification_code: string }
+        return NextResponse.json(
+          { error: `El código "${identCode}" ya está en uso por el animal "${dup.name || dup.identification_code}". Cada animal debe tener un código único.` },
+          { status: 409 }
+        )
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+     // Normalize legacy/plural sex values; prevent setting sex to null/empty.
+     if (typeof body.sex === 'string') {
+       const s = body.sex.toLowerCase().trim()
+       if (s === 'machos') body.sex = 'macho'
+       if (s === 'hembras') body.sex = 'hembra'
+       if (s === '') delete body.sex
+     }
+     if (body.sex === null) delete body.sex
+
     const { data, error: dbError } = await client.database
       .from('animals')
       .update(body)

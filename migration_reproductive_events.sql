@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS reproductive_events (
     'confirmacion_prenez',
     'parto',
     'aborto',
-    'destete'
+    'destete',
+    'muerte'
   )),
   event_date DATE NOT NULL,
   -- Fecha estimada de parto (se calcula al registrar monta/inseminación)

@@ -1,8 +1,20 @@
+
 'use client'
 
-import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { Search, Filter, X, ChevronDown, ChevronUp, Pencil, Trash2, Save, XCircle } from 'lucide-react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
+import {
+  Search, Filter, X, ChevronDown, ChevronUp, Pencil, Trash2, Save, XCircle,
+  Scale, History, TrendingUp, Loader2, Plus, CheckCircle, Loader
+} from 'lucide-react'
+import { Chart, registerables } from 'chart.js'
+import { AnimalVaccinationProfile } from '@/components/vaccines/AnimalVaccinationProfile'
+import { AssignVaccineModal } from '@/components/vaccines/AssignVaccineModal'
+
+if (typeof window !== 'undefined') {
+  Chart.register(...registerables)
+}
 
 interface Animal {
   id: string
@@ -20,6 +32,7 @@ interface Animal {
   metadata: Record<string, unknown>
   created_at: string
   animal_types: {
+    id: string
     name: string
     slug: string
     animal_categories: {
@@ -49,6 +62,54 @@ function formatDate(dateStr: string | null | undefined): string {
   return `${day}/${month}/${year}`
 }
 
+function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types' | 'metadata'>): string | null {
+  const sex = (animal.sex || '').toLowerCase()
+  const typeSlug = (animal.animal_types?.slug || '').toLowerCase()
+
+  if (typeSlug === 'bovino') {
+    if (sex === 'macho') return '/toro.svg'
+    if (sex === 'hembra') return '/vaca.svg'
+  }
+
+  if (typeSlug === 'porcino') {
+    if (sex === 'macho') return '/cerdo.svg'
+    if (sex === 'hembra') return '/cerda.svg'
+  }
+
+  if (typeSlug === 'aves-de-corral') {
+    const etapaRaw = (animal.metadata as Record<string, unknown> | null | undefined)?.etapa
+    const etapa = typeof etapaRaw === 'string' ? etapaRaw.toLowerCase() : ''
+
+    if (etapa === 'pollitos' || etapa === 'levante') return '/pollito.svg'
+    if (etapa === 'producción/adultos' || etapa === 'produccion/adultos') {
+      if (sex === 'macho' || sex === 'machos') return '/gallo.svg'
+      if (sex === 'hembra' || sex === 'hembras' || sex === 'mixto') return '/gallina.svg'
+    }
+
+    // Fallback when etapa missing
+    if (sex === 'macho' || sex === 'machos') return '/gallo.svg'
+    if (sex === 'hembra' || sex === 'hembras') return '/gallina.svg'
+    if (sex === 'mixto') return '/pollito.svg'
+  }
+
+  if (typeSlug === 'patos') {
+    if (sex === 'macho') return '/pato.svg'
+    if (sex === 'hembra') return '/pata.svg'
+  }
+
+  if (typeSlug === 'caprino') {
+    if (sex === 'macho') return '/cabro.svg'
+    if (sex === 'hembra') return '/cabrita.svg'
+  }
+
+  if (typeSlug === 'equino') {
+    if (sex === 'macho') return '/caballo.svg'
+    if (sex === 'hembra') return '/yegua.svg'
+  }
+
+  return null
+}
+
 export function AnimalListClient({ animals: initialAnimals, categories, types, isAdmin }: Props) {
   const [animals, setAnimals] = useState(initialAnimals)
   const [search, setSearch] = useState('')
@@ -60,9 +121,90 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editData, setEditData] = useState<Record<string, string | number | null>>({})
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editCodeStatus, setEditCodeStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const [editCodeMsg, setEditCodeMsg] = useState('')
+  const editCodeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [poultryCounts, setPoultryCounts] = useState<Record<string, { loading: boolean; initial: number | null; deaths: number | null; remaining: number | null }>>({})
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignAnimal, setAssignAnimal] = useState<{ id: string; typeId: string | null } | null>(null)
+
+  useEffect(() => {
+    const shouldOpen = searchParams.get('assignVaccine') === '1'
+    const targetId = searchParams.get('animalId')
+    if (!shouldOpen || !targetId) return
+    const exists = animals.find(a => a.id === targetId)
+    if (!exists) return
+
+    setExpandedId(targetId)
+    setAssignAnimal({ id: targetId, typeId: exists.animal_types?.id ?? null })
+    setAssignOpen(true)
+    // Clear params to avoid reopening on refresh.
+    router.replace('/dashboard/animals/list')
+  }, [searchParams, animals, router])
+
+  function parseInitialPoultryCount(a: Animal): number | null {
+    const raw = (a.metadata as Record<string, unknown> | null | undefined)?.cantidad
+    const n = typeof raw === 'number' ? raw : parseInt(String(raw ?? ''), 10)
+    return Number.isFinite(n) ? n : null
+  }
+
+  useEffect(() => {
+    if (!expandedId) return
+    const a = animals.find(x => x.id === expandedId)
+    if (!a) return
+    if (a.animal_types?.slug !== 'aves-de-corral') return
+
+    const initial = parseInitialPoultryCount(a)
+    setPoultryCounts(prev => ({
+      ...prev,
+      [expandedId]: {
+        loading: true,
+        initial,
+        deaths: prev[expandedId]?.deaths ?? null,
+        remaining: prev[expandedId]?.remaining ?? null,
+      }
+    }))
+
+    fetch(`/api/reproductive-events?animal_id=${encodeURIComponent(expandedId)}`)
+      .then(r => r.json())
+      .then((events: unknown) => {
+        if (!Array.isArray(events)) return
+        const typed = events as Array<{ event_type?: unknown; quantity?: unknown }>
+        const deaths = typed.reduce((sum: number, ev) => {
+          if (ev?.event_type !== 'muerte') return sum
+          const qRaw = ev?.quantity
+          const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
+          return sum + q
+        }, 0)
+        const remaining = initial == null ? null : (initial - deaths)
+        setPoultryCounts(prev => ({
+          ...prev,
+          [expandedId]: {
+            loading: false,
+            initial,
+            deaths,
+            remaining: remaining == null ? null : Math.max(remaining, 0),
+          }
+        }))
+      })
+      .catch(() => {
+        setPoultryCounts(prev => ({
+          ...prev,
+          [expandedId]: {
+            loading: false,
+            initial,
+            deaths: null,
+            remaining: null,
+          }
+        }))
+      })
+  }, [expandedId, animals])
 
   const filteredTypes = useMemo(() => {
     if (!filterCategory) return types
@@ -102,17 +244,55 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     setFilterSex('')
   }
 
+  function handleEditCodeChange(animalId: string, value: string) {
+    setEditData(p => ({ ...p, identification_code: value }))
+    setEditCodeStatus('idle')
+    setEditCodeMsg('')
+    if (editCodeDebounceRef.current) clearTimeout(editCodeDebounceRef.current)
+    if (!value.trim()) return
+    editCodeDebounceRef.current = setTimeout(async () => {
+      setEditCodeStatus('checking')
+      try {
+        const res = await fetch(`/api/animals/check-code?code=${encodeURIComponent(value.trim())}&exclude=${encodeURIComponent(animalId)}`)
+        const json = await res.json()
+        if (json.taken) {
+          setEditCodeStatus('taken')
+          setEditCodeMsg(json.usedBy ? `Ya está en uso por "${json.usedBy}"` : 'Este código ya está en uso')
+        } else {
+          setEditCodeStatus('available')
+          setEditCodeMsg('')
+        }
+      } catch {
+        setEditCodeStatus('idle')
+      }
+    }, 500)
+  }
+
   function startEdit(animal: Animal) {
+    const isPoultryBatch = animal.animal_types?.slug === 'aves-de-corral'
+    setEditError(null)
+    setEditCodeStatus('idle')
+    setEditCodeMsg('')
     setEditingId(animal.id)
     setEditData({
       name: animal.name || '',
       breed: animal.breed || '',
-      sex: animal.sex || '',
+      sex: (() => {
+        const s = (animal.sex || '').toLowerCase()
+        if (s === 'machos') return 'macho'
+        if (s === 'hembras') return 'hembra'
+        return s
+      })(),
       color: animal.color || '',
-      weight_kg: animal.weight_kg,
+      // UI for poultry batches is grams-first; DB stores kg.
+      weight_kg: isPoultryBatch
+        ? (animal.weight_kg == null ? null : Math.round(animal.weight_kg * 1000))
+        : animal.weight_kg,
       status: animal.status,
       notes: animal.notes || '',
       identification_code: animal.identification_code || '',
+      meta_estado_vacunacion: (animal.metadata?.estado_vacunacion as string) || '',
+      meta_fecha_vacunacion: (animal.metadata?.fecha_vacunacion as string) || '',
     })
     setExpandedId(animal.id)
   }
@@ -120,18 +300,42 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   function cancelEdit() {
     setEditingId(null)
     setEditData({})
+    setEditError(null)
+    setEditCodeStatus('idle')
+    setEditCodeMsg('')
   }
 
   async function saveEdit(animalId: string) {
+    if (editCodeStatus === 'taken' || editCodeStatus === 'checking') return
     setLoading(true)
+    setEditError(null)
     try {
+      const typeSlug = animals.find(a => a.id === animalId)?.animal_types?.slug
+      const isPoultry = typeSlug === 'aves-de-corral'
       const payload: Record<string, unknown> = {}
+      const metadataUpdates: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(editData)) {
-        if (value !== '' && value !== null) {
-          payload[key] = key === 'weight_kg' ? parseFloat(String(value)) : value
+        if (key.startsWith('meta_')) {
+          const metaKey = key.replace('meta_', '')
+          metadataUpdates[metaKey] = value === '' ? null : value
         } else {
-          payload[key] = null
+          if (value !== '' && value !== null) {
+            if (key === 'weight_kg') {
+              const raw = parseFloat(String(value))
+              // UI stores poultry weight in grams; DB expects kg
+              payload[key] = isNaN(raw) ? null : (isPoultry ? raw / 1000 : raw)
+            } else {
+              payload[key] = value
+            }
+          } else {
+            payload[key] = null
+          }
         }
+      }
+
+      const animalToEdit = animals.find(a => a.id === animalId)
+      if (animalToEdit) {
+        payload.metadata = { ...(animalToEdit.metadata || {}), ...metadataUpdates }
       }
 
       const res = await fetch(`/api/animals/${animalId}`, {
@@ -140,15 +344,23 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
         body: JSON.stringify(payload),
       })
 
-      if (res.ok) {
-        setEditingId(null)
-        setEditData({})
-        router.refresh()
-        // Optimistic update
-        setAnimals(prev => prev.map(a =>
-          a.id === animalId ? { ...a, ...payload } as Animal : a
-        ))
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}))
+        setEditError(result.error || `Error al guardar (${res.status})`)
+        return
       }
+
+      setEditingId(null)
+      setEditData({})
+      setEditError(null)
+      setEditCodeStatus('idle')
+      router.refresh()
+      setAnimals(prev => prev.map(a => {
+        if (a.id === animalId) {
+          return { ...a, ...payload, metadata: payload.metadata as Record<string, unknown> } as Animal
+        }
+        return a
+      }))
     } finally {
       setLoading(false)
     }
@@ -177,6 +389,15 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
 
   return (
     <div className="space-y-4">
+      <AssignVaccineModal
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        defaultAnimalIds={assignAnimal ? [assignAnimal.id] : []}
+        defaultTypeId={assignAnimal?.typeId ?? null}
+        isAdmin={isAdmin}
+        title="Programar vacunación"
+      />
+
       {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -278,6 +499,14 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
           {filteredAnimals.map((animal) => {
             const isEditing = editingId === animal.id
             const isDeleting = deleteConfirmId === animal.id
+            const animalIconSrc = getSexIconSrc(animal)
+            const sexOnlyIconSrc = (() => {
+              const sex = (animal.sex || '').toLowerCase()
+              if (sex === 'macho' || sex === 'machos') return '/simmacho.svg'
+              if (sex === 'hembra' || sex === 'hembras') return '/simhembra.svg'
+              if (sex === 'mixto') return '/simix.svg'
+              return null
+            })()
 
             return (
               <div key={animal.id} className="bg-surface border border-border rounded-xl overflow-hidden hover:shadow-md transition-all">
@@ -287,10 +516,25 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                     onClick={() => { setExpandedId(expandedId === animal.id ? null : animal.id); cancelEdit() }}
                     className="flex-1 flex items-center gap-4 text-left hover:bg-surface-hover rounded-lg transition-colors -m-1 p-1"
                   >
-                    <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 items-center">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{animal.name || 'Sin nombre'}</p>
-                        <p className="text-xs text-muted">{animal.identification_code || '—'}</p>
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 items-center min-w-0">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {animalIconSrc && (
+                            <div className="flex items-center justify-center w-7 h-7 md:w-7 md:h-7 shrink-0">
+                              <Image
+                                src={animalIconSrc}
+                                alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
+                                width={28}
+                                height={28}
+                                className="w-7 h-7 md:w-7 md:h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                              />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground whitespace-normal break-all md:wrap-break-word leading-snug">{animal.name || 'Sin nombre'}</p>
+                            <p className="text-xs text-muted">{animal.identification_code || '—'}</p>
+                          </div>
+                        </div>
                       </div>
                       <div className="hidden md:block">
                         <p className="text-sm text-foreground">{animal.animal_types?.name}</p>
@@ -300,7 +544,20 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                         <p className="text-sm">{animal.breed || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-sm capitalize">{animal.sex || '—'}</p>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {sexOnlyIconSrc && (
+                            <div className="flex items-center justify-center w-7 h-7 md:w-7 md:h-7 shrink-0">
+                              <Image
+                                src={sexOnlyIconSrc}
+                                alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
+                                width={28}
+                                height={28}
+                                className="w-7 h-7 md:w-7 md:h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                              />
+                            </div>
+                          )}
+                          <p className="text-sm capitalize">{animal.sex || '—'}</p>
+                        </div>
                       </div>
                       <div>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusColors[animal.status] || ''}`}>
@@ -363,21 +620,65 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                     {isEditing ? (
                       /* Edit mode */
                       <div className="space-y-4">
+                        {editError && (
+                          <div className="bg-danger/10 border border-danger/20 text-danger rounded-xl px-4 py-2 text-sm">
+                            {editError}
+                          </div>
+                        )}
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                           <EditField label="Nombre" name="name" value={editData.name} onChange={(v) => setEditData(p => ({...p, name: v}))} />
-                          <EditField label="Raza" name="breed" value={editData.breed} onChange={(v) => setEditData(p => ({...p, breed: v}))} />
+                          <EditField label="Raza *" name="breed" value={editData.breed} onChange={(v) => setEditData(p => ({...p, breed: v}))} />
                           <div>
                             <label className="block text-xs text-muted mb-1">Sexo</label>
                             <select value={String(editData.sex || '')} onChange={(e) => setEditData(p => ({...p, sex: e.target.value}))}
                               className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
-                              <option value="">—</option>
-                              <option value="macho">Macho</option>
-                              <option value="hembra">Hembra</option>
+                              {animal.animal_types?.slug === 'aves-de-corral' ? (
+                                <>
+                                  <option value="macho">Macho</option>
+                                  <option value="hembra">Hembra</option>
+                                  <option value="mixto">Mixto</option>
+                                </>
+                              ) : (
+                                <>
+                                  <option value="macho">Macho</option>
+                                  <option value="hembra">Hembra</option>
+                                </>
+                              )}
                             </select>
                           </div>
                           <EditField label="Color" name="color" value={editData.color} onChange={(v) => setEditData(p => ({...p, color: v}))} />
-                          <EditField label="Peso (kg)" name="weight_kg" value={editData.weight_kg} onChange={(v) => setEditData(p => ({...p, weight_kg: v}))} type="number" />
-                          <EditField label="Identificación" name="identification_code" value={editData.identification_code} onChange={(v) => setEditData(p => ({...p, identification_code: v}))} />
+                          <EditField
+                            label={animal.animal_types?.slug === 'aves-de-corral' ? 'Peso (g)' : 'Peso (kg)'}
+                            name="weight_kg"
+                            value={editData.weight_kg}
+                            onChange={(v) => setEditData(p => ({ ...p, weight_kg: v }))}
+                            type="number"
+                            step={animal.animal_types?.slug === 'aves-de-corral' ? '1' : '0.01'}
+                            min={animal.animal_types?.slug === 'aves-de-corral' ? 0 : undefined}
+                          />
+                          {/* Identification code with live duplicate check */}
+                          <div>
+                            <label className="block text-xs text-muted mb-1">Identificación *</label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={String(editData.identification_code || '')}
+                                onChange={e => handleEditCodeChange(animal.id, e.target.value)}
+                                className={`w-full px-3 py-1.5 pr-8 rounded-lg bg-background border text-sm focus:outline-none focus:ring-2 transition-all
+                                  ${editCodeStatus === 'taken'     ? 'border-danger  focus:ring-danger/30' :
+                                    editCodeStatus === 'available' ? 'border-success focus:ring-success/30' :
+                                    'border-border focus:ring-primary/30'}`}
+                              />
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                {editCodeStatus === 'checking'  && <Loader       className="w-3.5 h-3.5 text-muted animate-spin" />}
+                                {editCodeStatus === 'available' && <CheckCircle  className="w-3.5 h-3.5 text-success" />}
+                                {editCodeStatus === 'taken'     && <XCircle      className="w-3.5 h-3.5 text-danger" />}
+                              </span>
+                            </div>
+                            {editCodeStatus === 'taken' && (
+                              <p className="mt-0.5 text-[10px] text-danger">{editCodeMsg}</p>
+                            )}
+                          </div>
                           <div>
                             <label className="block text-xs text-muted mb-1">Estado</label>
                             <select value={String(editData.status || '')} onChange={(e) => setEditData(p => ({...p, status: e.target.value}))}
@@ -388,6 +689,17 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                               <option value="transferido">Transferido</option>
                             </select>
                           </div>
+                          <div>
+                            <label className="block text-xs text-muted mb-1">Estado Vacunación</label>
+                            <select value={String(editData.meta_estado_vacunacion || '')} onChange={(e) => setEditData(p => ({...p, meta_estado_vacunacion: e.target.value}))}
+                              className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
+                              <option value="">—</option>
+                              <option value="no vacunado">No vacunado</option>
+                              <option value="programado">Programado</option>
+                              <option value="vacunado">Vacunado</option>
+                            </select>
+                          </div>
+                          <EditField label="Fecha Vacunación" name="meta_fecha_vacunacion" value={editData.meta_fecha_vacunacion} onChange={(v) => setEditData(p => ({...p, meta_fecha_vacunacion: v}))} type="date" />
                         </div>
                         <div>
                           <label className="block text-xs text-muted mb-1">Notas</label>
@@ -395,10 +707,13 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             rows={2} className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
                         </div>
                         <div className="flex gap-2 pt-1">
-                          <button onClick={() => saveEdit(animal.id)} disabled={loading}
-                            className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors flex items-center gap-1.5">
+                          <button
+                            onClick={() => saveEdit(animal.id)}
+                            disabled={loading || editCodeStatus === 'taken' || editCodeStatus === 'checking'}
+                            className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors flex items-center gap-1.5"
+                          >
                             {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                            Guardar
+                            {editCodeStatus === 'checking' ? 'Verificando…' : 'Guardar'}
                           </button>
                           <button onClick={cancelEdit} className="px-4 py-1.5 rounded-lg border border-border text-sm text-muted hover:text-foreground transition-colors flex items-center gap-1.5">
                             <XCircle className="w-3.5 h-3.5" /> Cancelar
@@ -414,19 +729,80 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                           <Detail label="Raza" value={animal.breed} />
                           <Detail label="Sexo" value={animal.sex} />
                           <Detail label="Color" value={animal.color} />
-                          <Detail label="Peso" value={animal.weight_kg ? `${animal.weight_kg} kg` : null} />
+                          <Detail
+                            label="Peso"
+                            value={animal.weight_kg != null
+                              ? (animal.animal_types?.slug === 'aves-de-corral'
+                                ? `${Math.round(animal.weight_kg * 1000)} g`
+                                : `${animal.weight_kg} kg`)
+                              : null}
+                          />
+                          {animal.animal_types?.slug === 'aves-de-corral' && (
+                            <>
+                              <Detail
+                                label="Cantidad inicial"
+                                value={(() => {
+                                  const initial = parseInitialPoultryCount(animal)
+                                  return initial == null ? null : String(initial)
+                                })()}
+                              />
+                              <Detail
+                                label="Bajas acumuladas"
+                                value={(() => {
+                                  const c = poultryCounts[animal.id]
+                                  if (!c || c.loading) return 'Calculando...'
+                                  return c.deaths == null ? null : String(c.deaths)
+                                })()}
+                              />
+                              <Detail
+                                label="Cantidad actual"
+                                value={(() => {
+                                  const c = poultryCounts[animal.id]
+                                  if (!c || c.loading) return 'Calculando...'
+                                  return c.remaining == null ? null : String(c.remaining)
+                                })()}
+                              />
+                            </>
+                          )}
                           <Detail label="Nacimiento" value={formatDate(animal.birth_date)} />
                           <Detail label="Adquisición" value={animal.acquisition_type} />
                           <Detail label="F. Adquisición" value={formatDate(animal.acquisition_date)} />
                           <Detail label="Registrado" value={formatDate(animal.created_at)} />
                           {animal.metadata && Object.entries(animal.metadata)
-                            .filter(([key]) => key !== 'padre_id')  // hide raw UUID
+                            .filter(([key]) => {
+                              if (key === 'padre_id' || key === 'peso_promedio_g') return false
+                              if (animal.animal_types?.slug === 'aves-de-corral' && key === 'cantidad') return false
+                              return true
+                            })  // hide raw UUID + legacy derived weight + poultry initial count (shown explicitly)
                             .map(([key, value]) => (
                               <Detail key={key}
                                 label={key === 'padre_nombre' ? 'Padre' : key.replace(/_/g, ' ')}
                                 value={String(value)} />
                             ))}
                         </div>
+                        {/* Weight History Section — Only for specific types */}
+                        {['bovino', 'equino', 'porcino', 'caprino'].includes(animal.animal_types?.slug) && (
+                          <div className="mt-6 pt-6 border-t border-border">
+                            <WeightHistorySection
+                              animalId={animal.id}
+                              isAdmin={isAdmin}
+                              onWeightUpdated={(newWeight) => {
+                                setAnimals(prev => prev.map(a =>
+                                  a.id === animal.id ? { ...a, weight_kg: newWeight } : a
+                                ))
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        <div className="mt-6 pt-6 border-t border-border">
+                          <AnimalVaccinationProfile
+                            animalId={animal.id}
+                            animalTypeId={animal.animal_types?.id ?? null}
+                            isAdmin={isAdmin}
+                          />
+                        </div>
+
                         {animal.notes && (
                           <div className="mt-3 pt-3 border-t border-border">
                             <p className="text-xs text-muted mb-1">Notas</p>
@@ -451,6 +827,201 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   )
 }
 
+function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
+  animalId: string; isAdmin: boolean; onWeightUpdated: (w: number) => void
+}) {
+  const [weights, setWeights] = useState<{ id: string; weight_kg: number; recorded_at: string; notes: string | null }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [newWeight, setNewWeight] = useState('')
+  const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0])
+  const [newNotes, setNewNotes] = useState('')
+  const chartRef = useRef<HTMLCanvasElement>(null)
+  const chartInstance = useRef<Chart | null>(null)
+
+  useEffect(() => {
+    fetch(`/api/animals/${animalId}/weights`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d.data)) setWeights(d.data) })
+      .finally(() => setLoading(false))
+  }, [animalId])
+
+  useEffect(() => {
+    if (!chartRef.current || weights.length === 0) return
+    const ctx = chartRef.current.getContext('2d')
+    if (!ctx) return
+
+    if (chartInstance.current) chartInstance.current.destroy()
+
+    chartInstance.current = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: weights.map(w => {
+          const d = new Date(w.recorded_at)
+          return d.toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })
+        }),
+        datasets: [{
+          label: 'Peso (kg)',
+          data: weights.map(w => w.weight_kg),
+          borderColor: '#61810b',
+          backgroundColor: '#61810b22',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#61810b'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: false, grid: { color: '#e2e8f033' } },
+          x: { grid: { display: false } }
+        }
+      }
+    })
+
+    return () => chartInstance.current?.destroy()
+  }, [weights])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newWeight || !newDate) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/animals/${animalId}/weights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weight_kg: parseFloat(newWeight),
+          recorded_at: newDate,
+          notes: newNotes
+        })
+      })
+      if (res.ok) {
+        const result = await res.json()
+        const updatedWeights = [...weights, result.data].sort((a, b) =>
+          new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
+        )
+        setWeights(updatedWeights)
+        onWeightUpdated(parseFloat(newWeight))
+        setShowForm(false)
+        setNewWeight('')
+        setNewNotes('')
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <Scale className="w-4 h-4 text-primary" />
+          Historial de Peso
+        </h4>
+        {isAdmin && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="text-xs font-medium text-primary hover:text-primary-dark flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-lg transition-colors"
+          >
+            {showForm ? <X className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+            {showForm ? 'Cancelar' : 'Registrar Peso'}
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="bg-background border border-border rounded-xl p-4 animate-scale-in space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-muted uppercase mb-1">Peso (kg)</label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={newWeight}
+                onChange={e => setNewWeight(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-muted uppercase mb-1">Fecha</label>
+              <input
+                type="date"
+                required
+                value={newDate}
+                onChange={e => setNewDate(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold text-muted uppercase mb-1">Notas (opcional)</label>
+            <input
+              type="text"
+              value={newNotes}
+              onChange={e => setNewNotes(e.target.value)}
+              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+              placeholder="Ej: Destete, cambio de lote..."
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-dark transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Guardar Registro
+          </button>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-6 text-muted"><Loader2 className="w-5 h-5 animate-spin" /></div>
+      ) : weights.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-background border border-border rounded-xl p-3 h-48 relative">
+            <canvas ref={chartRef}></canvas>
+          </div>
+          <div className="bg-background border border-border rounded-xl overflow-hidden flex flex-col h-48">
+            <div className="px-3 py-2 border-b border-border bg-surface text-[10px] font-bold uppercase text-muted flex items-center gap-2">
+              <History className="w-3 h-3" /> Últimos registros
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {[...weights].reverse().map(w => (
+                <div key={w.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-surface transition-colors">
+                  <div>
+                    <p className="text-xs font-bold text-foreground">{w.weight_kg} kg</p>
+                    <p className="text-[10px] text-muted">{new Date(w.recorded_at).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: '2-digit' })}</p>
+                  </div>
+                  {w.notes && (
+                    <div className="group relative">
+                      <TrendingUp className="w-3 h-3 text-primary/40" />
+                      <span className="absolute bottom-full right-0 mb-2 w-32 p-2 bg-foreground text-background text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        {w.notes}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-surface/50 border border-dashed border-border rounded-xl p-8 text-center">
+          <TrendingUp className="w-8 h-8 text-muted/20 mx-auto mb-2" />
+          <p className="text-xs text-muted">No hay historial de peso registrado para este animal.</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Detail({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
@@ -460,9 +1031,9 @@ function Detail({ label, value }: { label: string; value: string | null | undefi
   )
 }
 
-function EditField({ label, name, value, onChange, type = 'text' }: {
+function EditField({ label, name, value, onChange, type = 'text', step, min }: {
   label: string; name: string; value: string | number | null | undefined
-  onChange: (v: string) => void; type?: string
+  onChange: (v: string) => void; type?: string; step?: string; min?: string | number
 }) {
   const fieldId = `edit-field-${name}`
   return (
@@ -474,7 +1045,8 @@ function EditField({ label, name, value, onChange, type = 'text' }: {
         type={type}
         value={String(value || '')}
         onChange={(e) => onChange(e.target.value)}
-        step={type === 'number' ? '0.01' : undefined}
+        step={type === 'number' ? (step ?? '0.01') : undefined}
+        min={min}
         className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
       />
     </div>
