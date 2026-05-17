@@ -80,8 +80,8 @@ function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types' | 'metadata'>
     const etapaRaw = (animal.metadata as Record<string, unknown> | null | undefined)?.etapa
     const etapa = typeof etapaRaw === 'string' ? etapaRaw.toLowerCase() : ''
 
-    if (etapa === 'pollitos' || etapa === 'levante') return '/pollito.svg'
-    if (etapa === 'producción/adultos' || etapa === 'produccion/adultos') {
+    if (etapa === 'pollitos') return '/pollito.svg'
+    if (etapa === 'levante' || etapa === 'producción/adultos' || etapa === 'produccion/adultos') {
       if (sex === 'macho' || sex === 'machos') return '/gallo.svg'
       if (sex === 'hembra' || sex === 'hembras' || sex === 'mixto') return '/gallina.svg'
     }
@@ -286,13 +286,18 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
       color: animal.color || '',
       // UI for poultry batches is grams-first; DB stores kg.
       weight_kg: isPoultryBatch
-        ? (animal.weight_kg == null ? null : Math.round(animal.weight_kg * 1000))
+        ? (() => {
+            if (animal.weight_kg == null) return null
+            const etapa = (animal.metadata?.etapa as string) || ''
+            return etapa === 'pollitos'
+              ? Math.round(animal.weight_kg * 1000)
+              : parseFloat((animal.weight_kg * 2.20462).toFixed(4))
+          })()
         : animal.weight_kg,
       status: animal.status,
       notes: animal.notes || '',
       identification_code: animal.identification_code || '',
-      meta_estado_vacunacion: (animal.metadata?.estado_vacunacion as string) || '',
-      meta_fecha_vacunacion: (animal.metadata?.fecha_vacunacion as string) || '',
+      ...(isPoultryBatch && { meta_etapa: (animal.metadata?.etapa as string) || '' }),
     })
     setExpandedId(animal.id)
   }
@@ -323,7 +328,12 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
             if (key === 'weight_kg') {
               const raw = parseFloat(String(value))
               // UI stores poultry weight in grams; DB expects kg
-              payload[key] = isNaN(raw) ? null : (isPoultry ? raw / 1000 : raw)
+              if (isPoultry) {
+                const etapa = (animals.find(a => a.id === animalId)?.metadata?.etapa as string) || ''
+                payload[key] = isNaN(raw) ? null : (etapa === 'pollitos' ? raw / 1000 : raw / 2.20462)
+              } else {
+                payload[key] = isNaN(raw) ? null : raw
+              }
             } else {
               payload[key] = value
             }
@@ -648,12 +658,14 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                           </div>
                           <EditField label="Color" name="color" value={editData.color} onChange={(v) => setEditData(p => ({...p, color: v}))} />
                           <EditField
-                            label={animal.animal_types?.slug === 'aves-de-corral' ? 'Peso (g)' : 'Peso (kg)'}
+                            label={animal.animal_types?.slug === 'aves-de-corral'
+                              ? ((animal.metadata?.etapa as string) === 'pollitos' ? 'Peso (g)' : 'Peso (lbs)')
+                              : 'Peso (kg)'}
                             name="weight_kg"
                             value={editData.weight_kg}
                             onChange={(v) => setEditData(p => ({ ...p, weight_kg: v }))}
                             type="number"
-                            step={animal.animal_types?.slug === 'aves-de-corral' ? '1' : '0.01'}
+                            step={animal.animal_types?.slug === 'aves-de-corral' && (animal.metadata?.etapa as string) === 'pollitos' ? '1' : '0.001'}
                             min={animal.animal_types?.slug === 'aves-de-corral' ? 0 : undefined}
                           />
                           {/* Identification code with live duplicate check */}
@@ -689,17 +701,18 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                               <option value="transferido">Transferido</option>
                             </select>
                           </div>
-                          <div>
-                            <label className="block text-xs text-muted mb-1">Estado Vacunación</label>
-                            <select value={String(editData.meta_estado_vacunacion || '')} onChange={(e) => setEditData(p => ({...p, meta_estado_vacunacion: e.target.value}))}
-                              className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
-                              <option value="">—</option>
-                              <option value="no vacunado">No vacunado</option>
-                              <option value="programado">Programado</option>
-                              <option value="vacunado">Vacunado</option>
-                            </select>
-                          </div>
-                          <EditField label="Fecha Vacunación" name="meta_fecha_vacunacion" value={editData.meta_fecha_vacunacion} onChange={(v) => setEditData(p => ({...p, meta_fecha_vacunacion: v}))} type="date" />
+                          {animal.animal_types?.slug === 'aves-de-corral' && (
+                            <div>
+                              <label className="block text-xs text-muted mb-1">Etapa productiva</label>
+                              <select value={String(editData.meta_etapa || '')} onChange={(e) => setEditData(p => ({...p, meta_etapa: e.target.value}))}
+                                className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
+                                <option value="">—</option>
+                                <option value="pollitos">Pollitos</option>
+                                <option value="levante">Levante</option>
+                                <option value="producción/adultos">Producción / Adultos</option>
+                              </select>
+                            </div>
+                          )}
                         </div>
                         <div>
                           <label className="block text-xs text-muted mb-1">Notas</label>
@@ -733,7 +746,9 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             label="Peso"
                             value={animal.weight_kg != null
                               ? (animal.animal_types?.slug === 'aves-de-corral'
-                                ? `${Math.round(animal.weight_kg * 1000)} g`
+                                ? ((animal.metadata?.etapa as string) === 'pollitos'
+                                    ? `${Math.round(animal.weight_kg * 1000)} g`
+                                    : `${(animal.weight_kg * 2.20462).toFixed(3)} lbs`)
                                 : `${animal.weight_kg} kg`)
                               : null}
                           />
@@ -771,7 +786,8 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                           {animal.metadata && Object.entries(animal.metadata)
                             .filter(([key]) => {
                               if (key === 'padre_id' || key === 'peso_promedio_g') return false
-                              if (animal.animal_types?.slug === 'aves-de-corral' && key === 'cantidad') return false
+                              if (key === 'estado_vacunacion' || key === 'fecha_vacunacion') return false
+                              if (animal.animal_types?.slug === 'aves-de-corral' && (key === 'cantidad' || key === 'mortalidad_esperada_pct')) return false
                               return true
                             })  // hide raw UUID + legacy derived weight + poultry initial count (shown explicitly)
                             .map(([key, value]) => (

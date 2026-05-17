@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { EntryAnimation } from '@/components/layout/EntryAnimation'
+import { NotificationsProvider } from '@/contexts/NotificationsContext'
+import { Day45Checker } from '@/components/layout/Day45Checker'
 
 /*
   DashboardShell reads cookies via getCurrentUser — this makes it dynamic.
@@ -15,6 +17,8 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!user) redirect('/login')
 
   return (
+    <NotificationsProvider>
+    <Day45Checker />
     <div className="min-h-screen flex bg-background print:block print:bg-white print:min-h-0 print:h-auto">
       <EntryAnimation />
       <a href="#main-content" className="skip-link print:hidden">
@@ -38,6 +42,7 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    </NotificationsProvider>
   )
 }
 

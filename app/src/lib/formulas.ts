@@ -183,6 +183,35 @@ export function calcFCR(totalFeedKg: number, weightGainKg: number): number {
 }
 
 // ─────────────────────────────────────────────
+// ROSS 308 AP — UTILIDADES DE LOTE AVÍCOLA
+// ─────────────────────────────────────────────
+
+/**
+ * Deriva la etapa productiva de un lote de pollos Ross 308 AP según días de vida.
+ * Day 0 = fecha de entrada (COALESCE(acquisition_date, birth_date)).
+ *
+ * FORMULA: ETAPA_AVICOLA — 1-23 pollitos | 24-35 levante | 36+ producción/adultos
+ */
+export function derivePoultryStage(
+  daysOfLife: number
+): 'pollitos' | 'levante' | 'producción/adultos' | null {
+  if (!Number.isFinite(daysOfLife) || daysOfLife < 1) return null
+  if (daysOfLife <= 23) return 'pollitos'
+  if (daysOfLife <= 35) return 'levante'
+  return 'producción/adultos'
+}
+
+/** Convierte kg a libras. FORMULA: PESO_LBS — kg × 2.20462 */
+export function kgToLbs(kg: number): number {
+  return kg * 2.20462
+}
+
+/** Convierte libras a kg. FORMULA: PESO_KG — lbs / 2.20462 */
+export function lbsToKg(lbs: number): number {
+  return lbs / 2.20462
+}
+
+// ─────────────────────────────────────────────
 // TIPOS DE EVENTOS REPRODUCTIVOS
 // ─────────────────────────────────────────────
 export const REPRODUCTIVE_EVENT_TYPES = [

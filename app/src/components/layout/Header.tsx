@@ -4,6 +4,7 @@ import { signOut } from '@/lib/auth/actions'
 import { LogOut, User, Sun, Moon, Palette } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useTheme } from '@/components/ThemeProvider'
+import { NotificationBell } from '@/components/layout/NotificationBell'
 
 interface HeaderProps {
   userName: string
@@ -47,9 +48,12 @@ export function Header({ userName, userRole, userEmail }: HeaderProps) {
       {/* Right actions */}
       <div className="flex items-center gap-1.5">
 
+        {/* Notifications (admin only) */}
+        <NotificationBell userRole={userRole} />
+
         {/* Theme toggles */}
         <button
-          onClick={() => setTheme('uleam')}
+          onClick={() => setTheme(theme === 'uleam' ? 'light' : 'uleam')}
           className={`p-2.5 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center mr-1 ${theme === 'uleam' ? 'bg-primary/10 text-primary' : 'text-muted hover:text-foreground hover:bg-surface-hover'}`}
           title="Tema Uleam (Material Design 3)"
           aria-label="Cambiar a tema Uleam"
