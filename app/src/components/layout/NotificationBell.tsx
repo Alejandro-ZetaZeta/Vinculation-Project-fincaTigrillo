@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
-import { Bell, BellOff, X, Trash2, CheckCircle, AlertTriangle, Info, AlertCircle } from 'lucide-react'
+import { Bell, BellOff, X, Trash2, CheckCircle, AlertTriangle, Info, AlertCircle, Loader2 } from 'lucide-react'
 import { useNotifications, type AppNotification, type NotificationType } from '@/contexts/NotificationsContext'
 
 interface NotificationBellProps {
@@ -28,7 +28,7 @@ const typeConfig: Record<NotificationType, { icon: React.ElementType; colorClass
 function NotificationItem({ n, onDismiss }: { n: AppNotification; onDismiss: (id: string) => void }) {
   const { icon: Icon, colorClass, bgClass } = typeConfig[n.type]
   return (
-    <div className={`group flex gap-3 px-4 py-3 transition-colors hover:bg-surface-hover/60 ${!n.read ? 'bg-primary/[0.03]' : ''}`}>
+    <div className={`group flex gap-3 px-4 py-3 transition-colors hover:bg-surface-hover/60 ${!n.read ? 'bg-primary/3' : ''}`}>
       <div className={`mt-0.5 w-7 h-7 rounded-lg ${bgClass} flex items-center justify-center shrink-0`}>
         <Icon className={`w-3.5 h-3.5 ${colorClass}`} />
       </div>
@@ -65,7 +65,7 @@ function NotificationItem({ n, onDismiss }: { n: AppNotification; onDismiss: (id
 export function NotificationBell({ userRole }: NotificationBellProps) {
   if (userRole !== 'admin') return null
 
-  const { notifications, unreadCount, dismiss, clearAll, markAllRead } = useNotifications()
+  const { notifications, unreadCount, loading, dismiss, clearAll, markAllRead } = useNotifications()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -98,7 +98,9 @@ export function NotificationBell({ userRole }: NotificationBellProps) {
         aria-expanded={open}
         className="relative p-2.5 rounded-xl text-muted hover:text-foreground hover:bg-surface-hover transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
       >
-        <Bell className="w-4 h-4" aria-hidden="true" />
+        {loading
+          ? <Loader2 className="w-4 h-4 animate-spin text-muted" aria-hidden="true" />
+          : <Bell className="w-4 h-4" aria-hidden="true" />}
         {unreadCount > 0 && (
           <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-danger flex items-center justify-center text-[9px] font-bold text-white leading-none pointer-events-none">
             {unreadCount > 9 ? '9+' : unreadCount}

@@ -1,6 +1,8 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import {
+  createContext, useContext, useState, useCallback, useEffect
+} from 'react'
 
 export type NotificationType = 'info' | 'warning' | 'success' | 'error'
 
@@ -15,88 +17,115 @@ export interface AppNotification {
   actionHref?: string
 }
 
+// Shape returned by /api/notifications
+interface DbRow {
+  id: string
+  title: string
+  message: string
+  type: NotificationType
+  is_read: boolean
+  created_at: string
+}
+
+function rowToNotification(row: DbRow): AppNotification {
+  return {
+    id: row.id,
+    type: row.type,
+    title: row.title,
+    message: row.message,
+    timestamp: new Date(row.created_at),
+    read: row.is_read,
+  }
+}
+
 interface NotificationsContextValue {
   notifications: AppNotification[]
   unreadCount: number
+  loading: boolean
   dismiss: (id: string) => void
   clearAll: () => void
   markAllRead: () => void
+  refresh: () => void
   addNotification: (payload: Omit<AppNotification, 'id' | 'read' | 'timestamp'>) => void
 }
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null)
 
-const MOCK_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: '1',
-    type: 'warning',
-    title: 'Vacunación pendiente',
-    message: '3 bovinos requieren dosis de refuerzo esta semana.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 14),
-    read: false,
-  },
-  {
-    id: '2',
-    type: 'info',
-    title: 'Nuevo lote registrado',
-    message: 'Lote Gallinas-03 ingresado con 120 aves en etapa pollitos.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    read: false,
-  },
-  {
-    id: '3',
-    type: 'success',
-    title: 'Reporte generado',
-    message: 'Reporte de inventario de mayo exportado correctamente.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
-    read: true,
-  },
-  {
-    id: '4',
-    type: 'error',
-    title: 'Evento de mortalidad',
-    message: 'Se registraron 4 bajas en Lote Pollos-02. Cantidad actual: 96.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23),
-    read: false,
-  },
-  {
-    id: '5',
-    type: 'info',
-    title: 'Peso actualizado',
-    message: 'Luna (Bov-007) registró nuevo peso: 412 kg.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26),
-    read: true,
-  },
-]
-
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<AppNotification[]>(MOCK_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const dismiss = useCallback((id: string) => {
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/notifications')
+      if (!res.ok) throw new Error(await res.text())
+      const rows: DbRow[] = await res.json()
+      setNotifications(rows.map(rowToNotification))
+    } catch (err) {
+      console.error('[NotificationsContext] fetch failed:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Load once on mount
+  useEffect(() => { load() }, [load])
+
+  const dismiss = useCallback(async (id: string) => {
+    // Optimistic update
     setNotifications(prev => prev.filter(n => n.id !== id))
-  }, [])
+    try {
+      await fetch(`/api/notifications?id=${id}`, { method: 'DELETE' })
+    } catch (err) {
+      console.error('[NotificationsContext] dismiss failed:', err)
+      load() // revert if error
+    }
+  }, [load])
 
-  const clearAll = useCallback(() => {
+  const clearAll = useCallback(async () => {
     setNotifications([])
-  }, [])
+    try {
+      await fetch('/api/notifications', { method: 'DELETE' })
+    } catch (err) {
+      console.error('[NotificationsContext] clearAll failed:', err)
+      load()
+    }
+  }, [load])
 
-  const markAllRead = useCallback(() => {
+  const markAllRead = useCallback(async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    try {
+      await fetch('/api/notifications', { method: 'PATCH' })
+    } catch (err) {
+      console.error('[NotificationsContext] markAllRead failed:', err)
+    }
   }, [])
 
-  const addNotification = useCallback((payload: Omit<AppNotification, 'id' | 'read' | 'timestamp'>) => {
-    setNotifications(prev => [{
-      ...payload,
-      id: crypto.randomUUID(),
-      read: false,
-      timestamp: new Date(),
-    }, ...prev])
-  }, [])
+  const addNotification = useCallback(
+    (payload: Omit<AppNotification, 'id' | 'read' | 'timestamp'>) => {
+      const optimistic: AppNotification = {
+        ...payload,
+        id: crypto.randomUUID(),
+        read: false,
+        timestamp: new Date(),
+      }
+      setNotifications(prev => [optimistic, ...prev])
+      fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: payload.title, message: payload.message, type: payload.type }),
+      }).catch(err => console.error('[NotificationsContext] addNotification failed:', err))
+    },
+    []
+  )
 
   const unreadCount = notifications.filter(n => !n.read).length
 
   return (
-    <NotificationsContext.Provider value={{ notifications, unreadCount, dismiss, clearAll, markAllRead, addNotification }}>
+    <NotificationsContext.Provider
+      value={{ notifications, unreadCount, loading, dismiss, clearAll, markAllRead, refresh: load, addNotification }}
+    >
       {children}
     </NotificationsContext.Provider>
   )

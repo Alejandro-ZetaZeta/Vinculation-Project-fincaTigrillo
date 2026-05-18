@@ -1,9 +1,10 @@
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { cacheLife, cacheTag } from 'next/cache'
 import { getCurrentUser } from '@/lib/auth/actions'
 import { getAccessToken } from '@/lib/auth/cookies'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
-import { PawPrint, TrendingUp, CheckCircle, Clock } from 'lucide-react'
+import { PawPrint, ShoppingCart, CheckCircle, BarChart2, ArrowRight } from 'lucide-react'
 import { StudentKanban } from '@/components/activities/StudentKanban'
 
 /* ─────────────────────────────────────────────
@@ -58,6 +59,7 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
 
   const totalAnimals  = animals.length
   const activeAnimals = animals.filter(a => a.status === 'activo').length
+  const soldAnimals   = animals.filter(a => a.status === 'vendido').length
 
   const countByCategory = categories.map(cat => {
     const catTypeIds = types.filter(t => t.category_id === cat.id).map(t => t.id)
@@ -70,10 +72,9 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
     .slice(0, 5)
 
   const stats = [
-    { label: 'Total Animales', value: totalAnimals,    icon: PawPrint,    color: 'text-primary',       bg: 'bg-primary/10'       },
-    { label: 'Activos',        value: activeAnimals,   icon: CheckCircle, color: 'text-success',       bg: 'bg-success/10'       },
-    { label: 'Categorías',     value: categories.length, icon: TrendingUp, color: 'text-accent',       bg: 'bg-accent/10'        },
-    { label: 'Especies',       value: types.length,    icon: Clock,       color: 'text-primary-light', bg: 'bg-primary-light/10' },
+    { label: 'Total Animales', value: totalAnimals,  icon: PawPrint,    color: 'text-primary', bg: 'bg-primary/10'  },
+    { label: 'Activos',        value: activeAnimals, icon: CheckCircle, color: 'text-success', bg: 'bg-success/10'  },
+    { label: 'Vendidos',       value: soldAnimals,   icon: ShoppingCart,color: 'text-accent',  bg: 'bg-accent/10'   },
   ]
 
   return (
@@ -94,9 +95,28 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
             </div>
           )
         })}
+
+        {/* Reports shortcut card */}
+        <Link
+          href="/dashboard/reports"
+          role="listitem"
+          aria-label="Ver reportes operacionales"
+          className="group relative overflow-hidden bg-linear-to-br from-primary/20 via-accent/10 to-primary/5 border border-primary/30 hover:border-primary/60 rounded-2xl p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
+              <BarChart2 className="w-5 h-5 text-primary" aria-hidden="true" />
+            </div>
+            <ArrowRight className="w-4 h-4 text-primary/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="font-display text-sm font-bold text-foreground">Reportes</p>
+            <p className="text-xs text-muted mt-0.5">Operacionales</p>
+          </div>
+        </Link>
       </div>
 
-      <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-2' : ''} gap-6`}>
+      <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-2' : ''} gap-6 items-start`}>
         {/* Category breakdown */}
         <div className="bg-surface border border-border rounded-2xl p-6">
           <h2 className="font-display text-base font-semibold mb-4 text-foreground tracking-tight">Animales por Categoría</h2>

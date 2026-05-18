@@ -62,6 +62,8 @@ interface Invoice {
   id: string
   event_id: string | null
   file_url: string
+  title: string
+  notes: string | null
   created_at: string
 }
 
@@ -811,6 +813,8 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [loadingPreview, setLoadingPreview] = useState(false)
+  const [title, setTitle] = useState('')
+  const [notes, setNotes] = useState('')
   const fileRef = React.useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -825,16 +829,21 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
+    if (!title.trim()) { setError('Ingresa un título antes de subir la factura'); return }
     setError('')
     setUploading(true)
     try {
       const optimized = await compressToUnder300KB(file)
       const form = new FormData()
       form.append('file', optimized, file.name)
+      form.append('title', title.trim())
+      if (notes.trim()) form.append('notes', notes.trim())
       const res = await fetch('/api/invoices', { method: 'POST', body: form })
       const result = await res.json()
       if (!res.ok) { setError(result.error || 'Error al subir'); return }
       setInvoices(prev => [result, ...prev])
+      setTitle('')
+      setNotes('')
     } catch {
       setError('Error al procesar el archivo')
     } finally {
@@ -880,32 +889,57 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
         <p className="text-sm text-muted">
           {invoices.length} factura{invoices.length !== 1 ? 's' : ''} registrada{invoices.length !== 1 ? 's' : ''}
         </p>
-        {isAdmin ? (
-          <>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/png,image/jpeg"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            <button
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-all"
-            >
-              {uploading
-                ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <Paperclip className="w-4 h-4" />}
-              {uploading ? 'Subiendo…' : 'Adjuntar Factura'}
-            </button>
-          </>
-        ) : (
+        {!isAdmin && (
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface border border-border text-xs text-muted">
             <Lock className="w-3 h-3" /> Solo lectura
           </div>
         )}
       </div>
+
+      {isAdmin && (
+        <div className="bg-surface border border-border rounded-2xl p-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-muted mb-1">Título <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Ej: Compra de alimento engorde"
+                maxLength={150}
+                className="input-calc"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-muted mb-1">Notas (opcional)</label>
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Ej: Proveedor: Distribuidora Chone, llegó tarde"
+                rows={2}
+                className="input-calc resize-none"
+              />
+            </div>
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-all"
+          >
+            {uploading
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <Paperclip className="w-4 h-4" />}
+            {uploading ? 'Subiendo…' : 'Adjuntar Factura'}
+          </button>
+        </div>
+      )}
 
       {error && <ErrorBanner message={error} />}
 
@@ -918,7 +952,15 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
             >
               <Receipt className="w-4 h-4 text-muted shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted">{fmtDate(inv.created_at)}</p>
+                <p className="text-sm font-semibold text-foreground truncate">{inv.title}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-muted">{fmtDate(inv.created_at)}</span>
+                  {inv.notes && (
+                    <span className="text-xs text-muted italic truncate max-w-[200px]" title={inv.notes}>
+                      — {inv.notes}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button

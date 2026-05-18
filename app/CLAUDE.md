@@ -10,6 +10,7 @@
 - `src/app/dashboard`: Protected routes (Admin/Student).
 - `src/components`: Divided by domain (animals, activities, layout).
 - `src/lib`: Core logic, formulas, and InsForge clients.
+- `../migrations/`: All PostgreSQL migration scripts (run manually in InsForge SQL editor). Never place `.sql` files in the project root or `app/` directory.
 
 ## Conventions
 - **Naming**: Kebab-case for directories, PascalCase for Components, camelCase for functions.

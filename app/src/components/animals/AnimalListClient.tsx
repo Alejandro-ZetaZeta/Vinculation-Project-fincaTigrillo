@@ -493,6 +493,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                 <option value="">Todos</option>
                 <option value="macho">Macho</option>
                 <option value="hembra">Hembra</option>
+                <option value="mixto">Mixto</option>
               </select>
             </div>
           </div>

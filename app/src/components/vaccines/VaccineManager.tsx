@@ -58,6 +58,7 @@ export function VaccineManager() {
 
   const [editing, setEditing] = useState<Vaccine | null>(null)
   const [assignOpen, setAssignOpen] = useState(false)
+  const [filterTypeId, setFilterTypeId] = useState<string>('')
 
   async function fetchVaccines() {
     setLoading(true)
@@ -537,13 +538,72 @@ export function VaccineManager() {
         </form>
       )}
 
-      {loading ? (
+      {!loading && types.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider">Filtrar por especie</p>
+          <div className="relative">
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar snap-x snap-mandatory">
+            <button
+              type="button"
+              onClick={() => setFilterTypeId('')}
+              className={[
+                'shrink-0 snap-start px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
+                !filterTypeId
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-surface border-border text-muted hover:text-foreground hover:border-primary/40',
+              ].join(' ')}
+            >
+              Todas
+              <span className={[
+                'ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold',
+                !filterTypeId ? 'bg-white/20 text-white' : 'bg-muted/10 text-muted',
+              ].join(' ')}>
+                {vaccines.length}
+              </span>
+            </button>
+            {types.filter(t => vaccines.some(v => v.target_type_id === t.id)).map(t => {
+              const count = vaccines.filter(v => v.target_type_id === t.id).length
+              const active = filterTypeId === t.id
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setFilterTypeId(active ? '' : t.id)}
+                  className={[
+                    'shrink-0 snap-start px-3 py-1.5 rounded-full text-xs font-semibold border transition-all',
+                    active
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-surface border-border text-muted hover:text-foreground hover:border-primary/40',
+                  ].join(' ')}
+                >
+                  {t.name}
+                  <span className={[
+                    'ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold',
+                    active ? 'bg-white/20 text-white' : 'bg-muted/10 text-muted',
+                  ].join(' ')}>
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+            </div>
+            {/* Fade hint — visible only when content overflows */}
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent" />
+          </div>
+        </div>
+      )}
+
+      {(() => {
+        const visible = filterTypeId
+          ? vaccines.filter(v => v.target_type_id === filterTypeId)
+          : vaccines
+        return loading ? (
         <div className="text-center py-12">
           <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
         </div>
-      ) : vaccines.length > 0 ? (
+      ) : visible.length > 0 ? (
         <div className="space-y-3">
-          {vaccines.map(v => (
+          {visible.map(v => (
             <div key={v.id} className="bg-surface border border-border rounded-2xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -614,9 +674,14 @@ export function VaccineManager() {
         <div className="bg-surface border border-border rounded-2xl p-12 text-center">
           <Syringe className="w-12 h-12 text-muted/30 mx-auto mb-3" aria-hidden="true" />
           <h3 className="text-lg font-semibold text-foreground mb-1">Sin vacunas</h3>
-          <p className="text-sm text-muted">Crea tu primera vacuna para iniciar el catálogo</p>
+          <p className="text-sm text-muted">
+            {filterTypeId
+              ? `No hay vacunas para ${types.find(t => t.id === filterTypeId)?.name || 'este tipo'}`
+              : 'Crea tu primera vacuna para iniciar el catálogo'}
+          </p>
         </div>
-      )}
+      )
+      })()}
     </div>
   )
 }

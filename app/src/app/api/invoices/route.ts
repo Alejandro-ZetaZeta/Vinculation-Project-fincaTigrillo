@@ -74,10 +74,14 @@ export async function POST(request: NextRequest) {
     const publicUrl = client.storage.from(BUCKET).getPublicUrl(storagePath) as unknown as string
 
     const eventId = formData.get('event_id') as string | null
+    const title = (formData.get('title') as string | null)?.trim() || ''
+    const notes = (formData.get('notes') as string | null)?.trim() || null
+
+    if (!title) return NextResponse.json({ error: 'El título es requerido' }, { status: 400 })
 
     const { data: record, error: dbErr } = await client.database
       .from('event_invoices')
-      .insert({ file_url: publicUrl, event_id: eventId || null })
+      .insert({ file_url: publicUrl, event_id: eventId || null, title, notes })
       .select()
       .single()
 
