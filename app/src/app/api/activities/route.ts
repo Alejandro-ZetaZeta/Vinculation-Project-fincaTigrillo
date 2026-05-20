@@ -82,7 +82,10 @@ export async function POST(request: NextRequest) {
         status: 'todo'
       }))
 
-      await client.database.from('activity_assignments').insert(assignments)
+      const { error: assignError } = await client.database.from('activity_assignments').insert(assignments)
+      if (assignError) {
+        console.error('Error creating assignments for activity', activity[0].id, assignError.message)
+      }
     }
 
     return NextResponse.json({

@@ -53,13 +53,16 @@ export async function signUp(formData: FormData) {
 
     // Create user profile with semester and career
     const authedClient = createInsForgeServerClient(data.accessToken)
-    await authedClient.database.from('user_profiles').insert([{
+    const { error: profileError } = await authedClient.database.from('user_profiles').insert([{
       user_id: data.user?.id,
       role: 'viewer',
       full_name: name,
       semester: semester,
       career: career
     }])
+    if (profileError) {
+      return { success: false, error: 'Cuenta creada pero error al guardar perfil. Contacta al administrador.' }
+    }
   }
 
   return { success: true }

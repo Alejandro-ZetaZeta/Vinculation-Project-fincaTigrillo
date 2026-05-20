@@ -66,7 +66,7 @@ export async function DELETE(req: NextRequest) {
 
     const query = id
       ? db.from('notifications').delete().eq('id', id)
-      : db.from('notifications').delete().neq('id', '00000000-0000-0000-0000-000000000000') // delete all
+      : db.from('notifications').delete().not('id', 'is', null)
 
     const { error } = await query
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

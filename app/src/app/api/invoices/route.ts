@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     if (uploadErr) return NextResponse.json({ error: uploadErr.message }, { status: 500 })
 
-    const publicUrl = client.storage.from(BUCKET).getPublicUrl(storagePath) as unknown as string
+    const publicUrl = client.storage.from(BUCKET).getPublicUrl(storagePath)
 
     const eventId = formData.get('event_id') as string | null
     const title = (formData.get('title') as string | null)?.trim() || ''

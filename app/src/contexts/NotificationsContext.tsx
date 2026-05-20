@@ -104,9 +104,10 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
 
   const addNotification = useCallback(
     (payload: Omit<AppNotification, 'id' | 'read' | 'timestamp'>) => {
+      const optimisticId = crypto.randomUUID()
       const optimistic: AppNotification = {
         ...payload,
-        id: crypto.randomUUID(),
+        id: optimisticId,
         read: false,
         timestamp: new Date(),
       }
@@ -115,7 +116,20 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: payload.title, message: payload.message, type: payload.type }),
-      }).catch(err => console.error('[NotificationsContext] addNotification failed:', err))
+      })
+        .then(async res => {
+          if (!res.ok) throw new Error(await res.text())
+          const saved: DbRow = await res.json()
+          // Replace optimistic entry with real DB record so dismiss uses the correct ID
+          setNotifications(prev => prev.map(n =>
+            n.id === optimisticId ? rowToNotification(saved) : n
+          ))
+        })
+        .catch(err => {
+          console.error('[NotificationsContext] addNotification failed:', err)
+          // Revert optimistic entry — notification was not persisted
+          setNotifications(prev => prev.filter(n => n.id !== optimisticId))
+        })
     },
     []
   )

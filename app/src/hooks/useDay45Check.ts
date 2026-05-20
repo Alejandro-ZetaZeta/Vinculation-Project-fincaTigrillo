@@ -39,7 +39,7 @@ export function useDay45Check() {
         for (const batch of batches) {
           if (batch.sex !== 'mixto') continue
           const days = computeDaysOfLife(batch)
-          if (days !== 45) continue
+          if (days === null || days < 45) continue
 
           const storageKey = `day45_notified_${batch.id}_${todayStr}`
           if (sessionStorage.getItem(storageKey)) continue

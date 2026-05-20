@@ -28,11 +28,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get('insforge_access_token')?.value
-    if (!accessToken) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    const client = await getAdminClient()
+    if (!client) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
-    const client = createInsForgeServerClient(accessToken)
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('insforge_access_token')?.value as string
     const { id } = await params
 
     const { data: record, error: fetchErr } = await client.database

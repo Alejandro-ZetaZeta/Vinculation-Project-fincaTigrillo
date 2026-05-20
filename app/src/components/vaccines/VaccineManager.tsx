@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Trash2, Save, X, Syringe, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Save, X, Syringe, Loader2, PackagePlus, Package } from 'lucide-react'
 import { AssignVaccineModal } from './AssignVaccineModal'
 import { formatVaccineAgeText } from '@/lib/vaccines/format'
 
@@ -23,9 +23,11 @@ interface Vaccine {
   allowed_reproductive_states: string[] | null
   default_next_dose_days: number | null
   is_active: boolean
+  stock_doses: number
 }
 
 const REPRO_TYPES = new Set(['bovino', 'equino', 'porcino', 'caprino'])
+const POULTRY_SLUG = 'aves-de-corral'
 const REPRO_STATE_OPTIONS: { value: string; label: string }[] = [
   { value: 'preñada', label: 'Preñada' },
   { value: 'vacía', label: 'Vacía' },
@@ -60,6 +62,11 @@ export function VaccineManager() {
   const [assignOpen, setAssignOpen] = useState(false)
   const [filterTypeId, setFilterTypeId] = useState<string>('')
 
+  // Stock replenishment state per-card
+  const [stockOpen, setStockOpen] = useState<string | null>(null)   // vaccine id
+  const [stockInput, setStockInput] = useState('')
+  const [stockSaving, setStockSaving] = useState(false)
+
   async function fetchVaccines() {
     setLoading(true)
     try {
@@ -84,7 +91,7 @@ export function VaccineManager() {
   const showCreateReproRestriction =
     !!createSelectedTypeSlug &&
     REPRO_TYPES.has(createSelectedTypeSlug) &&
-    (targetSex === 'hembra' || targetSex === 'any')
+    targetSex === 'hembra'
 
   useEffect(() => {
     if (!showCreateReproRestriction && allowedReproStates.length > 0) {
@@ -95,7 +102,7 @@ export function VaccineManager() {
   useEffect(() => {
     if (!editing) return
     const editTypeSlug = types.find(t => t.id === editing.target_type_id)?.slug
-    const showEdit = !!editTypeSlug && REPRO_TYPES.has(editTypeSlug) && (editing.target_sex === 'hembra' || editing.target_sex === 'any')
+    const showEdit = !!editTypeSlug && REPRO_TYPES.has(editTypeSlug) && editing.target_sex === 'hembra'
     if (!showEdit && editing.allowed_reproductive_states != null) {
       setEditing({ ...editing, allowed_reproductive_states: null })
     }
@@ -188,6 +195,34 @@ export function VaccineManager() {
     }
   }
 
+  async function addStock(vaccineId: string) {
+    const doses = parseInt(stockInput, 10)
+    if (!Number.isFinite(doses) || doses <= 0) {
+      setError('Ingresa un número de dosis válido (> 0)')
+      return
+    }
+    setError('')
+    setStockSaving(true)
+    try {
+      const res = await fetch(`/api/vaccines/${vaccineId}/stock`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ add_doses: doses }),
+      })
+      const json = await res.json()
+      if (!res.ok) { setError(json?.error || 'Error al actualizar stock'); return }
+      setVaccines(prev =>
+        prev.map(v => v.id === vaccineId ? { ...v, stock_doses: json.stock_doses } : v)
+      )
+      setStockOpen(null)
+      setStockInput('')
+    } catch {
+      setError('Error de conexión')
+    } finally {
+      setStockSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-6" id="vaccine-manager">
       <AssignVaccineModal
@@ -254,7 +289,11 @@ export function VaccineManager() {
               <label className="block text-sm font-medium">Tipo objetivo *</label>
               <select
                 value={targetTypeId}
-                onChange={(e) => setTargetTypeId(e.target.value)}
+                onChange={(e) => {
+                  const newSlug = types.find(t => t.id === e.target.value)?.slug
+                  if (newSlug !== POULTRY_SLUG && targetSex === 'mixto') setTargetSex('any')
+                  setTargetTypeId(e.target.value)
+                }}
                 className="w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 required
               >
@@ -278,7 +317,9 @@ export function VaccineManager() {
                 <option value="any">Cualquiera</option>
                 <option value="macho">Macho</option>
                 <option value="hembra">Hembra</option>
-                <option value="mixto">Mixto</option>
+                {createSelectedTypeSlug === POULTRY_SLUG && (
+                  <option value="mixto">Mixto</option>
+                )}
               </select>
             </div>
             <div className="space-y-1.5">
@@ -403,7 +444,11 @@ export function VaccineManager() {
               <label className="block text-sm font-medium">Tipo objetivo *</label>
               <select
                 value={editing.target_type_id || ''}
-                onChange={(e) => setEditing({ ...editing, target_type_id: e.target.value || null })}
+                onChange={(e) => {
+                  const newSlug = types.find(t => t.id === e.target.value)?.slug
+                  const newSex = newSlug !== POULTRY_SLUG && editing.target_sex === 'mixto' ? 'any' : editing.target_sex
+                  setEditing({ ...editing, target_type_id: e.target.value || null, target_sex: newSex })
+                }}
                 className="w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 required
               >
@@ -417,7 +462,7 @@ export function VaccineManager() {
 
           {(() => {
             const editTypeSlug = types.find(t => t.id === editing.target_type_id)?.slug
-            const showEdit = !!editTypeSlug && REPRO_TYPES.has(editTypeSlug) && (editing.target_sex === 'hembra' || editing.target_sex === 'any')
+            const showEdit = !!editTypeSlug && REPRO_TYPES.has(editTypeSlug) && editing.target_sex === 'hembra'
             const current = Array.isArray(editing.allowed_reproductive_states) ? editing.allowed_reproductive_states : []
             return (
               <div
@@ -477,7 +522,9 @@ export function VaccineManager() {
                 <option value="any">Cualquiera</option>
                 <option value="macho">Macho</option>
                 <option value="hembra">Hembra</option>
-                <option value="mixto">Mixto</option>
+                {types.find(t => t.id === editing.target_type_id)?.slug === POULTRY_SLUG && (
+                  <option value="mixto">Mixto</option>
+                )}
               </select>
             </div>
             <div className="space-y-1.5">
@@ -629,10 +676,73 @@ export function VaccineManager() {
                         Próxima dosis: +{v.default_next_dose_days} días
                       </span>
                     )}
+                    {/* Stock badge */}
+                    <span
+                      className={[
+                        'inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-semibold',
+                        v.stock_doses === 0
+                          ? 'bg-danger/10 text-danger'
+                          : v.stock_doses < 5
+                          ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                          : 'bg-success/10 text-success',
+                      ].join(' ')}
+                      title="Dosis en inventario"
+                    >
+                      <Package className="w-3 h-3" aria-hidden="true" />
+                      {v.stock_doses} dosis
+                    </span>
                   </div>
+
+                  {/* Inline stock replenishment form */}
+                  {stockOpen === v.id && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        value={stockInput}
+                        onChange={e => setStockInput(e.target.value)}
+                        placeholder="Nº dosis"
+                        className="w-28 px-3 py-1.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        autoFocus
+                        onKeyDown={e => { if (e.key === 'Enter') addStock(v.id) }}
+                        id={`stock-input-${v.id}`}
+                        aria-label={`Añadir dosis a ${v.name}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addStock(v.id)}
+                        disabled={stockSaving}
+                        className="px-3 py-1.5 rounded-xl bg-success text-white text-xs font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {stockSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Save className="w-3.5 h-3.5" aria-hidden="true" />}
+                        Confirmar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setStockOpen(null); setStockInput('') }}
+                        className="p-1.5 rounded-xl hover:bg-surface-hover text-muted"
+                        aria-label="Cancelar"
+                      >
+                        <X className="w-4 h-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
+                  {/* + Stock button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStockOpen(stockOpen === v.id ? null : v.id)
+                      setStockInput('')
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-success/10 text-success hover:bg-success/20 transition-colors"
+                    aria-label={`Añadir stock a ${v.name}`}
+                  >
+                    <PackagePlus className="w-3.5 h-3.5" aria-hidden="true" />
+                    + Stock
+                  </button>
                   <button
                     onClick={() => setEditing(v)}
                     className="text-xs font-medium text-primary hover:text-primary-dark"
