@@ -8,7 +8,7 @@ import { UserPlus, Mail, Lock, User, Eye, EyeOff, GraduationCap, BookOpen, Sun, 
 import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
 
-const CAREERS  = ['Agropecuaria', 'Agronegocios', 'Alimentos']
+const CAREERS  = ['Agropecuaria']
 const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
 export default function RegisterPage() {

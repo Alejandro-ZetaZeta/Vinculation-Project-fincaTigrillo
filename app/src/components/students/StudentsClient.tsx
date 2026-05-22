@@ -14,7 +14,7 @@ interface Student {
   created_at: string
 }
 
-const CAREERS = ['Agropecuaria', 'Agronegocios', 'Alimentos']
+const CAREERS = ['Agropecuaria']
 const SEMESTERS = ['1','2','3','4','5','6','7','8','9','10']
 
 function formatDate(dateStr: string): string {

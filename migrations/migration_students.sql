@@ -4,7 +4,7 @@ ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS career TEXT DEFAULT NULL;
 
 -- Add constraint for valid careers
 ALTER TABLE user_profiles ADD CONSTRAINT valid_career
-  CHECK (career IS NULL OR career IN ('Agropecuaria', 'Agronegocios', 'Alimentos'));
+  CHECK (career IS NULL OR career IN ('Agropecuaria'));
 
 -- Add constraint for valid semesters (1-10)
 ALTER TABLE user_profiles ADD CONSTRAINT valid_semester
