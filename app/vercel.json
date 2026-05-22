@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/weekly-feed",
+      "schedule": "0 13 * * 5"
+    }
+  ]
+}
