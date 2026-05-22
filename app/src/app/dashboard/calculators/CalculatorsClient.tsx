@@ -36,6 +36,7 @@ function toIso(d: Date) { return d.toISOString().split('T')[0] }
    PÁGINA PRINCIPAL
    ════════════════════════════════════════ */
 export default function CalculatorsClient({ isAdmin: _isAdmin }: { isAdmin: boolean }) {
+  void _isAdmin
   return (
     <div className="space-y-6 overflow-hidden min-w-0">
       <div>
@@ -344,10 +345,14 @@ function NumField({ label, value, onChange, min, step = "1" }: {
   label: string; value: number; onChange: (v: number) => void; min?: number; step?: string
 }) {
   const [inputValue, setInputValue] = useState(value.toString())
+  const inputValueRef = useRef(inputValue)
 
   useEffect(() => {
-    if (parseFloat(inputValue) !== value) {
-      setInputValue(value.toString())
+    const current = inputValueRef.current
+    if (parseFloat(current) !== value) {
+      const next = value.toString()
+      inputValueRef.current = next
+      setInputValue(next)
     }
   }, [value])
 
@@ -364,11 +369,13 @@ function NumField({ label, value, onChange, min, step = "1" }: {
           if (inputValue === "0" && val.length > 1 && val.startsWith("0")) {
             val = val.substring(1)
           }
+          inputValueRef.current = val
           setInputValue(val)
           onChange(val === '' ? 0 : +val)
         }}
         onBlur={() => {
           if (inputValue === "" || inputValue === "-") {
+            inputValueRef.current = "0"
             setInputValue("0")
             onChange(0)
           }

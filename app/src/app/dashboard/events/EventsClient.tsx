@@ -230,8 +230,6 @@ function ReproductivosTab({
     setDeleteId(null)
   }
 
-  const eventLabel = (t: string) => REPRODUCTIVE_EVENT_TYPES.find(r => r.value === t)?.label || t
-
   const previewDue = animalId && (eventType === 'monta_natural' || eventType === 'inseminacion')
     ? calcFechaParto(new Date(eventDate + 'T12:00:00'), getSpeciesSlug(animalId))
     : null

@@ -5,7 +5,7 @@ import { Chart, registerables } from 'chart.js';
 import {
   Printer, FileText, Calendar, Loader2, Info, PieChart,
   BarChart3, Microscope, ShieldCheck, Zap, TrendingUp,
-  Bot, Send, Sparkles, ChevronDown, AlertTriangle, CheckCircle, Filter
+  Bot, Send, Sparkles, AlertTriangle, CheckCircle, Filter
 } from 'lucide-react';
 
 if (typeof window !== 'undefined') Chart.register(...registerables);
@@ -18,6 +18,17 @@ interface AIAnalysis {
   data_quality: string;
   report_date: string;
 }
+
+type AIMeta = {
+  provider?: string;
+  model?: string;
+  generated_at?: string;
+  data_points?: {
+    animals?: number;
+    activities?: number;
+    repro_events?: number;
+  };
+};
 
 interface AnimalData {
   id: string;
@@ -56,7 +67,7 @@ export default function ReportsPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [aiMeta, setAiMeta] = useState<any>(null);
+  const [aiMeta, setAiMeta] = useState<AIMeta | null>(null);
   const [userQuestion, setUserQuestion] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
 
@@ -262,8 +273,8 @@ export default function ReportsPage() {
       if (!res.ok) { setAiError(json.error || 'Error de análisis'); return; }
       setAiAnalysis(json.analysis);
       setAiMeta(json.meta);
-    } catch (e: any) {
-      setAiError(e.message);
+    } catch (e: unknown) {
+      setAiError(e instanceof Error ? e.message : 'Error al procesar la solicitud');
     } finally {
       setAiLoading(false);
     }
@@ -444,7 +455,11 @@ export default function ReportsPage() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-sm">Análisis con Inteligencia Artificial</h3>
-              {aiMeta && <p className="text-xs text-muted">Modelo: {aiMeta.model} · {new Date(aiMeta.generated_at).toLocaleString('es-CO')}</p>}
+              {aiMeta && (
+                <p className="text-xs text-muted">
+                  Modelo: {aiMeta.model ?? '—'} · {aiMeta.generated_at ? new Date(aiMeta.generated_at).toLocaleString('es-CO') : '—'}
+                </p>
+              )}
             </div>
             <button onClick={() => setShowAiPanel(false)} className="text-muted hover:text-foreground text-xs">✕</button>
           </div>
@@ -519,7 +534,7 @@ export default function ReportsPage() {
                   <div>
                     <p className="text-xs font-bold text-muted uppercase mb-3">KPIs Detectados</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {aiAnalysis.kpis.map((kpi: any, i: number) => (
+                      {aiAnalysis.kpis.map((kpi, i) => (
                         <div key={i} className="bg-background border border-border rounded-xl p-3 shadow-sm">
                           <p className="text-[10px] font-bold text-muted uppercase">{kpi.label}</p>
                           <p className={`text-lg font-bold ${kpi.trend === 'positivo' ? 'text-success' : kpi.trend === 'negativo' ? 'text-danger' : 'text-primary'}`}>{kpi.value}</p>
@@ -535,7 +550,7 @@ export default function ReportsPage() {
                   <div>
                     <p className="text-xs font-bold text-muted uppercase mb-3">Hallazgos</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {aiAnalysis.insights.map((ins: any, i: number) => (
+                      {aiAnalysis.insights.map((ins, i) => (
                         <div key={i} className="bg-background border border-border rounded-xl p-4 flex gap-3 shadow-sm hover:shadow-md transition-shadow">
                           <span className="text-xl shrink-0">{ins.icon}</span>
                           <div>
@@ -553,7 +568,7 @@ export default function ReportsPage() {
                   <div>
                     <p className="text-xs font-bold text-muted uppercase mb-3">Recomendaciones</p>
                     <div className="space-y-2">
-                      {aiAnalysis.recommendations.map((rec: any, i: number) => (
+                      {aiAnalysis.recommendations.map((rec, i) => (
                         <div key={i} className={`flex gap-3 p-3.5 rounded-xl border ${
                           rec.priority === 'urgente' ? 'bg-red-500/10 border-red-500/20' :
                           rec.priority === 'normal' ? 'bg-yellow-500/10 border-yellow-500/20' :

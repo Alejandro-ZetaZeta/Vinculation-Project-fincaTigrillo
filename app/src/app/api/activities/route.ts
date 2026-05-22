@@ -16,7 +16,7 @@ async function getAuthClient() {
 
 export async function GET() {
   try {
-    const { client, role } = await getAuthClient()
+    const { client } = await getAuthClient()
     if (!client) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
     const { data: activities } = await client.database

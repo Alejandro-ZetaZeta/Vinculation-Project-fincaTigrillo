@@ -64,7 +64,10 @@ function NotificationItem({ n, onDismiss }: { n: AppNotification; onDismiss: (id
 
 export function NotificationBell({ userRole }: NotificationBellProps) {
   if (userRole !== 'admin') return null
+  return <AdminNotificationBell />
+}
 
+function AdminNotificationBell() {
   const { notifications, unreadCount, loading, dismiss, clearAll, markAllRead } = useNotifications()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)

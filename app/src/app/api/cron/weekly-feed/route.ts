@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
-import { derivePoultryStage } from '@/lib/formulas'
 
 const SACK_KG = 40
 
 /* ─────────────────────────────────────────────────────────────────
-   POST /api/cron/weekly-feed
+   GET /api/cron/weekly-feed
    Invoked every Friday 08:00 by Vercel Cron.
    Protected by Authorization: Bearer <CRON_SECRET>.
 ───────────────────────────────────────────────────────────────── */
-export async function POST(req: NextRequest) {
+async function handle(req: NextRequest) {
   /* 1. Auth guard */
   const secret = process.env.CRON_SECRET
   if (!secret) {
@@ -128,4 +127,14 @@ export async function POST(req: NextRequest) {
     console.error('[cron/weekly-feed]', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
+}
+
+// Vercel Cron invokes the configured path using an HTTP GET request.
+export async function GET(req: NextRequest) {
+  return handle(req)
+}
+
+// Allow manual triggering (e.g. from dashboards/tools) if needed.
+export async function POST(req: NextRequest) {
+  return handle(req)
 }

@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { cacheLife, cacheTag } from 'next/cache'
 import { getCurrentUser } from '@/lib/auth/actions'
 import { getAccessToken } from '@/lib/auth/cookies'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
@@ -11,10 +10,6 @@ import { StudentKanban } from '@/components/activities/StudentKanban'
    Cached reference data — changes infrequently
 ───────────────────────────────────────────── */
 async function getCachedCatalog(accessToken: string | undefined) {
-  'use cache'
-  cacheLife('hours')
-  cacheTag('animal-catalog')
-
   const insforge = createInsForgeServerClient(accessToken)
   const [{ data: categories }, { data: types }] = await Promise.all([
     insforge.database.from('animal_categories').select('id, name, slug'),
@@ -31,10 +26,6 @@ async function getCachedCatalog(accessToken: string | undefined) {
    Cached animal stats — refresh every 5 min
 ───────────────────────────────────────────── */
 async function getCachedAnimalStats(accessToken: string | undefined) {
-  'use cache'
-  cacheLife('minutes')
-  cacheTag('animals')
-
   const insforge = createInsForgeServerClient(accessToken)
   const { data } = await insforge.database
     .from('animals')
@@ -48,10 +39,6 @@ async function getCachedAnimalStats(accessToken: string | undefined) {
    Cached stats display component
 ───────────────────────────────────────────── */
 async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | undefined, isAdmin: boolean }) {
-  'use cache'
-  cacheLife('minutes')
-  cacheTag('animals', 'animal-catalog')
-
   const [animals, { categories, types }] = await Promise.all([
     getCachedAnimalStats(accessToken),
     getCachedCatalog(accessToken),
