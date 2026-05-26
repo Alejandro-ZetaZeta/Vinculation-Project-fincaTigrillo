@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useId, useEffect } from 'react'
+import { useState, useTransition, useId, useEffect, Suspense } from 'react'
 import { signIn } from '@/lib/auth/actions'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -8,7 +8,8 @@ import { LogIn, Mail, Lock, Eye, EyeOff, Sun, Moon } from 'lucide-react'
 import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
 
-export default function LoginPage() {
+// Inner component that safely uses useSearchParams
+function LoginContent() {
   const [error, setError]           = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -207,5 +208,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   )
 }
