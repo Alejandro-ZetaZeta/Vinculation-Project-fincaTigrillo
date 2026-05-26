@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/weekly-feed",
       "schedule": "0 13 * * 5"
+    },
+    {
+      "path": "/api/cron/cleanup-invoices",
+      "schedule": "0 18 * * 0"
     }
   ]
 }

@@ -83,12 +83,13 @@ export default function EventsClient({ isAdmin }: { isAdmin: boolean }) {
       .finally(() => setLoadingAnimals(false))
   }, [])
 
-  const tabs: { key: EventTab; label: string; shortLabel: string; icon: React.ElementType }[] = [
+  const allTabs: { key: EventTab; label: string; shortLabel: string; icon: React.ElementType; adminOnly?: boolean }[] = [
     { key: 'reproductivos', label: 'Reproductivos',       shortLabel: 'Repro',      icon: HeartPulse    },
     { key: 'mortalidad',    label: 'Mortalidad',           shortLabel: 'Bajas',      icon: AlertTriangle },
     { key: 'produccion',    label: 'Producción de Leche',  shortLabel: 'Leche',      icon: Droplets      },
-    { key: 'facturas',      label: 'Facturas',             shortLabel: 'Facturas',   icon: Receipt       },
+    { key: 'facturas',      label: 'Facturas',             shortLabel: 'Facturas',   icon: Receipt,      adminOnly: true },
   ]
+  const tabs = allTabs.filter(t => !t.adminOnly || isAdmin)
 
   return (
     <div className="space-y-6 overflow-hidden min-w-0">
@@ -136,7 +137,7 @@ export default function EventsClient({ isAdmin }: { isAdmin: boolean }) {
       {activeTab === 'produccion' && (
         <ProduccionLecheTab animals={animals} loadingAnimals={loadingAnimals} isAdmin={isAdmin} />
       )}
-      {activeTab === 'facturas' && (
+      {activeTab === 'facturas' && isAdmin && (
         <InvoicesTab isAdmin={isAdmin} />
       )}
     </div>

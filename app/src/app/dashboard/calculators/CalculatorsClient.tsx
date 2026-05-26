@@ -25,7 +25,12 @@ import {
 /* ──────────── helpers de fecha ──────────── */
 function fmtDate(d: Date | null | string) {
   if (!d) return '—'
-  const date = typeof d === 'string' ? new Date(d) : d
+  // Append T12:00:00 to bare ISO date strings so they parse as local noon
+  // instead of UTC midnight — prevents off-by-one-day in UTC-N zones.
+  const normalized = typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)
+    ? d + 'T12:00:00'
+    : d
+  const date = typeof normalized === 'string' ? new Date(normalized) : normalized
   if (isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }

@@ -32,8 +32,8 @@ async function getAuthClient() {
 
 export async function GET() {
   try {
-    const client = await getAuthClient()
-    if (!client) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    const client = await getAdminClient()
+    if (!client) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
     const { data, error } = await client.database
       .from('event_invoices')
