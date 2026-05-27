@@ -165,9 +165,9 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'var(--color-surface, rgba(255,255,255,0.05))', borderRadius: 12, padding: '0.35rem', width: 'fit-content', border: '1px solid color-mix(in srgb, currentColor 5%, transparent)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.04)', borderRadius: 12, padding: '0.35rem', width: 'fit-content', border: '1px solid rgba(0,0,0,0.05)', boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.02)' }}>
         {(['mapa', 'potreros', 'sembrios'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '0.5rem 1.25rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: tab === t ? 700 : 500, background: tab === t ? 'var(--color-background, white)' : 'transparent', color: tab === t ? 'var(--color-foreground)' : 'color-mix(in srgb, currentColor 60%, transparent)', textTransform: 'capitalize', fontSize: '0.9rem', boxShadow: tab === t ? '0 4px 12px rgba(0,0,0,0.05)' : 'none', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+          <button key={t} onClick={() => setTab(t)} style={{ padding: '0.5rem 1.25rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: tab === t ? 700 : 500, background: tab === t ? '#ffffff' : 'transparent', color: tab === t ? '#000000' : 'rgba(0,0,0,0.6)', textTransform: 'capitalize', fontSize: '0.9rem', boxShadow: tab === t ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
             {t === 'mapa' ? 'Mapa' : t === 'potreros' ? 'Potreros' : 'Sembríos'}
           </button>
         ))}
@@ -236,12 +236,12 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                     )}
                   </div>
                   
-                  <div style={{ margin: '1rem 0 0.5rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', background: 'color-mix(in srgb, currentColor 3%, transparent)', padding: '0.5rem 0.75rem', borderRadius: '8px' }}>
+                  <div style={{ margin: '1rem 0 0.5rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', background: 'rgba(0,0,0,0.03)', padding: '0.5rem 0.75rem', borderRadius: '8px' }}>
                     <span><strong style={{ fontSize: '0.9rem' }}>{fmt(p.area_total_m2)}</strong> m² total</span>
                     <span style={{ color: '#16a34a', fontWeight: 600 }}>{fmt(p.area_disponible_m2)} m² libres</span>
                   </div>
                   
-                  <div style={{ height: 8, borderRadius: 8, background: 'color-mix(in srgb, currentColor 8%, transparent)', overflow: 'hidden', marginBottom: '1rem' }}>
+                  <div style={{ height: 8, borderRadius: 8, background: 'rgba(0,0,0,0.06)', overflow: 'hidden', marginBottom: '1rem' }}>
                     <div style={{ height: '100%', borderRadius: 8, background: pct > 80 ? 'linear-gradient(90deg, #f59e0b, #ef4444)' : 'linear-gradient(90deg, #22c55e, #10b981)', width: `${pct}%`, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }} />
                   </div>
                   
@@ -256,7 +256,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                       {sembrios.filter(s => s.potrero_id === p.id).length === 0
                         ? <div style={{ fontSize: '0.8rem', opacity: 0.5, textAlign: 'center', padding: '1rem' }}>Sin sembríos registrados en este potrero</div>
                         : sembrios.filter(s => s.potrero_id === p.id).map(s => (
-                          <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', margin: '0 -0.5rem', borderRadius: '8px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, currentColor 3%, transparent)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                          <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', margin: '0 -0.5rem', borderRadius: '8px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.03)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                             <div>
                               <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{s.tipo_cultivo}{s.variedad ? <span style={{ opacity: 0.6, fontWeight: 500 }}> ({s.variedad})</span> : ''}</div>
                               <div style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.1rem' }}>{fmt(s.area_sembrada_m2)} m² · {new Date(s.fecha_siembra).toLocaleDateString('es-EC')}</div>
@@ -293,7 +293,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                     <MapPin size={12} /> {s.potreros?.nombre || '—'} <span style={{ opacity: 0.3 }}>|</span> <Ruler size={12} /> {fmt(s.area_sembrada_m2)} m²
                   </div>
                 </div>
-                <div style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 500, background: 'color-mix(in srgb, currentColor 4%, transparent)', padding: '0.4rem 0.75rem', borderRadius: '6px' }}>
+                <div style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 500, background: 'rgba(0,0,0,0.04)', padding: '0.4rem 0.75rem', borderRadius: '6px' }}>
                   {new Date(s.fecha_siembra).toLocaleDateString('es-EC')}
                 </div>
                 <span style={{ fontSize: '0.75rem', padding: '4px 12px', borderRadius: 99, background: `${ESTADO_COLORS[s.estado]}22`, color: ESTADO_COLORS[s.estado], border: `1px solid ${ESTADO_COLORS[s.estado]}44`, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase' }}>{ESTADO_LABEL[s.estado]}</span>
