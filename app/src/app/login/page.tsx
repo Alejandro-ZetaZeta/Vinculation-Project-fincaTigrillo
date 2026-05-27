@@ -34,7 +34,15 @@ function LoginContent() {
     startTransition(async () => {
       const result = await signIn(formData)
       if (result.success) {
-        router.push('/dashboard')
+        // Sanitize the ?redirect= param set by the proxy to prevent open-redirect.
+        // Must be a relative path (starts with '/') and must NOT start with '//'
+        // (which would be interpreted as a protocol-relative absolute URL).
+        const redirect = searchParams.get('redirect')
+        const safeRedirect =
+          redirect?.startsWith('/') && !redirect.startsWith('//')
+            ? redirect
+            : '/dashboard'
+        router.push(safeRedirect)
       } else {
         setError(result.error || 'Error al iniciar sesión')
       }

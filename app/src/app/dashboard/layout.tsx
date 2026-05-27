@@ -31,7 +31,7 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <div id="main-content-wrapper" className="flex-1 flex flex-col min-h-screen min-w-0 md:ml-64 print:ml-0 print:block print:min-h-0 print:h-auto transition-all duration-300">
         <div className="print:hidden">
-          <Header userName={user.fullName} userRole={user.role} userEmail={user.email} />
+          <Header userName={user.fullName} userRole={user.role} userEmail={user.email} userAvatarUrl={user.avatarUrl} />
         </div>
         <main
           id="main-content"

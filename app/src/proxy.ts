@@ -3,11 +3,16 @@ import type { NextRequest } from 'next/server'
 
 const PRODUCTION_ORIGIN = 'https://fincatigrillo.vercel.app'
 
+// Additional allowed origins from the environment (comma-separated).
+// Example: ALLOWED_ORIGINS=https://testfincat.vercel.app,https://preview.example.com
+const EXTRA_ORIGINS =
+  process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) ?? []
+
 function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false
   if (origin === PRODUCTION_ORIGIN) return true
-  // Vercel preview URL
-  if (origin === 'https://testfincat.vercel.app') return true
+  // Environment-variable allowlist (replaces hardcoded preview URLs)
+  if (EXTRA_ORIGINS.includes(origin)) return true
   // localhost during development
   if (process.env.NODE_ENV === 'development' && /^http:\/\/localhost(:\d+)?$/.test(origin)) return true
   return false
@@ -38,10 +43,20 @@ export function proxy(request: NextRequest) {
     return res
   }
 
+  // --- CORS actual request (non-preflight) ---
+  // Inject dynamic Access-Control-Allow-Origin on API responses so the
+  // origin allowlist is the single source of truth (no static block in next.config.ts).
+  if (pathname.startsWith('/api/') && isAllowedOrigin(origin)) {
+    const res = NextResponse.next()
+    res.headers.set('Access-Control-Allow-Origin', origin!)
+    Object.entries(CORS_HEADERS).forEach(([k, v]) => res.headers.set(k, v))
+    return res
+  }
+
   // --- Auth proxy ---
   const accessToken = request.cookies.get('insforge_access_token')?.value
 
-  // Allow static files and API routes (API CORS headers set via next.config.ts)
+  // Allow static files and unmatched API routes through
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -50,7 +65,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
 
   if (isPublicRoute && accessToken) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
@@ -72,3 +87,4 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
+

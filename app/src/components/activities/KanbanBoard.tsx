@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { Avatar } from '@/components/ui/Avatar'
 
 export interface KanbanItem {
   id: string
@@ -12,7 +13,7 @@ export interface KanbanItem {
   targetCareer: string
   targetSemester: string
   // presence: students who moved this item
-  presence?: { name: string; initials: string; status: string }[]
+  presence?: { name: string; initials: string; status: string; avatarUrl?: string | null }[]
 }
 
 interface KanbanBoardProps {
@@ -176,14 +177,13 @@ export function KanbanBoard({ items, onStatusChange, onCardClick }: KanbanBoardP
                       {item.presence.slice(0, 5).map((p, i) => (
                         <div
                           key={i}
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold border-2 border-background ${
-                            p.status === 'done' ? 'bg-success/20 text-success' :
-                            p.status === 'in_progress' ? 'bg-primary/20 text-primary' :
-                            'bg-muted/20 text-muted'
+                          className={`rounded-full border-2 border-background overflow-hidden ${
+                            p.status === 'done' ? 'ring-1 ring-success/40' :
+                            p.status === 'in_progress' ? 'ring-1 ring-primary/40' : ''
                           }`}
                           title={p.name}
                         >
-                          {p.initials}
+                          <Avatar src={p.avatarUrl} name={p.name} size="xs" />
                         </div>
                       ))}
                       {item.presence.length > 5 && (

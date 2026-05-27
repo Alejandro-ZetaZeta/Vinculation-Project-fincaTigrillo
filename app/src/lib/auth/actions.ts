@@ -243,7 +243,7 @@ export async function getCurrentUser() {
 
   const { data: profile } = await insforge.database
     .from('user_profiles')
-    .select('role, full_name, semester, career')
+    .select('role, full_name, semester, career, avatar_url, avatar_updated_at')
     .eq('user_id', data.user.id)
     .maybeSingle()
 
@@ -253,5 +253,7 @@ export async function getCurrentUser() {
     fullName: profile?.full_name || data.user.profile?.name || '',
     semester: profile?.semester || null,
     career: profile?.career || null,
+    avatarUrl: profile?.avatar_url || null,
+    avatarUpdatedAt: profile?.avatar_updated_at || null,
   }
 }

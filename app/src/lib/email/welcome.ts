@@ -123,7 +123,7 @@ export function buildWelcomeEmail(name: string): { subject: string; html: string
         <!-- CTA -->
         <tr>
           <td style="padding:0 40px 36px;text-align:center;">
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard"
+            <a href="https://fincatigrillo.vercel.app/login"
                style="display:inline-block;background:#2d6a4f;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 32px;border-radius:8px;letter-spacing:0.3px;">
               Ir al panel →
             </a>
