@@ -4,10 +4,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, PawPrint, ClipboardList,
-  Menu, X, Users, ListTodo, Calculator, FileText,
+  LayoutDashboard, PawPrint, ClipboardList, Leaf,
+  Menu, X, Users, ListTodo, Calculator, FileText, Brain,
   PanelLeft, PanelLeftClose, Syringe, CalendarDays,
-  Wrench, ChevronDown, Package,
+  Wrench, ChevronDown, Package, Sprout,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
@@ -19,6 +19,7 @@ const allNavItems = [
   { href: '/dashboard/students',   label: 'Estudiantes',         icon: Users,           adminOnly: true,  viewerOnly: false },
   { href: '/dashboard/activities', label: 'Actividades',         icon: ListTodo,        adminOnly: true,  viewerOnly: false },
   { href: '/dashboard/activities', label: 'Mis Actividades',     icon: ListTodo,        adminOnly: false, viewerOnly: true  },
+  { href: '/dashboard/sembrios',   label: 'Sembríos',            icon: Sprout,          adminOnly: true,  viewerOnly: false },
   { href: '/dashboard/reports',    label: 'Informes Operativos', icon: FileText,        adminOnly: false, viewerOnly: false },
   { href: '/dashboard/events',     label: 'Eventos',             icon: CalendarDays,    adminOnly: false, viewerOnly: false },
   { href: '/dashboard/calculators',label: 'Calculadoras',        icon: Calculator,      adminOnly: false, viewerOnly: false },
