@@ -84,14 +84,17 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   }, [load])
 
   const clearAll = useCallback(async () => {
+    const ids = notifications.map(n => n.id)
     setNotifications([])
     try {
-      await fetch('/api/notifications', { method: 'DELETE' })
+      await Promise.all(
+        ids.map(id => fetch(`/api/notifications?id=${id}`, { method: 'DELETE' }))
+      )
     } catch (err) {
       console.error('[NotificationsContext] clearAll failed:', err)
       load()
     }
-  }, [load])
+  }, [notifications, load])
 
   const markAllRead = useCallback(async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))

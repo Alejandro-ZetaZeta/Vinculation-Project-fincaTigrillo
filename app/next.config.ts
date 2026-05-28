@@ -4,6 +4,14 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const nextConfig: NextConfig = {
   reactCompiler: !isDev,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.insforge.app',
+      },
+    ],
+  },
   async headers() {
     return [
       {

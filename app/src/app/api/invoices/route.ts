@@ -23,12 +23,6 @@ async function getAdminClient() {
   return client
 }
 
-async function getAuthClient() {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('insforge_access_token')?.value
-  if (!accessToken) return null
-  return createInsForgeServerClient(accessToken)
-}
 
 export async function GET() {
   try {

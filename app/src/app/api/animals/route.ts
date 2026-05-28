@@ -78,10 +78,31 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    body.created_by = userData.user.id
 
-    // ── Verificar código de identificación duplicado ──────────────────────────
-    const identCode = (body.identification_code as string | undefined)?.trim()
+    // ── Allowlist of user-editable columns (prevents mass-assignment) ────────
+    // created_by / created_at / id are always server-derived; never trust client.
+    const {
+      name,
+      breed,
+      sex: rawSex,
+      birth_date,
+      identification_code,
+      color,
+      weight_kg,
+      acquisition_type,
+      acquisition_date,
+      notes,
+      status,
+      type_id,
+      metadata,
+    } = body as Record<string, unknown>
+
+    // Normalize legacy/plural sex values (DB constraint expects 'macho' / 'hembra').
+    let sex = typeof rawSex === 'string' ? rawSex.toLowerCase() : rawSex
+    if (sex === 'machos') sex = 'macho'
+    if (sex === 'hembras') sex = 'hembra'
+
+    const identCode = typeof identification_code === 'string' ? identification_code.trim() : null
     if (identCode) {
       const { data: existing, error: checkError } = await insforge.database
         .from('animals')
@@ -101,19 +122,27 @@ export async function POST(request: NextRequest) {
         )
       }
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
-     // Normalize legacy/plural sex values coming from the client.
-     // DB constraint expects singular values (e.g. 'macho' / 'hembra').
-     if (typeof body.sex === 'string') {
-       const s = body.sex.toLowerCase()
-       if (s === 'machos') body.sex = 'macho'
-       if (s === 'hembras') body.sex = 'hembra'
-     }
+    const insertPayload: Record<string, unknown> = {
+      name:                name                ?? null,
+      breed:               breed               ?? null,
+      sex:                 sex                 ?? null,
+      birth_date:          birth_date          ?? null,
+      identification_code: identCode,
+      color:               color               ?? null,
+      weight_kg:           weight_kg           ?? null,
+      acquisition_type:    acquisition_type    ?? null,
+      acquisition_date:    acquisition_date    ?? null,
+      notes:               notes               ?? null,
+      status:              status              ?? 'activo',
+      type_id:             type_id             ?? null,
+      metadata:            metadata            ?? null,
+      created_by:          userData.user.id,
+    }
 
     const { data, error } = await insforge.database
       .from('animals')
-      .insert([body])
+      .insert([insertPayload])
       .select()
 
     if (error) {

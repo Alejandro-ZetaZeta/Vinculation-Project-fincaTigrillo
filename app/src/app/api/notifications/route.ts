@@ -53,24 +53,41 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/* ── DELETE /api/notifications?id=<uuid>  (single)
-       DELETE /api/notifications             (all)   ────────────── */
+/* ── DELETE /api/notifications?id=<uuid>  (single, admin only) ─── */
 export async function DELETE(req: NextRequest) {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('insforge_access_token')?.value
     if (!token) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-    const db = createInsForgeServerClient(token).database
-    const id = new URL(req.url).searchParams.get('id')
+    const client = createInsForgeServerClient(token)
+    const { data: userData } = await client.auth.getCurrentUser()
+    if (!userData?.user) return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 })
 
-    const query = id
-      ? db.from('notifications').delete().eq('id', id)
-      : db.from('notifications').delete().not('id', 'is', null)
+    const { data: profile } = await client.database
+      .from('user_profiles')
+      .select('role')
+      .eq('user_id', userData.user.id)
+      .maybeSingle()
 
-    const { error } = await query
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Sin permisos de administrador' }, { status: 403 })
+    }
+
+    const id = new URL(req.url).searchParams.get('id')?.trim()
+    if (!id) {
+      return NextResponse.json(
+        { error: 'El parámetro id es obligatorio. La eliminación masiva no está permitida.' },
+        { status: 400 }
+      )
+    }
+
+    const { error } = await client.database
+      .from('notifications')
+      .delete()
+      .eq('id', id)
+
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('DELETE /api/notifications:', err)

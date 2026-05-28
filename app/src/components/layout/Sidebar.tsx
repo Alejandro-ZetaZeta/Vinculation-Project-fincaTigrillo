@@ -4,8 +4,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, PawPrint, ClipboardList, Leaf,
-  Menu, X, Users, ListTodo, Calculator, FileText, Brain,
+  LayoutDashboard, PawPrint, ClipboardList,
+  Menu, X, Users, ListTodo, Calculator, FileText,
   PanelLeft, PanelLeftClose, Syringe, CalendarDays,
   Wrench, ChevronDown, Package, Sprout,
 } from 'lucide-react'

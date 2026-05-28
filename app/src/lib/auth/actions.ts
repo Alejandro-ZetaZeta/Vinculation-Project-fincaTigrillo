@@ -6,6 +6,13 @@ import { buildWelcomeEmail } from '@/lib/email/welcome'
 import { createGmailTransporter } from '@/lib/email/transporter'
 import { redirect } from 'next/navigation'
 
+// Registration is restricted to ULEAM institutional accounts only.
+const ALLOWED_EMAIL_DOMAIN = '@live.uleam.edu.ec'
+
+function isAllowedRegistrationEmail(email: string): boolean {
+  return email.toLowerCase().endsWith(ALLOWED_EMAIL_DOMAIN)
+}
+
 export async function signIn(formData: FormData) {
   const insforge = createInsForgeServerClient()
   const email = String(formData.get('email') ?? '').trim()
@@ -49,6 +56,14 @@ export async function signUp(formData: FormData) {
   const career = String(formData.get('career') ?? '').trim() || null
   const semester = String(formData.get('semester') ?? '').trim() || null
 
+  if (!isAllowedRegistrationEmail(email)) {
+    return {
+      success: false,
+      requireVerification: false,
+      error: `Solo se permite el registro con correos institucionales ${ALLOWED_EMAIL_DOMAIN}.`,
+    }
+  }
+
   const { data, error } = await insforge.auth.signUp({
     email,
     password,
@@ -77,21 +92,28 @@ export async function signUp(formData: FormData) {
 
   // Verification disabled — user signed in directly
   if (data?.accessToken && data?.refreshToken) {
-    await setAuthCookies(data.accessToken, data.refreshToken)
+    // Insert profile FIRST, using the in-memory access token (no cookies yet).
+    // Only persist the session cookies once the profile row is confirmed.
+    try {
+      const { error: profileError } = await createInsForgeServerClient(data.accessToken)
+        .database.from('user_profiles').insert([{
+          user_id: data.user?.id,
+          role: 'viewer',
+          full_name: name,
+          semester,
+          career,
+        }])
 
-    const { error: profileError } = await createInsForgeServerClient(data.accessToken)
-      .database.from('user_profiles').insert([{
-        user_id: data.user?.id,
-        role: 'viewer',
-        full_name: name,
-        semester,
-        career,
-      }])
-
-    if (profileError) {
+      if (profileError) {
+        await clearAuthCookies()
+        return { success: false, requireVerification: false, error: 'Cuenta creada pero error al guardar perfil. Contacta al administrador.' }
+      }
+    } catch {
+      await clearAuthCookies()
       return { success: false, requireVerification: false, error: 'Cuenta creada pero error al guardar perfil. Contacta al administrador.' }
     }
 
+    await setAuthCookies(data.accessToken, data.refreshToken)
     void sendWelcomeEmail(email, name)
   }
 
@@ -123,21 +145,29 @@ export async function verifyEmailAndFinish(params: {
     return { success: false, error: 'Error al obtener sesión tras la verificación.' }
   }
 
-  await setAuthCookies(data.accessToken, data.refreshToken)
+  // Insert profile FIRST, using the in-memory access token (no cookies yet).
+  // Only persist the session cookies once the profile row is confirmed,
+  // to avoid leaving a "zombie" authenticated user without a profile row.
+  try {
+    const { error: profileError } = await createInsForgeServerClient(data.accessToken)
+      .database.from('user_profiles').insert([{
+        user_id: data.user?.id,
+        role: 'viewer',
+        full_name: params.name,
+        semester: params.semester,
+        career: params.career,
+      }])
 
-  const { error: profileError } = await createInsForgeServerClient(data.accessToken)
-    .database.from('user_profiles').insert([{
-      user_id: data.user?.id,
-      role: 'viewer',
-      full_name: params.name,
-      semester: params.semester,
-      career: params.career,
-    }])
-
-  if (profileError) {
+    if (profileError) {
+      await clearAuthCookies()
+      return { success: false, error: 'Verificado pero error al guardar perfil. Contacta al administrador.' }
+    }
+  } catch {
+    await clearAuthCookies()
     return { success: false, error: 'Verificado pero error al guardar perfil. Contacta al administrador.' }
   }
 
+  await setAuthCookies(data.accessToken, data.refreshToken)
   void sendWelcomeEmail(params.email, params.name)
 
   return { success: true }

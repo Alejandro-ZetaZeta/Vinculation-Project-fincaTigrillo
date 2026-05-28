@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 
 function getInitials(name: string): string {
   return name
@@ -32,11 +33,12 @@ export function Avatar({ src, name, size = 'sm', className = '' }: AvatarProps) 
 
   if (src && !imgError) {
     return (
-      <div className={`${sizeClass} rounded-full overflow-hidden shrink-0 bg-primary/10 ${className}`}>
-        <img
+      <div className={`${sizeClass} rounded-full overflow-hidden shrink-0 bg-primary/10 relative ${className}`}>
+        <Image
           src={src}
           alt={name}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
           onError={() => setImgError(true)}
         />
       </div>

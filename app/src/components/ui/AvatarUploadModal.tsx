@@ -17,7 +17,6 @@ export function AvatarUploadModal({ onClose, onSuccess }: AvatarUploadModalProps
   const [error, setError]         = useState('')
   const [offset, setOffset]       = useState({ x: 0, y: 0 })
   const [imgDims, setImgDims]     = useState({ w: 0, h: 0 })
-  const [scale, setScale]         = useState(1)
 
   const fileRef    = useRef<HTMLInputElement>(null)
   const imgRef     = useRef<HTMLImageElement>(null)
@@ -64,7 +63,6 @@ export function AvatarUploadModal({ onClose, onSuccess }: AvatarUploadModalProps
     const s = DISPLAY_SIZE / Math.min(img.naturalWidth, img.naturalHeight)
     const w = img.naturalWidth  * s
     const h = img.naturalHeight * s
-    setScale(s)
     setImgDims({ w, h })
     setOffset({ x: (DISPLAY_SIZE - w) / 2, y: (DISPLAY_SIZE - h) / 2 })
   }

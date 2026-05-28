@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sprout, Plus, MapPin, Ruler, Trash2, X, ChevronRight, Leaf, BarChart3, TreePine } from 'lucide-react'
+import { Sprout, Plus, MapPin, Ruler, Trash2, X, ChevronRight, Leaf, TreePine } from 'lucide-react'
 import Image from 'next/image'
 
 /* ─── Types ─────────────────────────────────────────── */
