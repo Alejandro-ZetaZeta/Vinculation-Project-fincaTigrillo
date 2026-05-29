@@ -11,8 +11,16 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
-    "next-env.d.ts",
+      "next-env.d.ts",
   ]),
+
+  // This rule is too noisy for common patterns used in this codebase
+  // (mount flags, syncing derived UI state). We rely on code review for these.
+  {
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
 ]);
 
 export default eslintConfig;

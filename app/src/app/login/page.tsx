@@ -1,20 +1,30 @@
 'use client'
 
-import { useState, useTransition, useId } from 'react'
+import { useState, useTransition, useId, useEffect, Suspense } from 'react'
 import { signIn } from '@/lib/auth/actions'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { LogIn, Mail, Lock, Eye, EyeOff, Sun, Moon } from 'lucide-react'
 import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
 
-export default function LoginPage() {
-  const [error, setError] = useState('')
+// Inner component that safely uses useSearchParams
+function LoginContent() {
+  const [error, setError]           = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const router = useRouter()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
   const { theme, toggleTheme } = useTheme()
-  const errorId = useId()
+  const errorId   = useId()
+  const successId = useId()
+
+  useEffect(() => {
+    if (searchParams.get('reset') === 'success') {
+      setSuccessMsg('Contraseña cambiada correctamente. Inicia sesión con tu nueva contraseña.')
+    }
+  }, [searchParams])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -24,7 +34,15 @@ export default function LoginPage() {
     startTransition(async () => {
       const result = await signIn(formData)
       if (result.success) {
-        router.push('/dashboard')
+        // Sanitize the ?redirect= param set by the proxy to prevent open-redirect.
+        // Must be a relative path (starts with '/') and must NOT start with '//'
+        // (which would be interpreted as a protocol-relative absolute URL).
+        const redirect = searchParams.get('redirect')
+        const safeRedirect =
+          redirect?.startsWith('/') && !redirect.startsWith('//')
+            ? redirect
+            : '/dashboard'
+        router.push(safeRedirect)
       } else {
         setError(result.error || 'Error al iniciar sesión')
       }
@@ -73,9 +91,21 @@ export default function LoginPage() {
           <form
             onSubmit={handleSubmit}
             className="space-y-5"
-            aria-describedby={error ? errorId : undefined}
+            aria-describedby={[successMsg ? successId : '', error ? errorId : ''].filter(Boolean).join(' ') || undefined}
             noValidate
           >
+            {/* Success alert (password reset) */}
+            {successMsg && (
+              <div
+                id={successId}
+                role="status"
+                aria-live="polite"
+                className="bg-success/10 border border-success/20 text-success rounded-xl px-4 py-3 text-sm"
+              >
+                {successMsg}
+              </div>
+            )}
+
             {/* Error alert */}
             {error && (
               <div
@@ -137,6 +167,16 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Forgot password */}
+            <div className="flex justify-end -mt-1">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-primary hover:text-primary-dark font-medium transition-colors underline underline-offset-2"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+
             {/* Submit */}
             <button
               type="submit"
@@ -176,5 +216,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   )
 }

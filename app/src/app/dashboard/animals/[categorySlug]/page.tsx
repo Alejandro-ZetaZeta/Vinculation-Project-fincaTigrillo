@@ -100,7 +100,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
 
       {/* Type Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {types?.map((type: { id: string; name: string; slug: string; description: string; icon: string }, i: number) => {
+        {types?.map((type: { id: string; name: string; slug: string; description: string; icon: string }) => {
           const IconComponent = typeIcons[type.icon] || PawPrint
           const colors = typeColors[type.slug] || typeColors['bovino']
 

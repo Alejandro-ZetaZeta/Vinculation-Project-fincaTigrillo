@@ -15,7 +15,7 @@ export default async function StudentsPage() {
 
   const { data: students } = await insforge.database
     .from('user_profiles')
-    .select('id, user_id, full_name, role, semester, career, created_at')
+    .select('id, user_id, full_name, role, semester, career, created_at, avatar_url')
     .eq('role', 'viewer')
     .order('created_at', { ascending: false })
 

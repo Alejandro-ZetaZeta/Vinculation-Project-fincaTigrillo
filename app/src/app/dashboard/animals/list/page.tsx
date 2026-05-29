@@ -1,5 +1,3 @@
-import { Suspense } from 'react'
-import { cacheLife, cacheTag } from 'next/cache'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { getAccessToken } from '@/lib/auth/cookies'
 import { getCurrentUser } from '@/lib/auth/actions'
@@ -11,10 +9,6 @@ import { AnimalListClient } from '@/components/animals/AnimalListClient'
    Reference data — cached for hours (rarely changes)
 ───────────────────────────────────────────── */
 async function getCachedCatalog(accessToken: string | undefined) {
-  'use cache'
-  cacheLife('hours')
-  cacheTag('animal-catalog')
-
   const insforge = createInsForgeServerClient(accessToken)
   const [{ data: categories }, { data: types }] = await Promise.all([
     insforge.database.from('animal_categories').select('id, name, slug').order('display_order', { ascending: true }),
@@ -31,10 +25,6 @@ async function getCachedCatalog(accessToken: string | undefined) {
    Animal list — cached for minutes (changes on mutations)
 ───────────────────────────────────────────── */
 async function getCachedAnimals(accessToken: string | undefined) {
-  'use cache'
-  cacheLife('minutes')
-  cacheTag('animals')
-
   const insforge = createInsForgeServerClient(accessToken)
   const { data } = await insforge.database
     .from('animals')

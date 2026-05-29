@@ -84,7 +84,7 @@ export async function POST(
       .eq('animal_id', id)
       .order('recorded_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (latestWeight) {
       await client.database

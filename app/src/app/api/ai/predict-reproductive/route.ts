@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { runReproductivePrediction } from '@/lib/ai/factory'
@@ -14,7 +14,7 @@ import type { AnimalContext, ReproductiveEventContext } from '@/lib/ai/provider'
  * 3. Construye el prompt y llama al proveedor de IA activo
  * 4. Retorna PredictionResult
  */
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     // ── Autenticación ────────────────────────────────────────
     const cookieStore = await cookies()

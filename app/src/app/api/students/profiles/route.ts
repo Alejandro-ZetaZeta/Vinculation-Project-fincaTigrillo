@@ -12,7 +12,7 @@ export async function GET() {
 
     const { data } = await insforge.database
       .from('user_profiles')
-      .select('user_id, full_name')
+      .select('user_id, full_name, avatar_url')
       .eq('role', 'viewer')
 
     return NextResponse.json({ data: data || [] })
