@@ -35,12 +35,17 @@ export const DMI_PERCENTAGE: Record<string, number> = {
   bovino: 0.025,    // 2.5% del peso corporal
   equino: 0.020,    // 2.0% del peso corporal
   porcino: 0.030,   // 3.0% del peso corporal
+  caprino: 0.030,   // 3.0% del peso corporal (cabras: referencia NRC Small Ruminants)
 }
 
 // FORMULA: CONSUMO_AVE_DIA_KG — Consumo diario promedio por ave adulta en kg.
 // Fuente: Dine a Chook / industria avícola colombiana.
 // Gallina ponedora: ~0.12 kg/día. Pollo de engorde: ~0.10 kg/día.
 export const POULTRY_DAILY_FEED_KG = 0.12
+
+// FORMULA: CONSUMO_PATO_DIA_KG — Consumo diario promedio por pato adulto en kg.
+// Fuente: industria avícola; pato Pekín ~0.20 kg/día.
+export const DUCK_DAILY_FEED_KG = 0.20
 
 // FORMULA: PESO_SACO_KG — Peso estándar de un saco de alimento concentrado.
 // En Colombia los sacos comerciales son generalmente de 40 kg.
@@ -85,6 +90,9 @@ export function calcFechaParto(breedingDate: Date, speciesSlug: string): Date | 
 export function calcConsumoDiario(weightKg: number, speciesSlug: string): number {
   if (speciesSlug === 'aves-de-corral') {
     return POULTRY_DAILY_FEED_KG
+  }
+  if (speciesSlug === 'patos') {
+    return DUCK_DAILY_FEED_KG
   }
   const dmi = DMI_PERCENTAGE[speciesSlug]
   if (!dmi) return 0

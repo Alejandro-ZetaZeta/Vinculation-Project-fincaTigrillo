@@ -92,53 +92,58 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       {/* Back button */}
       <Link
         href="/dashboard/animals"
-        className="inline-flex items-center gap-2 text-sm text-muted hover:text-primary transition-colors"
+        className="group inline-flex items-center gap-2 text-sm text-muted hover:text-primary border border-border hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 px-3 py-1.5 rounded-lg"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1" />
         Volver a categorías
       </Link>
 
       {/* Type Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {types?.map((type: { id: string; name: string; slug: string; description: string; icon: string }, i: number) => {
-          const IconComponent = typeIcons[type.icon] || PawPrint
-          const colors = typeColors[type.slug] || typeColors['bovino']
+      {(() => {
+        const isSmallGrid = types && types.length <= 2
+        return (
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-6${isSmallGrid ? ' lg:max-w-2xl lg:mx-auto' : ' lg:grid-cols-3'}`}>
+            {types?.map((type: { id: string; name: string; slug: string; description: string; icon: string }) => {
+              const IconComponent = typeIcons[type.icon] || PawPrint
+              const colors = typeColors[type.slug] || typeColors['bovino']
 
-          return (
-            <Link
-              key={type.id}
-              href={isAdmin ? `/dashboard/animals/register/${type.slug}` : '#'}
-              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 ${colors.bg} ${
-                isAdmin ? 'cursor-pointer' : 'opacity-80 cursor-default'
-              }`}
-              onClick={isAdmin ? undefined : (e) => e.preventDefault()}
-            >
-              {/* Icon */}
-              <div className={`w-16 h-16 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5`}>
-                <IconComponent className={`w-8 h-8 ${colors.text}`} />
-              </div>
+              return (
+                <Link
+                  key={type.id}
+                  href={isAdmin ? `/dashboard/animals/register/${type.slug}` : '#'}
+                  className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 ${colors.bg} ${
+                    isAdmin ? 'cursor-pointer' : 'opacity-80 cursor-default'
+                  }`}
+                  onClick={isAdmin ? undefined : (e) => e.preventDefault()}
+                >
+                  {/* Icon */}
+                  <div className={`w-16 h-16 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5`}>
+                    <IconComponent className={`w-8 h-8 ${colors.text}`} />
+                  </div>
 
-              {/* Content */}
-              <h3 className="text-xl font-bold text-foreground mb-2">
-                {type.name}
-              </h3>
-              <p className="text-sm text-muted leading-relaxed mb-4">
-                {type.description}
-              </p>
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-foreground mb-2">
+                    {type.name}
+                  </h3>
+                  <p className="text-sm text-muted leading-relaxed mb-4">
+                    {type.description}
+                  </p>
 
-              {/* Action text */}
-              {isAdmin ? (
-                <p className="text-sm font-medium text-primary flex items-center gap-1">
-                  Registrar {type.name}
-                  <ArrowRight className="w-4 h-4" />
-                </p>
-              ) : (
-                <p className="text-xs text-muted italic">Solo administradores pueden registrar</p>
-              )}
-            </Link>
-          )
-        })}
-      </div>
+                  {/* Action text */}
+                  {isAdmin ? (
+                    <p className="text-sm font-medium text-primary flex items-center gap-1">
+                      Registrar {type.name}
+                      <ArrowRight className="w-4 h-4" />
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted italic">Solo administradores pueden registrar</p>
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        )
+      })()}
     </div>
   )
 }

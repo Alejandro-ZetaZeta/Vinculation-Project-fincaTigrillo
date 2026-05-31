@@ -209,16 +209,44 @@ function CalcReproductivo() {
 
 /* ─── FCR ─── */
 function CalcFCRCard() {
-  const [feed, setFeed] = useState(1200)
-  const [gain, setGain] = useState(350)
-  const fcr = calcFCR(feed, gain)
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg')
+  const prevUnitRef = useRef(weightUnit)
+
+  const [feedInUnit, setFeedInUnit] = useState(1200)
+  const [gainInUnit, setGainInUnit] = useState(350)
+
+  useEffect(() => {
+    if (prevUnitRef.current !== weightUnit) {
+      const oldDef = WEIGHT_UNITS.find(u => u.value === prevUnitRef.current)!
+      const newDef = WEIGHT_UNITS.find(u => u.value === weightUnit)!
+      setFeedInUnit(Number(newDef.fromKg(oldDef.toKg(feedInUnit)).toFixed(2)))
+      setGainInUnit(Number(newDef.fromKg(oldDef.toKg(gainInUnit)).toFixed(2)))
+      prevUnitRef.current = weightUnit
+    }
+  }, [weightUnit, feedInUnit, gainInUnit])
+
+  const unitDef = WEIGHT_UNITS.find(u => u.value === weightUnit)!
+  const feedKg = unitDef.toKg(feedInUnit)
+  const gainKg = unitDef.toKg(gainInUnit)
+  const fcr = calcFCR(feedKg, gainKg)
+  const sym = unitDef.symbol
 
   return (
     <CalcCard title="Conversión Alimenticia (FCR)" icon={<Scale className="w-5 h-5 text-primary" />}
       hint="Ref: Pollo 1.6–2.0 | Porcino 2.5–3.5 | Bovino 6–10">
+      <div className="flex gap-2 bg-surface border border-border p-1.5 rounded-xl w-fit mb-1">
+        {WEIGHT_UNITS.map(u => (
+          <button key={u.value} onClick={() => setWeightUnit(u.value)}
+            className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+              weightUnit === u.value ? 'bg-primary text-white shadow-sm' : 'text-muted hover:bg-background'
+            }`}>
+            {u.label}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-2 gap-3">
-        <NumField label="Alimento total (kg)" value={feed} onChange={setFeed} min={0} />
-        <NumField label="Peso ganado (kg)"    value={gain} onChange={setGain} min={0} />
+        <NumField label={`Alimento total (${sym})`} value={feedInUnit} onChange={setFeedInUnit} min={0} />
+        <NumField label={`Peso ganado (${sym})`}    value={gainInUnit} onChange={setGainInUnit} min={0} />
       </div>
       <ResultBox label="FCR (menor = más eficiente)" value={fcr > 0 ? fcr.toFixed(2) : '—'} accent />
     </CalcCard>

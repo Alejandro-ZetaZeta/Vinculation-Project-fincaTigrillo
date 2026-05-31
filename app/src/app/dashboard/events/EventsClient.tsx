@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import {
   CalendarDays, HeartPulse, AlertTriangle, Droplets,
   Plus, Trash2, Calendar, Loader2, ChevronUp, Lock,
+  Receipt, Paperclip, X, Eye, Download,
 } from 'lucide-react'
 import {
   calcFechaParto,
@@ -14,7 +15,11 @@ import {
 /* ──────────── helpers ──────────── */
 function fmtDate(d: Date | null | string) {
   if (!d) return '—'
-  const date = typeof d === 'string' ? new Date(d) : d
+  // Normalize bare ISO date strings (YYYY-MM-DD) to local noon to avoid UTC-offset day shifts
+  const normalized = typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)
+    ? d + 'T12:00:00'
+    : d
+  const date = typeof normalized === 'string' ? new Date(normalized) : normalized
   if (isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
@@ -103,18 +108,18 @@ export default function EventsClient({ isAdmin }: { isAdmin: boolean }) {
               className={[
                 'flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-medium rounded-t-xl transition-all whitespace-nowrap shrink-0',
                 isActive
-                  ? 'bg-surface border border-border border-b-surface text-primary -mb-px'
+                  ? 'bg-surface border border-b-0 border-border text-primary'
                   : 'text-muted hover:text-foreground',
               ].join(' ')}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              <span className="hidden xs:inline sm:hidden">{t.shortLabel}</span>
               <span className="hidden sm:inline">{t.label}</span>
-              <span className="xs:hidden">{t.shortLabel}</span>
+              <span className="sm:hidden">{t.shortLabel}</span>
             </button>
           )
         })}
       </div>
+
 
       {activeTab === 'reproductivos' && (
         <ReproductivosTab animals={animals} loadingAnimals={loadingAnimals} isAdmin={isAdmin} />
@@ -178,9 +183,49 @@ function ReproductivosTab({
     return animals.find(a => a.id === aid)?.animal_types?.slug || ''
   }
 
-  const femaleAnimals = animals.filter(a => {
+  const allFemales = animals.filter(a => {
     if (a.animal_types?.slug === 'aves-de-corral') return false
     return a.sex?.toLowerCase() === 'hembra'
+  })
+
+  // ── unique species present in the female list ──────────────────────
+  const speciesInFemales = Array.from(
+    new Set(allFemales.map(a => a.animal_types?.slug).filter(Boolean) as string[])
+  )
+
+  // label map for species slugs
+  const SPECIES_NAME: Record<string, string> = {
+    bovino: 'Bovino', equino: 'Equino', porcino: 'Porcino',
+    caprino: 'Caprino', patos: 'Patos',
+  }
+  const eventTypeLabel = Object.fromEntries(
+    REPRODUCTIVE_EVENT_TYPES.map(t => [t.value, t.label])
+  )
+
+  // ── form: species filter ──────────────────────────────────────────
+  const [formSpecies, setFormSpecies] = useState('')   // '' = all
+  const femaleAnimals = formSpecies
+    ? allFemales.filter(a => a.animal_types?.slug === formSpecies)
+    : allFemales
+
+  // ── log: filter state ─────────────────────────────────────────────
+  const [filterSpecies, setFilterSpecies] = useState('')    // '' = all
+  const [filterEventType, setFilterEventType] = useState('') // '' = all
+
+  // derive unique species & event types from loaded events
+  const logSpecies = Array.from(
+    new Set(
+      events
+        .map(ev => ev.animals?.animal_types?.slug)
+        .filter(Boolean) as string[]
+    )
+  )
+  const logEventTypes = Array.from(new Set(events.map(ev => ev.event_type)))
+
+  const filteredEvents = events.filter(ev => {
+    if (filterSpecies && ev.animals?.animal_types?.slug !== filterSpecies) return false
+    if (filterEventType && ev.event_type !== filterEventType) return false
+    return true
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -205,7 +250,7 @@ function ReproductivosTab({
       if (!res.ok) { setError(result.error || 'Error al guardar'); return }
       const refreshed = await fetch('/api/reproductive-events').then(r => r.json())
       if (Array.isArray(refreshed)) setEvents(refreshed.filter((ev: ReproEvent) => ev.event_type !== 'muerte'))
-      setShowForm(false); setNotes(''); setSireId(''); setAnimalId('')
+      setShowForm(false); setNotes(''); setSireId(''); setAnimalId(''); setFormSpecies('')
     } catch { setError('Error de conexión') }
     finally { setSaving(false) }
   }
@@ -227,7 +272,7 @@ function ReproductivosTab({
   return (
     <div className="space-y-4">
       <TabHeader
-        count={events.length}
+        count={filteredEvents.length}
         noun="evento reproductivo"
         isAdmin={isAdmin}
         showForm={showForm}
@@ -238,6 +283,21 @@ function ReproductivosTab({
         <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-2xl p-5 space-y-4">
           {error && <ErrorBanner message={error} />}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* ── Livestock type selector (form) ── */}
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1">Tipo de Ganado</label>
+              <select
+                value={formSpecies}
+                onChange={e => { setFormSpecies(e.target.value); setAnimalId(''); setSireId('') }}
+                className="input-calc"
+              >
+                <option value="">Todos los tipos…</option>
+                {speciesInFemales.map(slug => (
+                  <option key={slug} value={slug}>{SPECIES_NAME[slug] ?? slug}</option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-xs font-medium text-muted mb-1">Animal (hembra)</label>
               <select
@@ -246,7 +306,7 @@ function ReproductivosTab({
                 className="input-calc"
                 required
               >
-                <option value="">Seleccionar...</option>
+                <option value="">Seleccionar…</option>
                 {femaleAnimals.map(a => (
                   <option key={a.id} value={a.id}>
                     {a.name || a.identification_code || 'Sin nombre'} — {a.animal_types?.name}
@@ -319,9 +379,72 @@ function ReproductivosTab({
         </form>
       )}
 
-      {events.length > 0 ? (
+      {/* ── Log filters ─────────────────────────────────────────────── */}
+      {events.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {/* Species filter row */}
+          <div className="flex gap-1.5 flex-wrap items-center">
+            <span className="text-xs text-muted font-medium shrink-0">Tipo:</span>
+            <button
+              onClick={() => setFilterSpecies('')}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
+                filterSpecies === ''
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'text-muted border-border hover:bg-surface-hover'
+              }`}
+            >
+              Todos
+            </button>
+            {logSpecies.map(slug => (
+              <button
+                key={slug}
+                onClick={() => setFilterSpecies(s => s === slug ? '' : slug)}
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
+                  filterSpecies === slug
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'text-muted border-border hover:bg-surface-hover'
+                }`}
+              >
+                {SPECIES_NAME[slug] ?? slug}
+              </button>
+            ))}
+          </div>
+
+          {/* Event-type filter row */}
+          {logEventTypes.length > 1 && (
+            <div className="flex gap-1.5 flex-wrap items-center">
+              <span className="text-xs text-muted font-medium shrink-0">Evento:</span>
+              <button
+                onClick={() => setFilterEventType('')}
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
+                  filterEventType === ''
+                    ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
+                    : 'text-muted border-border hover:bg-surface-hover'
+                }`}
+              >
+                Todos
+              </button>
+              {logEventTypes.map(et => (
+                <button
+                  key={et}
+                  onClick={() => setFilterEventType(f => f === et ? '' : et)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
+                    filterEventType === et
+                      ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
+                      : 'text-muted border-border hover:bg-surface-hover'
+                  }`}
+                >
+                  {eventTypeLabel[et] ?? et}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {filteredEvents.length > 0 ? (
         <div className="space-y-2">
-          {events.map(ev => (
+          {filteredEvents.map(ev => (
             <div
               key={ev.id}
               className="bg-surface border border-border rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
@@ -356,8 +479,8 @@ function ReproductivosTab({
         </div>
       ) : (
         <EmptyState icon={<HeartPulse className="w-10 h-10 text-muted/30 mx-auto mb-2" />}
-          message="No hay eventos reproductivos registrados"
-          hint={!isAdmin ? 'El administrador registrará los eventos de monta y partos' : undefined}
+          message={events.length > 0 ? 'Ningún evento coincide con los filtros' : 'No hay eventos reproductivos registrados'}
+          hint={events.length === 0 && !isAdmin ? 'El administrador registrará los eventos de monta y partos' : undefined}
         />
       )}
     </div>
@@ -547,6 +670,11 @@ function ProduccionLecheTab({
   const [litersPm, setLitersPm] = useState('')
   const [notes, setNotes] = useState('')
 
+  // ── date filter ───────────────────────────────────────────────────
+  const [filterDate, setFilterDate] = useState('')   // ISO date or ''
+
+  const PAGE_SIZE = 7
+
   const dairyAnimals = animals.filter(a =>
     (a.animal_types?.slug === 'bovino' || a.animal_types?.slug === 'caprino') &&
     a.sex?.toLowerCase() === 'hembra'
@@ -596,7 +724,7 @@ function ProduccionLecheTab({
 
   if (loading || loadingAnimals) return <TabSpinner />
 
-  // Aggregate totals per animal for summary bar
+  // Aggregate totals per animal for summary bar (all records, not filtered)
   const totalsByAnimal = events.reduce<Record<string, { name: string; total: number }>>((acc, ev) => {
     const key = ev.animal_id
     const name = ev.animals?.name || ev.animals?.identification_code || 'Animal'
@@ -604,6 +732,17 @@ function ProduccionLecheTab({
     acc[key].total += Number(ev.total_liters) || 0
     return acc
   }, {})
+
+  // Apply date filter then cap at PAGE_SIZE.
+  // Parse recorded_date as local noon (same normalization as fmtDate) so the
+  // filtered day matches what the user sees displayed on screen.
+  const toLocalIso = (iso: string | undefined) =>
+    iso ? toIso(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso + 'T12:00:00' : iso)) : ''
+  const filtered = filterDate
+    ? events.filter(ev => toLocalIso(ev.recorded_date) === filterDate)
+    : events
+  const visibleRows = filtered.slice(0, PAGE_SIZE)
+  const hasMore = filtered.length > PAGE_SIZE
 
   return (
     <div className="space-y-4">
@@ -682,61 +821,103 @@ function ProduccionLecheTab({
         </form>
       )}
 
-      {events.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm min-w-[480px]">
-            <thead>
-              <tr className="border-b border-border bg-background">
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">Fecha</th>
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">Animal</th>
-                <th className="text-right px-3 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">AM (L)</th>
-                <th className="text-right px-3 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">PM (L)</th>
-                <th className="text-right px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">Total</th>
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider hidden sm:table-cell">Notas</th>
-                {isAdmin && <th className="px-3 py-2.5" />}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {events.map(ev => (
-                <tr key={ev.id} className="bg-surface hover:bg-surface-hover transition-colors">
-                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{fmtDate(ev.recorded_date)}</td>
-                  <td className="px-4 py-3">
-                    <span className="font-medium text-foreground text-sm">
-                      {ev.animals?.name || ev.animals?.identification_code || 'Animal'}
-                    </span>
-                    <span className="text-xs text-muted ml-1 hidden sm:inline">({ev.animals?.animal_types?.name})</span>
-                  </td>
-                  <td className="px-3 py-3 text-right text-sm tabular-nums text-muted">
-                    {Number(ev.liters_am) > 0 ? Number(ev.liters_am).toFixed(2) : '—'}
-                  </td>
-                  <td className="px-3 py-3 text-right text-sm tabular-nums text-muted">
-                    {Number(ev.liters_pm) > 0 ? Number(ev.liters_pm).toFixed(2) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="font-bold text-primary tabular-nums">
-                      {Number(ev.total_liters).toFixed(2)} L
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted italic truncate max-w-[160px] hidden sm:table-cell">
-                    {ev.notes || '—'}
-                  </td>
-                  {isAdmin && (
-                    <td className="px-3 py-3 text-right">
-                      <DeleteControls
-                        id={ev.id}
-                        deleteId={deleteId}
-                        setDeleteId={setDeleteId}
-                        onConfirm={handleDelete}
-                        compact
-                      />
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
+      {events.length > 0 && (
+        <>
+          {/* ── Date filter bar ───────────────────────────────────────── */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="text-xs font-medium text-muted shrink-0">Filtrar por fecha:</label>
+            <div className="flex items-center gap-1">
+              <input
+                type="date"
+                value={filterDate}
+                onChange={e => setFilterDate(e.target.value)}
+                className="input-calc !py-1 !text-xs w-auto"
+              />
+              {filterDate && (
+                <button
+                  onClick={() => setFilterDate('')}
+                  className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+                  title="Limpiar filtro"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {(filterDate || hasMore) && (
+              <span className="text-xs text-muted ml-auto">
+                {visibleRows.length === filtered.length
+                  ? `${filtered.length} registro${filtered.length !== 1 ? 's' : ''}`
+                  : `${visibleRows.length} de ${filtered.length} registros (más recientes)`
+                }
+              </span>
+            )}
+          </div>
+
+          {/* ── Table ─────────────────────────────────────────────────── */}
+          {visibleRows.length > 0 ? (
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full text-sm min-w-[480px]">
+                <thead>
+                  <tr className="border-b border-border bg-background">
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">Fecha</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">Animal</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">AM (L)</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">PM (L)</th>
+                    <th className="text-right px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider">Total</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider hidden sm:table-cell">Notas</th>
+                    {isAdmin && <th className="px-3 py-2.5" />}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {visibleRows.map(ev => (
+                    <tr key={ev.id} className="bg-surface hover:bg-surface-hover transition-colors">
+                      <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{fmtDate(ev.recorded_date)}</td>
+                      <td className="px-4 py-3">
+                        <span className="font-medium text-foreground text-sm">
+                          {ev.animals?.name || ev.animals?.identification_code || 'Animal'}
+                        </span>
+                        <span className="text-xs text-muted ml-1 hidden sm:inline">({ev.animals?.animal_types?.name})</span>
+                      </td>
+                      <td className="px-3 py-3 text-right text-sm tabular-nums text-muted">
+                        {Number(ev.liters_am) > 0 ? Number(ev.liters_am).toFixed(2) : '—'}
+                      </td>
+                      <td className="px-3 py-3 text-right text-sm tabular-nums text-muted">
+                        {Number(ev.liters_pm) > 0 ? Number(ev.liters_pm).toFixed(2) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-bold text-primary tabular-nums">
+                          {Number(ev.total_liters).toFixed(2)} L
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted italic truncate max-w-[160px] hidden sm:table-cell">
+                        {ev.notes || '—'}
+                      </td>
+                      {isAdmin && (
+                        <td className="px-3 py-3 text-right">
+                          <DeleteControls
+                            id={ev.id}
+                            deleteId={deleteId}
+                            setDeleteId={setDeleteId}
+                            onConfirm={handleDelete}
+                            compact
+                          />
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Droplets className="w-10 h-10 text-muted/30 mx-auto mb-2" />}
+              message="Ningún registro para la fecha seleccionada"
+            />
+          )}
+        </>
+      )}
+
+      {events.length === 0 && (
         <EmptyState
           icon={<Droplets className="w-10 h-10 text-muted/30 mx-auto mb-2" />}
           message="No hay registros de producción de leche"
@@ -747,8 +928,9 @@ function ProduccionLecheTab({
   )
 }
 
+
 /* ════════════════════════════════════════
-   COMPONENTES REUTILIZABLES
+   TAB 4 — FACTURAS
    ════════════════════════════════════════ */
 function TabHeader({
   count, noun, isAdmin, showForm, onToggle,

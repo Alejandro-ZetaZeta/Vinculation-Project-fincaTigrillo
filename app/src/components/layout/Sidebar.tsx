@@ -87,8 +87,8 @@ export function Sidebar({ userRole }: { userRole: string }) {
           'md:translate-x-0',
         ].join(' ')}
       >
-        {/* Brand & Toggle */}
-        <div className={`px-4 py-5 border-b border-(--sidebar-border) flex ${isCollapsed ? 'flex-col items-center gap-4' : 'items-center justify-between'}`}>
+        {/* Brand & collapse toggle */}
+        <div className={`px-4 h-16 border-b border-(--sidebar-border) flex shrink-0 ${isCollapsed ? 'flex-col items-center justify-center gap-4' : 'items-center justify-between'}`}>
           <Link
             href="/dashboard"
             className={`flex items-center gap-3 group rounded-lg p-1 -m-1 ${isCollapsed ? 'justify-center' : ''}`}

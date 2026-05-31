@@ -516,54 +516,153 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                     onClick={() => { setExpandedId(expandedId === animal.id ? null : animal.id); cancelEdit() }}
                     className="flex-1 flex items-center gap-4 text-left hover:bg-surface-hover rounded-lg transition-colors -m-1 p-1"
                   >
-                    <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 items-center min-w-0">
-                      <div className="min-w-0">
+                    <div className="flex-1 min-w-0">
+
+                      {/* ── Mobile (< md): name full-width, sex + status below ── */}
+                      <div className="md:hidden space-y-1.5">
                         <div className="flex items-center gap-3 min-w-0">
                           {animalIconSrc && (
-                            <div className="flex items-center justify-center w-7 h-7 md:w-7 md:h-7 shrink-0">
+                            <div className="flex items-center justify-center w-7 h-7 shrink-0">
                               <Image
                                 src={animalIconSrc}
                                 alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
-                                width={28}
-                                height={28}
-                                className="w-7 h-7 md:w-7 md:h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                                width={28} height={28}
+                                className="w-7 h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
                               />
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-foreground whitespace-normal break-all md:wrap-break-word leading-snug">{animal.name || 'Sin nombre'}</p>
-                            <p className="text-xs text-muted">{animal.identification_code || '—'}</p>
+                            <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                            <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
                           </div>
                         </div>
-                      </div>
-                      <div className="hidden md:block">
-                        <p className="text-sm text-foreground">{animal.animal_types?.name}</p>
-                        <p className="text-xs text-muted">{animal.animal_types?.animal_categories?.name}</p>
-                      </div>
-                      <div className="hidden md:block">
-                        <p className="text-sm">{animal.breed || '—'}</p>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-3 pl-1">
                           {sexOnlyIconSrc && (
-                            <div className="flex items-center justify-center w-7 h-7 md:w-7 md:h-7 shrink-0">
+                            <Image
+                              src={sexOnlyIconSrc}
+                              alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
+                              width={18} height={18}
+                              className="w-4.5 h-4.5 object-contain invert-0 [html[data-theme='dark']_&]:invert shrink-0"
+                            />
+                          )}
+                          <p className="text-sm capitalize text-foreground">{animal.sex || '—'}</p>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusColors[animal.status] || ''}`}>
+                            {animal.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* ── Tablet (md → lg): name | namespace | sex(6rem) | status(7rem) ── */}
+                      <div className="hidden md:grid lg:hidden grid-cols-[minmax(0,2fr)_minmax(0,1fr)_6rem_7rem] gap-3 items-center">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {animalIconSrc && (
+                              <div className="flex items-center justify-center w-7 h-7 shrink-0">
+                                <Image
+                                  src={animalIconSrc}
+                                  alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
+                                  width={28} height={28}
+                                  className="w-7 h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                                />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                              <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <p className="text-sm text-foreground">{animal.animal_types?.name}</p>
+                          <p className="text-xs text-muted">{animal.animal_types?.animal_categories?.name}</p>
+                        </div>
+                        <div className="flex justify-center">
+                          <div className="flex items-center gap-2">
+                            {sexOnlyIconSrc && (
                               <Image
                                 src={sexOnlyIconSrc}
                                 alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
-                                width={28}
-                                height={28}
-                                className="w-7 h-7 md:w-7 md:h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                                width={28} height={28}
+                                className="w-7 h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert shrink-0"
                               />
-                            </div>
-                          )}
-                          <p className="text-sm capitalize">{animal.sex || '—'}</p>
+                            )}
+                            <p className="text-sm capitalize">{animal.sex || '—'}</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-center">
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusColors[animal.status] || ''}`}>
+                            {animal.status}
+                          </span>
                         </div>
                       </div>
-                      <div>
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusColors[animal.status] || ''}`}>
-                          {animal.status}
-                        </span>
+
+                      {/* ── Laptop (lg+): name | namespace | breed | weight | sex(6rem) | status(7rem) ── */}
+                      <div className="hidden lg:grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_6rem_7rem] gap-4 items-center">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {animalIconSrc && (
+                              <div className="flex items-center justify-center w-7 h-7 shrink-0">
+                                <Image
+                                  src={animalIconSrc}
+                                  alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
+                                  width={28} height={28}
+                                  className="w-7 h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                                />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                              <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <p className="text-base text-foreground">{animal.animal_types?.name}</p>
+                          <p className="text-sm text-muted">{animal.animal_types?.animal_categories?.name}</p>
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <p className="text-sm text-foreground">{animal.breed || '—'}</p>
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          {(() => {
+                            const isPoultry = animal.animal_types?.slug === 'aves-de-corral'
+                            const weightLabel = isPoultry ? 'Peso Prom.' : 'Peso'
+                            const w = animal.weight_kg
+                            const weightVal = w != null
+                              ? (isPoultry
+                                  ? ((animal.metadata?.etapa as string) === 'pollitos'
+                                      ? `${Math.round(w * 1000)} g`
+                                      : `${(w * 2.20462).toFixed(2)} lbs`)
+                                  : `${w} kg`)
+                              : '—'
+                            return (
+                              <>
+                                <p className="text-sm text-foreground">{weightVal}</p>
+                                <p className="text-xs text-muted">{weightLabel}</p>
+                              </>
+                            )
+                          })()}
+                        </div>
+                        <div className="flex justify-center">
+                          <div className="flex items-center gap-2">
+                            {sexOnlyIconSrc && (
+                              <Image
+                                src={sexOnlyIconSrc}
+                                alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
+                                width={28} height={28}
+                                className="w-7 h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert shrink-0"
+                              />
+                            )}
+                            <p className="text-sm capitalize">{animal.sex || '—'}</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-center">
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${statusColors[animal.status] || ''}`}>
+                            {animal.status}
+                          </span>
+                        </div>
                       </div>
+
                     </div>
                     {expandedId === animal.id ? <ChevronUp className="w-4 h-4 text-muted shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted shrink-0" />}
                   </button>

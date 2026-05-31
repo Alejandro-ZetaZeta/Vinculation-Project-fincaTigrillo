@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, ArrowLeft, PawPrint, HeartPulse, CheckCircle, XCircle, Loader, Syringe } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 /* ── Slugs that support reproductive tracking ── */
 const REPRO_TYPES = ['bovino', 'equino', 'porcino', 'caprino']
@@ -222,6 +223,17 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
 
   const fields = typeFields[typeSlug] || typeFields['bovino']
 
+  const iconSrc: string | null =
+    typeSlug === 'bovino'         ? (sex === 'hembra' ? '/vaca.svg'    : '/toro.svg') :
+    typeSlug === 'equino'         ? (sex === 'hembra' ? '/yegua.svg'   : '/caballo.svg') :
+    typeSlug === 'porcino'        ? (sex === 'hembra' ? '/cerda.svg'   : '/cerdo.svg') :
+    typeSlug === 'caprino'        ? (sex === 'hembra' ? '/cabrita.svg' : '/cabro.svg') :
+    typeSlug === 'patos'          ? (sex === 'hembra' ? '/pata.svg'    : '/pato.svg') :
+    typeSlug === 'aves-de-corral' ? (
+      avesEtapa === 'pollitos' || !avesEtapa ? '/pollito.svg' :
+      (sex === 'hembra' || sex === 'hembras' || sex === 'mixto') ? '/gallina.svg' : '/gallo.svg'
+    ) : null
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
@@ -311,9 +323,23 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Registrar {typeName}</h1>
-        <p className="text-muted mt-1">Completa la información del animal</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Registrar {typeName}</h1>
+          <p className="text-muted mt-1">Completa la información del animal</p>
+        </div>
+        {/* Tablet / mobile: small icon to the right of heading, sticky below header */}
+        {iconSrc && (
+          <div className="lg:hidden shrink-0 sticky top-16 self-start">
+            <Image
+              src={iconSrc}
+              alt={typeName}
+              width={72}
+              height={72}
+              className="object-contain invert-0 [html[data-theme='dark']_&]:invert"
+            />
+          </div>
+        )}
       </div>
 
       {/* Breadcrumbs */}
@@ -328,13 +354,15 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
       </div>
 
       <Link href={`/dashboard/animals/${categorySlug}`}
-        className="inline-flex items-center gap-2 text-sm text-muted hover:text-primary transition-colors">
-        <ArrowLeft className="w-4 h-4" />
+        className="group inline-flex items-center gap-2 text-sm text-muted hover:text-primary border border-border hover:border-primary/40 hover:bg-primary/10 transition-all duration-200 px-3 py-1.5 rounded-lg">
+        <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1" />
         Volver a {categoryName}
       </Link>
 
-      {/* Form */}
-      <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 max-w-3xl">
+      {/* Form + laptop icon */}
+      <div className="flex items-start">
+        {/* Form */}
+        <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 max-w-3xl flex-1 min-w-0">
         {success && (
           <div className="mb-6 bg-success/10 border border-success/20 text-success rounded-xl px-4 py-3 text-sm animate-scale-in flex items-center gap-2">
             <PawPrint className="w-4 h-4" />
@@ -547,6 +575,9 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                 )
               }
 
+              /* ── Notes rendered separately after all conditional fields ── */
+              if (field.name === 'notes') return null
+
               /* ── Default render ── */
               const colSpan = field.type === 'textarea' ? 'md:col-span-2' : ''
               return (
@@ -609,49 +640,62 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                 </select>
               </div>
             )}
-          </div>
 
-          {/* ── Sire selector panel ── */}
-          {showSireSelector && (
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3 animate-fade-in">
-              <div className="flex items-center gap-2 text-primary text-sm font-semibold">
-                <HeartPulse className="w-4 h-4" />
-                Padre reproductor
-              </div>
-              <p className="text-xs text-muted">
-                Selecciona el {SIRE_LABEL[typeSlug] || 'macho'} que impregnó a esta hembra.
-              </p>
-              {loadingSires ? (
-                <div className="flex items-center gap-2 text-xs text-muted py-2">
-                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                  Cargando machos registrados...
+            {/* ── Sire selector panel ── */}
+            {showSireSelector && (
+              <div className="md:col-span-2">
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3 animate-fade-in">
+                  <div className="flex items-center gap-2 text-primary text-sm font-semibold">
+                    <HeartPulse className="w-4 h-4" />
+                    Padre reproductor
+                  </div>
+                  <p className="text-xs text-muted">
+                    Selecciona el {SIRE_LABEL[typeSlug] || 'macho'} que impregnó a esta hembra.
+                  </p>
+                  {loadingSires ? (
+                    <div className="flex items-center gap-2 text-xs text-muted py-2">
+                      <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      Cargando machos registrados...
+                    </div>
+                  ) : sires.length === 0 ? (
+                    <p className="text-xs text-warning py-2">
+                      No hay {
+                        typeSlug === 'bovino' ? 'toros' :
+                        typeSlug === 'equino' ? 'sementales' :
+                        typeSlug === 'porcino' ? 'verracos' :
+                        typeSlug === 'caprino' ? 'machos cabrios' :
+                        'machos'
+                      } registrados activos.
+                      Puedes registrar el padre más tarde desde el módulo de eventos reproductivos.
+                    </p>
+                  ) : (
+                    <select value={sireId} onChange={e => setSireId(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                      <option value="">— Sin especificar —</option>
+                      {sires.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name || s.identification_code || 'Sin nombre'}{s.identification_code && s.name ? ` (${s.identification_code})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {sireId && <input type="hidden" name="meta_padre_id" value={sireId} />}
                 </div>
-              ) : sires.length === 0 ? (
-                <p className="text-xs text-warning py-2">
-                  No hay {
-                    typeSlug === 'bovino' ? 'toros' :
-                    typeSlug === 'equino' ? 'sementales' :
-                    typeSlug === 'porcino' ? 'verracos' :
-                    typeSlug === 'caprino' ? 'machos cabrios' :
-                    'machos'
-                  } registrados activos.
-                  Puedes registrar el padre más tarde desde el módulo de eventos reproductivos.
-                </p>
-              ) : (
-                <select value={sireId} onChange={e => setSireId(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                  <option value="">— Sin especificar —</option>
-                  {sires.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name || s.identification_code || 'Sin nombre'}{s.identification_code && s.name ? ` (${s.identification_code})` : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {/* hidden input so sireId reaches handleSubmit via metadata */}
-              {sireId && <input type="hidden" name="meta_padre_id" value={sireId} />}
-            </div>
-          )}
+              </div>
+            )}
+
+            {/* ── Notes: always last field ── */}
+            {fields.find(f => f.name === 'notes') && (
+              <div className="md:col-span-2">
+                <label htmlFor="notes" className="block text-sm font-medium text-foreground mb-1.5">
+                  {fields.find(f => f.name === 'notes')!.label}
+                </label>
+                <textarea id="notes" name="notes" rows={3}
+                  placeholder={fields.find(f => f.name === 'notes')!.placeholder}
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none" />
+              </div>
+            )}
+          </div>
 
           <div className="pt-4 border-t border-border flex gap-3">
             <button type="submit" disabled={isPending || success}
@@ -666,11 +710,26 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
               )}
             </button>
             <Link href={`/dashboard/animals/${categorySlug}`}
-              className="px-6 py-2.5 rounded-xl border border-border text-muted hover:text-foreground hover:bg-surface-hover font-medium transition-all">
+              className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-border hover:border-primary/40 text-muted hover:text-primary hover:bg-primary/10 font-medium transition-all duration-200">
+              <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1" />
               Cancelar
             </Link>
           </div>
         </form>
+        </div>
+
+        {/* Laptop: right column icon, sticky so it follows scroll */}
+        {iconSrc && (
+          <div className="hidden lg:flex w-[538px] shrink-0 sticky top-8 self-start items-center justify-center py-12">
+            <Image
+              src={iconSrc}
+              alt={typeName}
+              width={460}
+              height={460}
+              className="object-contain invert-0 [html[data-theme='dark']_&]:invert"
+            />
+          </div>
+        )}
       </div>
     </div>
   )

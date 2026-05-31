@@ -56,8 +56,8 @@ export default async function AnimalsPage() {
       </div>
 
       {/* Category Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories?.map((category: { id: string; name: string; slug: string; description: string; icon: string }, i: number) => {
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:max-w-5xl lg:mx-auto">
+        {categories?.map((category: { id: string; name: string; slug: string; description: string; icon: string }) => {
           const IconComponent = categoryIcons[category.icon] || PawPrint
           const colors = categoryColors[category.slug] || categoryColors['ganado-mayor']
 
@@ -65,18 +65,18 @@ export default async function AnimalsPage() {
             <Link
               key={category.id}
               href={`/dashboard/animals/${category.slug}`}
-              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 ${colors.bg}`}
+              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 lg:p-10 ${colors.bg}`}
             >
               {/* Icon */}
-              <div className={`w-16 h-16 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5`}>
-                <IconComponent className={`w-8 h-8 ${colors.text}`} />
+              <div className={`w-16 h-16 lg:w-24 lg:h-24 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5 lg:mb-7`}>
+                <IconComponent className={`w-8 h-8 lg:w-12 lg:h-12 ${colors.text}`} />
               </div>
 
               {/* Content */}
-              <h3 className="text-xl font-bold text-foreground mb-2">
+              <h3 className="text-xl lg:text-2xl font-bold text-foreground mb-2 lg:mb-3">
                 {category.name}
               </h3>
-              <p className="text-sm text-muted leading-relaxed">
+              <p className="text-sm lg:text-base text-muted leading-relaxed">
                 {category.description}
               </p>
 
