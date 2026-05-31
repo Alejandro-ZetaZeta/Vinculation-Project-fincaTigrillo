@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createInsForgeServerClient } from '@/lib/insforge/server'
+import { createInsForgeAdminClient } from '@/lib/insforge/server'
 
 const BUCKET = 'bucket_prove'
 
 /* ─────────────────────────────────────────────────────────────────
    GET /api/cron/cleanup-invoices
    Invoked every Sunday 13:00 UTC-5 (18:00 UTC) by Vercel Cron.
-   Deletes invoice images (storage + DB) that are older than 7 days.
+   Deletes invoice images (storage + DB) that are older than 2 calendar months.
    Protected by Authorization: Bearer <CRON_SECRET>.
 ───────────────────────────────────────────────────────────────── */
 async function handle(req: NextRequest) {
@@ -22,16 +22,17 @@ async function handle(req: NextRequest) {
   }
 
   /* 2. Service-role client */
-  const serviceKey = process.env.INSFORGE_API_KEY
-  if (!serviceKey) {
+  if (!process.env.INSFORGE_API_KEY) {
     console.error('[cron/cleanup-invoices] INSFORGE_API_KEY not set')
     return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
   }
-  const client = createInsForgeServerClient(serviceKey)
+  const client = createInsForgeAdminClient()
 
   try {
-    /* 3. Fetch invoices older than 7 days */
-    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    /* 3. Fetch invoices older than 2 calendar months */
+    const cutoffDate = new Date()
+    cutoffDate.setMonth(cutoffDate.getMonth() - 2)
+    const cutoff = cutoffDate.toISOString()
 
     const { data: staleInvoices, error: fetchErr } = await client.database
       .from('event_invoices')
@@ -86,7 +87,7 @@ async function handle(req: NextRequest) {
 
     if (dbErr) throw new Error(dbErr.message)
 
-    console.log(`[cron/cleanup-invoices] Deleted ${ids.length} invoice(s) older than 7 days`)
+    console.log(`[cron/cleanup-invoices] Deleted ${ids.length} invoice(s) older than 2 months`)
     return NextResponse.json({ ok: true, deleted: ids.length })
 
   } catch (err) {
