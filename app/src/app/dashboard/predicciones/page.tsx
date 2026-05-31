@@ -4,7 +4,7 @@ import { useState } from 'react'
 import {
   Brain, Sparkles, AlertTriangle, AlertCircle, Info,
   CheckCircle2, Clock, Calendar, RefreshCw, PawPrint,
-  ChevronRight, Zap, TrendingUp, Activity
+  Zap, TrendingUp, Activity
 } from 'lucide-react'
 import type {
   PredictionResult, AnimalPrediction, PredictiveAlert,
@@ -207,7 +207,7 @@ function EmptyState() {
       <div>
         <h3 className="font-semibold text-foreground text-lg mb-1">Sin análisis aún</h3>
         <p className="text-muted text-sm max-w-sm">
-          Presiona <strong>"Analizar con IA"</strong> para generar predicciones reproductivas
+          Presiona <strong>&quot;Analizar con IA&quot;</strong> para generar predicciones reproductivas
           basadas en el historial de eventos de la finca.
         </p>
       </div>
@@ -270,7 +270,6 @@ export default function PrediccionesPage() {
 
   // ── Contadores para el resumen ──
   const urgentCount  = result?.alerts.filter(a => a.level === 'urgente').length  ?? 0
-  const atentionCount = result?.alerts.filter(a => a.level === 'atencion').length ?? 0
   const gestCount    = result?.predictions.filter(p => p.status === 'en_gestacion').length ?? 0
 
   return (

@@ -13,6 +13,7 @@ export interface VaccineCatalogItem {
   age_max_days: number | null
   default_next_dose_days: number | null
   is_active: boolean
+  stock_doses: number
 }
 
 export interface EligibleAnimal {
@@ -59,6 +60,13 @@ export function AssignVaccineModal(props: {
     () => vaccines.find(v => v.id === vaccineId) || null,
     [vaccines, vaccineId]
   )
+
+  // How many animals will receive the vaccine
+  const animalCount = mode === 'single' ? defaultAnimalIds.length : selectedAnimalIds.length
+  const stockInsufficient =
+    selectedVaccine !== null &&
+    typeof selectedVaccine.stock_doses === 'number' &&
+    selectedVaccine.stock_doses < animalCount
 
   useEffect(() => {
     if (!open) return
@@ -190,6 +198,15 @@ export function AssignVaccineModal(props: {
               <div className="p-3 bg-danger/10 border border-danger/20 text-danger rounded-xl text-sm">{error}</div>
             )}
 
+            {stockInsufficient && selectedVaccine && (
+              <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-700 dark:text-yellow-400 rounded-xl text-sm flex items-start gap-2" role="alert">
+                <span className="text-base leading-none mt-0.5" aria-hidden="true">⚠️</span>
+                <span>
+                  <strong>Stock insuficiente:</strong> {selectedVaccine.stock_doses} dosis disponible{selectedVaccine.stock_doses !== 1 ? 's' : ''}, se requieren {animalCount}.
+                </span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium">Vacuna *</label>
@@ -201,7 +218,9 @@ export function AssignVaccineModal(props: {
                 >
                   <option value="">{loadingVaccines ? 'Cargando...' : 'Seleccionar'}</option>
                   {vaccines.map(v => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
+                    <option key={v.id} value={v.id}>
+                      {v.name}{typeof v.stock_doses === 'number' ? ` (${v.stock_doses} dosis)` : ''}
+                    </option>
                   ))}
                 </select>
                 {defaultTypeId && (
@@ -344,7 +363,7 @@ export function AssignVaccineModal(props: {
             <button
               type="button"
               onClick={handleAssign}
-              disabled={!isAdmin || saving}
+              disabled={!isAdmin || saving || stockInsufficient}
               className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 inline-flex items-center gap-2"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}

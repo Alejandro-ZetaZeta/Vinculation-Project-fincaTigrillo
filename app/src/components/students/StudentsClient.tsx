@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Search, Filter, CheckSquare, Square, Trash2, Pencil, ListTodo, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { Avatar } from '@/components/ui/Avatar'
 
 interface Student {
   id: string
@@ -12,9 +13,10 @@ interface Student {
   semester: string | null
   career: string | null
   created_at: string
+  avatar_url?: string | null
 }
 
-const CAREERS = ['Agropecuaria', 'Agronegocios', 'Alimentos']
+const CAREERS = ['Agropecuaria']
 const SEMESTERS = ['1','2','3','4','5','6','7','8','9','10']
 
 function formatDate(dateStr: string): string {
@@ -23,9 +25,6 @@ function formatDate(dateStr: string): string {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 }
 
-function getInitials(name: string): string {
-  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-}
 
 export function StudentsClient({ students: initialStudents }: { students: Student[] }) {
   const [students, setStudents] = useState(initialStudents)
@@ -275,9 +274,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                          {getInitials(student.full_name || '?')}
-                        </div>
+                        <Avatar src={student.avatar_url} name={student.full_name || '?'} size="sm" />
                         <p className="font-medium text-foreground">{student.full_name || 'Sin nombre'}</p>
                       </div>
                     </td>

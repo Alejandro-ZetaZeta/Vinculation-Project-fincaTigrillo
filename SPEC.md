@@ -12,7 +12,7 @@ An educational management platform for "Finca Tigrillo", designed to track lives
 
 ## Data Model (Schema)
 ### Core Entities
-- **User Profiles**: Extends Auth users with roles (`admin`, `student`), `career` (Agropecuaria, Agronegocios, Alimentos), and `semester` (1-10).
+- **User Profiles**: Extends Auth users with roles (`admin`, `student`), `career` (Agropecuaria), and `semester` (1-10).
 - **Animals**: Tracks `id`, `name`, `type_id`, `status` (active, sold, deceased), and `birth_date`.
 - **Animal Categories/Types**: Hierarchical classification (e.g., Ganado Mayor -> Bovino).
 - **Reproductive Events**: Logs `monta_natural`, `inseminacion`, `parto`, etc. Includes `expected_due_date` calculation.

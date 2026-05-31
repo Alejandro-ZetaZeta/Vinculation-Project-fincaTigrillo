@@ -5,6 +5,8 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { EntryAnimation } from '@/components/layout/EntryAnimation'
 import { SessionKeepAlive } from '@/components/layout/SessionKeepAlive'
+import { NotificationsProvider } from '@/contexts/NotificationsContext'
+import { Day45Checker } from '@/components/layout/Day45Checker'
 
 /*
   DashboardShell reads cookies via getCurrentUser — this makes it dynamic.
@@ -16,6 +18,8 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!user) redirect('/login')
 
   return (
+    <NotificationsProvider>
+    <Day45Checker />
     <div className="min-h-screen flex bg-background print:block print:bg-white print:min-h-0 print:h-auto">
       <EntryAnimation />
       <SessionKeepAlive />
@@ -29,7 +33,7 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <div id="main-content-wrapper" className="flex-1 flex flex-col min-h-screen min-w-0 md:ml-64 print:ml-0 print:block print:min-h-0 print:h-auto transition-all duration-300">
         <div className="print:hidden">
-          <Header userName={user.fullName} userRole={user.role} userEmail={user.email} />
+          <Header userName={user.fullName} userRole={user.role} userEmail={user.email} userAvatarUrl={user.avatarUrl} />
         </div>
         <main
           id="main-content"
@@ -40,6 +44,7 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    </NotificationsProvider>
   )
 }
 

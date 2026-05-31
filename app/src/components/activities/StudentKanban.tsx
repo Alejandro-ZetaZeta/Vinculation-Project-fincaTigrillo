@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { KanbanBoard, KanbanItem } from './KanbanBoard'
+import { Avatar } from '@/components/ui/Avatar'
 import { ListTodo, X } from 'lucide-react'
 
 interface Assignment {
@@ -26,6 +27,7 @@ interface Activity {
 interface StudentProfile {
   user_id: string
   full_name: string
+  avatar_url?: string | null
 }
 
 interface StudentKanbanProps {
@@ -49,7 +51,7 @@ export function StudentKanban({ userId }: StudentKanbanProps) {
       const profileRes = await fetch('/api/students/profiles')
       const profileData = await profileRes.json()
       const profiles = (profileData.data || []) as StudentProfile[]
-      const profileMap = new Map(profiles.map(p => [p.user_id, p.full_name]))
+      const profileMap = new Map(profiles.map(p => [p.user_id, { name: p.full_name, avatarUrl: p.avatar_url ?? null }]))
 
       // Build kanban items from MY assignments only, but include presence from all assignments
       const kanbanItems: KanbanItem[] = []
@@ -63,9 +65,10 @@ export function StudentKanban({ userId }: StudentKanbanProps) {
         const presence = allAssignments
           .filter(a => a.status !== 'todo')
           .map(a => {
-            const name = profileMap.get(a.student_id) || '?'
-            const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-            return { name, initials, status: a.status }
+            const p = profileMap.get(a.student_id)
+            const name = p?.name || '?'
+            const initials = name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+            return { name, initials, status: a.status, avatarUrl: p?.avatarUrl ?? null }
           })
 
         kanbanItems.push({
@@ -179,11 +182,7 @@ export function StudentKanban({ userId }: StudentKanbanProps) {
               <div className="flex flex-wrap gap-2">
                 {expandedItem.presence.map((p, i) => (
                   <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 bg-background rounded-lg border border-border">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                      p.status === 'done' ? 'bg-success/20 text-success' : 'bg-primary/20 text-primary'
-                    }`}>
-                      {p.initials}
-                    </div>
+                    <Avatar src={p.avatarUrl} name={p.name} size="xs" className={p.status === 'done' ? 'ring-1 ring-success/40' : 'ring-1 ring-primary/40'} />
                     <div>
                       <p className="text-xs font-medium text-foreground">{p.name}</p>
                       <p className="text-[10px] text-muted">{p.status === 'done' ? 'Finalizado' : 'En proceso'}</p>

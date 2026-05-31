@@ -60,7 +60,16 @@ interface MilkEvent {
   animals?: { name: string | null; identification_code: string | null; animal_types: { name: string; slug: string } | null }
 }
 
-type EventTab = 'reproductivos' | 'mortalidad' | 'produccion'
+type EventTab = 'reproductivos' | 'mortalidad' | 'produccion' | 'facturas'
+
+interface Invoice {
+  id: string
+  event_id: string | null
+  file_url: string
+  title: string
+  notes: string | null
+  created_at: string
+}
 
 /* ════════════════════════════════════════
    COMPONENTE PRINCIPAL
@@ -78,11 +87,13 @@ export default function EventsClient({ isAdmin }: { isAdmin: boolean }) {
       .finally(() => setLoadingAnimals(false))
   }, [])
 
-  const tabs: { key: EventTab; label: string; shortLabel: string; icon: React.ElementType }[] = [
+  const allTabs: { key: EventTab; label: string; shortLabel: string; icon: React.ElementType; adminOnly?: boolean }[] = [
     { key: 'reproductivos', label: 'Reproductivos',       shortLabel: 'Repro',      icon: HeartPulse    },
     { key: 'mortalidad',    label: 'Mortalidad',           shortLabel: 'Bajas',      icon: AlertTriangle },
     { key: 'produccion',    label: 'Producción de Leche',  shortLabel: 'Leche',      icon: Droplets      },
+    { key: 'facturas',      label: 'Facturas',             shortLabel: 'Facturas',   icon: Receipt,      adminOnly: true },
   ]
+  const tabs = allTabs.filter(t => !t.adminOnly || isAdmin)
 
   return (
     <div className="space-y-6 overflow-hidden min-w-0">
@@ -129,6 +140,9 @@ export default function EventsClient({ isAdmin }: { isAdmin: boolean }) {
       )}
       {activeTab === 'produccion' && (
         <ProduccionLecheTab animals={animals} loadingAnimals={loadingAnimals} isAdmin={isAdmin} />
+      )}
+      {activeTab === 'facturas' && isAdmin && (
+        <InvoicesTab isAdmin={isAdmin} />
       )}
     </div>
   )
@@ -260,8 +274,6 @@ function ReproductivosTab({
     setEvents(prev => prev.filter(e => e.id !== id))
     setDeleteId(null)
   }
-
-  const eventLabel = (t: string) => REPRODUCTIVE_EVENT_TYPES.find(r => r.value === t)?.label || t
 
   const previewDue = animalId && (eventType === 'monta_natural' || eventType === 'inseminacion')
     ? calcFechaParto(new Date(eventDate + 'T12:00:00'), getSpeciesSlug(animalId))
@@ -931,6 +943,280 @@ function ProduccionLecheTab({
 
 /* ════════════════════════════════════════
    TAB 4 — FACTURAS
+   ════════════════════════════════════════ */
+
+async function compressToUnder300KB(file: File): Promise<Blob> {
+  const TARGET = 300 * 1024
+  if (file.size <= TARGET) return file
+
+  return new Promise<Blob>((resolve) => {
+    const img = new Image()
+    const objUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(objUrl)
+      const canvas = document.createElement('canvas')
+      const MAX = 1920
+      let { width, height } = img
+      if (width > MAX || height > MAX) {
+        const r = Math.min(MAX / width, MAX / height)
+        width = Math.round(width * r)
+        height = Math.round(height * r)
+      }
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+
+      let quality = 0.85
+      const attempt = () => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) { resolve(file); return }
+            if (blob.size <= TARGET || quality <= 0.3) { resolve(blob); return }
+            quality -= 0.1
+            attempt()
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      attempt()
+    }
+    img.src = objUrl
+  })
+}
+
+function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [loadingPreview, setLoadingPreview] = useState(false)
+  const [title, setTitle] = useState('')
+  const [notes, setNotes] = useState('')
+  const fileRef = React.useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch('/api/invoices')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setInvoices(d) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!title.trim()) { setError('Ingresa un título antes de subir la factura'); return }
+    setError('')
+    setUploading(true)
+    try {
+      const optimized = await compressToUnder300KB(file)
+      const form = new FormData()
+      form.append('file', optimized, file.name)
+      form.append('title', title.trim())
+      if (notes.trim()) form.append('notes', notes.trim())
+      const res = await fetch('/api/invoices', { method: 'POST', body: form })
+      const result = await res.json()
+      if (!res.ok) { setError(result.error || 'Error al subir'); return }
+      setInvoices(prev => [result, ...prev])
+      setTitle('')
+      setNotes('')
+    } catch {
+      setError('Error al procesar el archivo')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handlePreview(id: string) {
+    setLoadingPreview(true)
+    try {
+      const res = await fetch(`/api/invoices/${id}`)
+      if (!res.ok) { setError('No se pudo cargar la imagen'); return }
+      const blob = await res.blob()
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(URL.createObjectURL(blob))
+    } catch {
+      setError('Error al cargar la vista previa')
+    } finally {
+      setLoadingPreview(false)
+    }
+  }
+
+  function closePreview() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl(null)
+  }
+
+  async function handleDelete(id: string) {
+    const res = await fetch(`/api/invoices/${id}`, { method: 'DELETE' })
+    if (res.ok || res.status === 204) {
+      setInvoices(prev => prev.filter(inv => inv.id !== id))
+    } else {
+      setError('Error al eliminar la factura')
+    }
+    setDeleteId(null)
+  }
+
+  if (loading) return <TabSpinner />
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted">
+          {invoices.length} factura{invoices.length !== 1 ? 's' : ''} registrada{invoices.length !== 1 ? 's' : ''}
+        </p>
+        {!isAdmin && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface border border-border text-xs text-muted">
+            <Lock className="w-3 h-3" /> Solo lectura
+          </div>
+        )}
+      </div>
+
+      {isAdmin && (
+        <div className="bg-surface border border-border rounded-2xl p-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-muted mb-1">Título <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Ej: Compra de alimento engorde"
+                maxLength={150}
+                className="input-calc"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-muted mb-1">Notas (opcional)</label>
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Ej: Proveedor: Distribuidora Chone, llegó tarde"
+                rows={2}
+                className="input-calc resize-none"
+              />
+            </div>
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 transition-all"
+          >
+            {uploading
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <Paperclip className="w-4 h-4" />}
+            {uploading ? 'Subiendo…' : 'Adjuntar Factura'}
+          </button>
+        </div>
+      )}
+
+      {error && <ErrorBanner message={error} />}
+
+      {invoices.length > 0 ? (
+        <div className="space-y-2">
+          {invoices.map(inv => (
+            <div
+              key={inv.id}
+              className="bg-surface border border-border rounded-xl px-4 py-3 flex items-center gap-3"
+            >
+              <Receipt className="w-4 h-4 text-muted shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{inv.title}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-muted">{fmtDate(inv.created_at)}</span>
+                  {inv.notes && (
+                    <span className="text-xs text-muted italic truncate max-w-[200px]" title={inv.notes}>
+                      — {inv.notes}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => handlePreview(inv.id)}
+                  disabled={loadingPreview}
+                  className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover transition-colors text-foreground disabled:opacity-50"
+                >
+                  {loadingPreview
+                    ? <Loader2 className="w-3 h-3 animate-spin" />
+                    : <Eye className="w-3 h-3" />}
+                  Vista previa
+                </button>
+                {isAdmin && (
+                  deleteId === inv.id ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDelete(inv.id)}
+                        className="px-3 py-1 text-xs rounded-lg bg-danger text-white hover:bg-danger/80"
+                      >
+                        Sí, eliminar
+                      </button>
+                      <button
+                        onClick={() => setDeleteId(null)}
+                        className="px-3 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDeleteId(inv.id)}
+                      className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={<Receipt className="w-10 h-10 text-muted/30 mx-auto mb-2" />}
+          message="No hay facturas adjuntas"
+          hint={!isAdmin ? 'El administrador puede adjuntar imágenes de facturas' : undefined}
+        />
+      )}
+
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={closePreview}
+        >
+          <div className="relative max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={closePreview}
+              className="absolute -top-9 right-0 flex items-center gap-1.5 text-white/80 hover:text-white text-sm transition-colors"
+            >
+              <X className="w-4 h-4" /> Cerrar
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl}
+              alt="Vista previa de factura"
+              className="w-full rounded-xl object-contain max-h-[80vh] shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ════════════════════════════════════════
+   COMPONENTES REUTILIZABLES
    ════════════════════════════════════════ */
 function TabHeader({
   count, noun, isAdmin, showForm, onToggle,

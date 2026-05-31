@@ -58,6 +58,8 @@ app/.qwen
 app/.roo
 app/.trae
 app/.windsurf
+.mcp.json
+app/.mcp.json
 
 # InsForge & AI agent skills
 .insforge

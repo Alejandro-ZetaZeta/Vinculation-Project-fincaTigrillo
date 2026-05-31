@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { X, Plus, BookOpen, GraduationCap, Calendar } from 'lucide-react'
 
-const CAREERS = ['Agropecuaria', 'Agronegocios', 'Alimentos']
+const CAREERS = ['Agropecuaria']
 const SEMESTERS = ['1','2','3','4','5','6','7','8','9','10']
 
 interface ActivityFormProps {

@@ -50,8 +50,6 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Propósito', name: 'meta_proposito', type: 'select_sex_bovino', options: [] },
     { label: 'Número de partos', name: 'meta_numero_partos', type: 'number_hembra_only', placeholder: '0' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
-    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
-    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'equino': [
@@ -66,8 +64,6 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Estado de doma', name: 'meta_doma', type: 'select', options: ['domado', 'en proceso', 'sin domar'] },
     { label: 'Alzada (cm)', name: 'meta_alzada_cm', type: 'number', placeholder: 'Ej: 150' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
-    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
-    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'porcino': [
@@ -81,8 +77,6 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Etapa', name: 'meta_etapa', type: 'select', options: ['lechón', 'levante', 'ceba', 'reproductor'] },
     { label: 'Número de camada', name: 'meta_numero_camada', type: 'number', placeholder: '0' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
-    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
-    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'aves-de-corral': [
@@ -92,15 +86,12 @@ const typeFields: Record<string, { label: string; name: string; type: string; re
     { label: 'Fecha de nacimiento / ingreso', name: 'birth_date', type: 'date' },
     { label: 'Código de identificación', name: 'identification_code', type: 'text', required: true, placeholder: 'Anillo o código de lote' },
     { label: 'Color de plumaje', name: 'color', type: 'text', placeholder: 'Ej: Rojo, Blanco' },
-    { label: 'Peso promedio (g)', name: 'weight_kg', type: 'number', placeholder: 'Ej: 850' },
     { label: 'Número inicial de aves', name: 'meta_cantidad', type: 'number', required: true, placeholder: 'Ej: 100' },
-    { label: 'Mortalidad esperada (%)', name: 'meta_mortalidad_esperada_pct', type: 'number', placeholder: 'Ej: 5' },
     { label: 'Etapa productiva', name: 'meta_etapa', type: 'select', required: true, options: ['pollitos', 'levante', 'producción/adultos'] },
+    { label: 'Peso promedio', name: 'weight_kg', type: 'number', placeholder: '' },
     { label: 'Propósito', name: 'meta_proposito', type: 'select', options: ['postura', 'engorde', 'doble propósito'] },
     { label: 'Producción huevos/semana', name: 'meta_produccion_huevos', type: 'number', placeholder: 'Ej: 5' },
     { label: 'Tipo de adquisición', name: 'acquisition_type', type: 'select', options: ['nacimiento', 'compra', 'donacion'] },
-    { label: 'Estado de Vacunación', name: 'meta_estado_vacunacion', type: 'select', options: ['no vacunado', 'programado', 'vacunado'] },
-    { label: 'Fecha de Vacunación', name: 'meta_fecha_vacunacion', type: 'date' },
     { label: 'Notas', name: 'notes', type: 'textarea', placeholder: 'Observaciones adicionales...' },
   ],
   'patos': [
@@ -267,7 +258,9 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
       } else if (baseFields.includes(key)) {
         if (key === 'weight_kg') {
           const n = parseFloat(value as string)
-          animalData[key] = typeSlug === 'aves-de-corral' ? (n / 1000) : n
+          animalData[key] = typeSlug === 'aves-de-corral'
+            ? (avesEtapa === 'pollitos' ? n / 1000 : n / 2.20462)
+            : n
         } else {
           animalData[key] = value
         }
@@ -441,6 +434,29 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                 )
               }
 
+              /* ── Aves-de-corral: stage-aware weight input ── */
+              if (field.name === 'weight_kg' && typeSlug === 'aves-de-corral') {
+                const isChick = avesEtapa === 'pollitos'
+                const weightLabel = isChick ? 'Peso promedio (g)' : 'Peso promedio (lbs)'
+                const weightPlaceholder = isChick ? 'Ej: 35' : 'Ej: 1.87'
+                const weightStep = isChick ? '1' : '0.001'
+                return (
+                  <div key={field.name}>
+                    <label htmlFor={field.name} className="block text-sm font-medium text-foreground mb-1.5">
+                      {weightLabel}
+                    </label>
+                    <input
+                      id={field.name} name={field.name} type="number"
+                      placeholder={weightPlaceholder} step={weightStep} min="0"
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    />
+                    <p className="text-[11px] text-muted mt-1">
+                      {isChick ? 'Pollitos: peso en gramos.' : 'Levante / adultos: peso en libras.'}
+                    </p>
+                  </div>
+                )
+              }
+
               /* ── Aves-de-corral: controlled etapa ── */
               if (field.name === 'meta_etapa' && typeSlug === 'aves-de-corral') {
                 return (
@@ -603,7 +619,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                       required={field.required}
                       placeholder={field.placeholder}
                       step={field.type === 'number'
-                        ? (typeSlug === 'aves-de-corral' && field.name === 'weight_kg' ? '1' : '0.01')
+                        ? (typeSlug === 'aves-de-corral' && field.name === 'weight_kg' ? '0.01' : '0.01')
                         : undefined}
                       min={typeSlug === 'aves-de-corral' && field.name === 'weight_kg' ? '0' : undefined}
                       className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"

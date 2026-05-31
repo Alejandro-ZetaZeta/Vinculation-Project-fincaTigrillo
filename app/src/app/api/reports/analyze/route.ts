@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Parsear body: { reportType, focusModule, userQuestion, period }
     const body = await request.json()
-    const { reportType = 'general', focusModule = 'todos', userQuestion = '', period = 'mes' } = body
+    const { focusModule = 'todos', userQuestion = '', period = 'mes' } = body
 
     // ─── Recolectar datos reales de la BD ────────────────────────────────────
 
@@ -70,7 +70,13 @@ export async function POST(request: NextRequest) {
       .select('role, career, semester')
 
     // ─── Procesar datos para el prompt ────────────────────────────────────────
-    const animalList = (animals || []) as any[]
+    type AnimalRow = {
+      status?: string | null
+      animal_types?: { name?: string | null } | null
+      metadata?: { estado_vacunacion?: string | null } | null
+      weight?: number | null
+    }
+    const animalList = (animals ?? []) as AnimalRow[]
 
     const activityList = (activities || []) as Array<{
       id: string; title: string; due_date: string | null; created_at: string;

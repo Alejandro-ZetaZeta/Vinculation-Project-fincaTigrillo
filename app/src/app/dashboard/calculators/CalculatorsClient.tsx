@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Calculator, Baby, Wheat, Egg, HeartPulse, Scale, Info,
+  Calculator, Baby, Wheat, Egg, HeartPulse, Scale, Info, ShoppingCart, Loader2,
 } from 'lucide-react'
 
 // ─── Sistema de unidades de peso ───────────────────────────────
@@ -25,7 +25,12 @@ import {
 /* ──────────── helpers de fecha ──────────── */
 function fmtDate(d: Date | null | string) {
   if (!d) return '—'
-  const date = typeof d === 'string' ? new Date(d) : d
+  // Append T12:00:00 to bare ISO date strings so they parse as local noon
+  // instead of UTC midnight — prevents off-by-one-day in UTC-N zones.
+  const normalized = typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)
+    ? d + 'T12:00:00'
+    : d
+  const date = typeof normalized === 'string' ? new Date(normalized) : normalized
   if (isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
@@ -36,6 +41,7 @@ function toIso(d: Date) { return d.toISOString().split('T')[0] }
    PÁGINA PRINCIPAL
    ════════════════════════════════════════ */
 export default function CalculatorsClient({ isAdmin: _isAdmin }: { isAdmin: boolean }) {
+  void _isAdmin
   return (
     <div className="space-y-6 overflow-hidden min-w-0">
       <div>
@@ -47,6 +53,7 @@ export default function CalculatorsClient({ isAdmin: _isAdmin }: { isAdmin: bool
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CalcRoss308 />
         <CalcParto />
         <CalcAlimento />
         <CalcHuevos />
@@ -54,6 +61,85 @@ export default function CalculatorsClient({ isAdmin: _isAdmin }: { isAdmin: bool
         <CalcFCRCard />
       </div>
     </div>
+  )
+}
+
+/* ─── Proyección semanal Ross 308 AP ─── */
+interface Ross308Batch {
+  id: string; name: string; days_of_life: number
+  stage: string | null; live_count: number; next_7_days_feed_g: number; bags_share: number
+}
+interface Ross308Result {
+  total_bags: number; total_feed_g: number; batches: Ross308Batch[]
+}
+const STAGE_LABEL: Record<string, string> = {
+  'pollitos': 'Pollitos', 'levante': 'Levante', 'producción/adultos': 'Adultos',
+}
+function CalcRoss308() {
+  const [data, setData] = useState<Ross308Result | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/feed/weekly-projection')
+      .then(r => r.json())
+      .then(j => { if (j.error) setError(j.error); else setData(j) })
+      .catch(() => setError('Error al cargar proyección'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  return (
+    <CalcCard
+      title="Proyección semanal — Ross 308 AP"
+      icon={<ShoppingCart className="w-5 h-5 text-primary" />}
+      hint="Lotes mixtos activos · Sacos de 40 kg · Próximos 7 días"
+    >
+      {loading && (
+        <div className="flex items-center gap-2 text-muted text-sm py-4">
+          <Loader2 className="w-4 h-4 animate-spin" /> Calculando…
+        </div>
+      )}
+      {error && <p className="text-sm text-danger py-2">{error}</p>}
+      {!loading && !error && data && (
+        <>
+          <ResultBox
+            label="Sacos de 40 kg a comprar (próxima semana)"
+            value={data.total_bags === 0 ? 'Sin lotes activos' : `${data.total_bags} sacos`}
+            accent={data.total_bags > 0}
+          />
+          {data.batches.length > 0 && (
+            <div className="overflow-x-auto rounded-xl border border-border text-xs">
+              <table className="w-full min-w-[420px]">
+                <thead>
+                  <tr className="bg-surface-hover/50 text-muted uppercase tracking-wider">
+                    <th className="text-left px-3 py-2 font-semibold">Lote</th>
+                    <th className="text-center px-3 py-2 font-semibold">Día</th>
+                    <th className="text-center px-3 py-2 font-semibold">Etapa</th>
+                    <th className="text-center px-3 py-2 font-semibold">Aves vivas</th>
+                    <th className="text-right px-3 py-2 font-semibold">Sacos</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {data.batches.map(b => (
+                    <tr key={b.id} className="hover:bg-surface-hover/30 transition-colors">
+                      <td className="px-3 py-2 font-medium text-foreground truncate max-w-[120px]">{b.name}</td>
+                      <td className="px-3 py-2 text-center text-muted">{b.days_of_life}</td>
+                      <td className="px-3 py-2 text-center">
+                        <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-medium">
+                          {STAGE_LABEL[b.stage ?? ''] ?? b.stage ?? '—'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-center text-muted">{Math.round(b.live_count)}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-foreground">{b.bags_share.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </CalcCard>
   )
 }
 
@@ -139,13 +225,13 @@ function CalcAlimento() {
         <div>
           <label className="block text-xs font-medium text-muted mb-1">Especie</label>
           <select value={species} onChange={e => setSpecies(e.target.value)} className="input-calc">
-            {Object.entries(SPECIES_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            {Object.entries(SPECIES_LABELS)
+              .filter(([k]) => k !== 'aves-de-corral')
+              .map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </div>
         <NumField label="Cantidad animales" value={count} onChange={setCount} min={1} />
-        {species !== 'aves-de-corral' && (
-          <NumField label={`Peso promedio (${sym})`} value={weightInUnit} onChange={setWeightInUnit} min={0} />
-        )}
+        <NumField label={`Peso promedio (${sym})`} value={weightInUnit} onChange={setWeightInUnit} min={0} />
         <NumField label={`Peso saco (${sym})`} value={sackInUnit} onChange={setSackInUnit} min={0} />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -292,10 +378,14 @@ function NumField({ label, value, onChange, min, step = "1" }: {
   label: string; value: number; onChange: (v: number) => void; min?: number; step?: string
 }) {
   const [inputValue, setInputValue] = useState(value.toString())
+  const inputValueRef = useRef(inputValue)
 
   useEffect(() => {
-    if (parseFloat(inputValue) !== value) {
-      setInputValue(value.toString())
+    const current = inputValueRef.current
+    if (parseFloat(current) !== value) {
+      const next = value.toString()
+      inputValueRef.current = next
+      setInputValue(next)
     }
   }, [value])
 
@@ -312,11 +402,13 @@ function NumField({ label, value, onChange, min, step = "1" }: {
           if (inputValue === "0" && val.length > 1 && val.startsWith("0")) {
             val = val.substring(1)
           }
+          inputValueRef.current = val
           setInputValue(val)
           onChange(val === '' ? 0 : +val)
         }}
         onBlur={() => {
           if (inputValue === "" || inputValue === "-") {
+            inputValueRef.current = "0"
             setInputValue("0")
             onChange(0)
           }
