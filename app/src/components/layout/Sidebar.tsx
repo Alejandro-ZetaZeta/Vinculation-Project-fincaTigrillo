@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, PawPrint, ClipboardList,
   Menu, X, Users, ListTodo, Calculator, FileText,
-  PanelLeft, PanelLeftClose, Syringe, CalendarDays,
+  PanelLeftClose, Syringe, CalendarDays,
   Wrench, ChevronDown, Package, Sprout,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -119,32 +119,45 @@ export function Sidebar({ userRole }: { userRole: string }) {
           'md:translate-x-0',
         ].join(' ')}
       >
-        <div className={`px-4 h-16 border-b border-(--sidebar-border) flex shrink-0 ${isCollapsed ? 'flex-col items-center justify-center gap-4' : 'items-center justify-between'}`}>
-          <Link
-            href="/dashboard"
-            className={`flex items-center gap-3 group rounded-lg p-1 -m-1 ${isCollapsed ? 'justify-center' : ''}`}
-            onClick={() => setMobileOpen(false)}
-            aria-label="Finca Tigrillo — Ir al inicio"
-          >
-            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors overflow-hidden">
+        <div className="px-4 h-16 border-b border-(--sidebar-border) flex shrink-0 items-center justify-between">
+          {isCollapsed ? (
+            /* ── Collapsed (md+): icon acts as expand button ── */
+            <button
+              onClick={() => setIsCollapsed(false)}
+              className="hidden md:flex w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 items-center justify-center shrink-0 hover:bg-primary/20 transition-colors overflow-hidden mx-auto"
+              aria-label="Expandir menú"
+              title="Expandir menú"
+            >
               <Image src="/eloyAocelote1.png" alt="Logo" width={28} height={28} className="object-contain" />
-            </div>
-            {!isCollapsed && (
-              <div className="whitespace-nowrap opacity-100 transition-opacity duration-300">
-                <p className="font-display font-700 text-sm text-foreground leading-tight tracking-tight">Finca Tigrillo</p>
-                <p className="text-[11px] text-muted leading-tight mt-0.5">Gestión Ganadera</p>
-              </div>
-            )}
-          </Link>
+            </button>
+          ) : (
+            /* ── Expanded: icon links to /dashboard + collapse button ── */
+            <>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-3 group rounded-lg p-1 -m-1"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Finca Tigrillo — Ir al inicio"
+              >
+                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors overflow-hidden">
+                  <Image src="/eloyAocelote1.png" alt="Logo" width={28} height={28} className="object-contain" />
+                </div>
+                <div className="whitespace-nowrap opacity-100 transition-opacity duration-300">
+                  <p className="font-display font-700 text-sm text-foreground leading-tight tracking-tight">Finca Tigrillo</p>
+                  <p className="text-[11px] text-muted leading-tight mt-0.5">Gestión Ganadera</p>
+                </div>
+              </Link>
 
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden md:flex p-1.5 rounded-lg text-muted hover:text-foreground bg-muted/10 hover:bg-muted/20 border border-transparent hover:border-border transition-all items-center justify-center shrink-0"
-            aria-label={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}
-            title={isCollapsed ?  'Expandir menú'    : 'Colapsar menú'}
-          >
-            {isCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-          </button>
+              <button
+                onClick={() => setIsCollapsed(true)}
+                className="hidden md:flex p-1.5 rounded-lg text-muted hover:text-foreground bg-muted/10 hover:bg-muted/20 border border-transparent hover:border-border transition-all items-center justify-center shrink-0"
+                aria-label="Colapsar menú"
+                title="Colapsar menú"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* ── Navigation ─────────────────────────────────────────────── */}

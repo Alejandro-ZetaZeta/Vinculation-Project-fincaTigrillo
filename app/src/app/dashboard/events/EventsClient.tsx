@@ -1051,6 +1051,24 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
     setPreviewUrl(null)
   }
 
+  async function handleDownload(id: string, fileUrl: string, createdAt: string) {
+    try {
+      const res = await fetch(`/api/invoices/${id}`)
+      if (!res.ok) { setError('No se pudo descargar la factura'); return }
+      const blob = await res.blob()
+      const date = createdAt ? new Date(createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+      const ext = fileUrl.endsWith('.png') ? 'png' : 'jpg'
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Tigrillo invoice ${date}.${ext}`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setError('Error al descargar la factura')
+    }
+  }
+
   async function handleDelete(id: string) {
     const res = await fetch(`/api/invoices/${id}`, { method: 'DELETE' })
     if (res.ok || res.status === 204) {
@@ -1152,6 +1170,13 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
                     ? <Loader2 className="w-3 h-3 animate-spin" />
                     : <Eye className="w-3 h-3" />}
                   Vista previa
+                </button>
+                <button
+                  onClick={() => handleDownload(inv.id, inv.file_url, inv.created_at)}
+                  className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover transition-colors text-foreground"
+                >
+                  <Download className="w-3 h-3" />
+                  Descargar
                 </button>
                 {isAdmin && (
                   deleteId === inv.id ? (
