@@ -15,7 +15,7 @@ export async function GET(
     const insforge = createInsForgeServerClient(accessToken)
     const { data, error } = await insforge.database
       .from('animal_vaccinations')
-      .select('*, vaccine_catalog(id, name, target_type_id)')
+      .select('*, vaccine_catalog(id, name, target_type_id, default_next_dose_days, total_doses)')
       .eq('animal_id', id)
       .order('applied_at', { ascending: true })
 

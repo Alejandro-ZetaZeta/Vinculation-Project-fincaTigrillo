@@ -69,7 +69,7 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
     <>
       <header
         id="app-header"
-        className="sticky top-0 z-20 h-16 bg-surface/95 backdrop-blur-md border-b border-border flex items-center justify-between px-4 md:px-6 lg:px-8"
+        className="sticky top-0 z-20 h-16 bg-header-bg/95 backdrop-blur-md border-b border-border shadow-sm flex items-center justify-between px-4 md:px-6 lg:px-8"
       >
         {/* Left spacer (mobile: offset for hamburger) */}
         <div className="md:hidden w-12" aria-hidden="true" />

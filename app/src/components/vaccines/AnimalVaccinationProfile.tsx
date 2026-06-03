@@ -9,7 +9,13 @@ interface VaccinationRow {
   applied_at: string
   next_dose_at: string | null
   notes: string | null
-  vaccine_catalog?: { id: string; name: string; target_type_id: string | null }
+  vaccine_catalog?: {
+    id: string
+    name: string
+    target_type_id: string | null
+    default_next_dose_days: number | null
+    total_doses: number | null
+  }
 }
 
 function daysUntil(dateISO: string): number {
@@ -76,11 +82,30 @@ export function AnimalVaccinationProfile(props: {
   }
 
   const enriched = useMemo(() => {
+    // rows are ordered by applied_at ASC from the API
+    // build ordered sequence of record ids per vaccine so we can compute dose number
+    const doseSequence = new Map<string, string[]>()
+    for (const r of rows) {
+      const vid = r.vaccine_catalog?.id
+      if (!vid) continue
+      if (!doseSequence.has(vid)) doseSequence.set(vid, [])
+      doseSequence.get(vid)!.push(r.id)
+    }
+
     return rows.map(r => {
       const dueIn = r.next_dose_at ? daysUntil(r.next_dose_at) : null
+      const isMultiDose = r.vaccine_catalog?.default_next_dose_days != null
       const status: 'single' | 'overdue' | 'soon' | 'ok' =
         dueIn == null ? 'single' : (dueIn < 0 ? 'overdue' : (dueIn <= 7 ? 'soon' : 'ok'))
-      return { ...r, dueIn, status }
+
+      let doseNumber: number | null = null
+      if (isMultiDose && r.vaccine_catalog?.id) {
+        const seq = doseSequence.get(r.vaccine_catalog.id) ?? []
+        const idx = seq.indexOf(r.id)
+        if (idx !== -1) doseNumber = idx + 1
+      }
+
+      return { ...r, dueIn, status, isMultiDose, doseNumber }
     })
   }, [rows])
 
@@ -161,6 +186,13 @@ export function AnimalVaccinationProfile(props: {
                     )}
                     {r.status === 'single' && (
                       <span className="text-[11px] font-semibold text-success">Dosis única</span>
+                    )}
+                    {r.isMultiDose && r.doseNumber != null && (
+                      <span className="text-[11px] font-semibold text-primary/80 bg-primary/8 px-1.5 py-0.5 rounded-full">
+                        {r.vaccine_catalog?.total_doses != null
+                          ? `Dosis ${r.doseNumber} de ${r.vaccine_catalog.total_doses}`
+                          : `Dosis ${r.doseNumber}`}
+                      </span>
                     )}
 
                     {isAdmin && (

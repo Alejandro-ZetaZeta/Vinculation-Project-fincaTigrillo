@@ -22,6 +22,7 @@ interface Vaccine {
   age_max_days: number | null
   allowed_reproductive_states: string[] | null
   default_next_dose_days: number | null
+  total_doses: number | null
   is_active: boolean
   stock_doses: number
 }
@@ -52,6 +53,7 @@ export function VaccineManager() {
   const [ageMinDays, setAgeMinDays] = useState('')
   const [ageMaxDays, setAgeMaxDays] = useState('')
   const [defaultNextDoseDays, setDefaultNextDoseDays] = useState('')
+  const [totalDoses, setTotalDoses] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [allowedReproStates, setAllowedReproStates] = useState<string[]>([])
 
@@ -126,6 +128,7 @@ export function VaccineManager() {
           age_max_days: ageMaxDays ? parseInt(ageMaxDays, 10) : null,
           allowed_reproductive_states: showCreateReproRestriction && allowedReproStates.length > 0 ? allowedReproStates : null,
           default_next_dose_days: defaultNextDoseDays ? parseInt(defaultNextDoseDays, 10) : null,
+          total_doses: totalDoses ? parseInt(totalDoses, 10) : null,
           is_active: isActive,
         })
       })
@@ -140,6 +143,7 @@ export function VaccineManager() {
       setAgeMaxDays('')
       setAllowedReproStates([])
       setDefaultNextDoseDays('')
+      setTotalDoses('')
       setIsActive(true)
       await fetchVaccines()
     } catch {
@@ -168,6 +172,7 @@ export function VaccineManager() {
           age_max_days: editing.age_max_days,
           allowed_reproductive_states: editing.allowed_reproductive_states ?? null,
           default_next_dose_days: editing.default_next_dose_days,
+          total_doses: editing.total_doses,
           is_active: editing.is_active,
         })
       })
@@ -346,7 +351,7 @@ export function VaccineManager() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium">Edad mínima (días)</label>
               <input
@@ -375,6 +380,18 @@ export function VaccineManager() {
                 value={defaultNextDoseDays}
                 onChange={(e) => setDefaultNextDoseDays(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium">Nº total de dosis</label>
+              <input
+                type="number"
+                min={1}
+                value={totalDoses}
+                onChange={(e) => setTotalDoses(e.target.value)}
+                placeholder="(vacío = ilimitado)"
+                disabled={!defaultNextDoseDays}
+                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -541,7 +558,7 @@ export function VaccineManager() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium">Edad mínima (días)</label>
               <input
@@ -570,6 +587,18 @@ export function VaccineManager() {
                 value={editing.default_next_dose_days ?? ''}
                 onChange={(e) => setEditing({ ...editing, default_next_dose_days: toIntOrNull(e.target.value) })}
                 className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium">Nº total de dosis</label>
+              <input
+                type="number"
+                min={1}
+                value={editing.total_doses ?? ''}
+                onChange={(e) => setEditing({ ...editing, total_doses: toIntOrNull(e.target.value) })}
+                placeholder="(vacío = ilimitado)"
+                disabled={editing.default_next_dose_days == null}
+                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -674,6 +703,11 @@ export function VaccineManager() {
                     {v.default_next_dose_days != null && (
                       <span className="text-xs px-2 py-1 rounded-full bg-success/10 text-success font-medium">
                         Próxima dosis: +{v.default_next_dose_days} días
+                      </span>
+                    )}
+                    {v.default_next_dose_days != null && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                        {v.total_doses != null ? `${v.total_doses} dosis` : 'Dosis recurrente'}
                       </span>
                     )}
                     {/* Stock badge */}

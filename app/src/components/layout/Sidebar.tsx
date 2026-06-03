@@ -124,7 +124,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
             /* ── Collapsed (md+): icon acts as expand button ── */
             <button
               onClick={() => setIsCollapsed(false)}
-              className="hidden md:flex w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 items-center justify-center shrink-0 hover:bg-primary/20 transition-colors overflow-hidden mx-auto"
+              className="hidden md:flex w-9 h-9 rounded-xl bg-white/15 border border-white/25 items-center justify-center shrink-0 hover:bg-white/25 transition-colors overflow-hidden mx-auto"
               aria-label="Expandir menú"
               title="Expandir menú"
             >
@@ -139,18 +139,18 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 onClick={() => setMobileOpen(false)}
                 aria-label="Finca Tigrillo — Ir al inicio"
               >
-                <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors overflow-hidden">
+                <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors overflow-hidden">
                   <Image src="/eloyAocelote1.png" alt="Logo" width={28} height={28} className="object-contain" />
                 </div>
                 <div className="whitespace-nowrap opacity-100 transition-opacity duration-300">
-                  <p className="font-display font-700 text-sm text-foreground leading-tight tracking-tight">Finca Tigrillo</p>
-                  <p className="text-[11px] text-muted leading-tight mt-0.5">Gestión Ganadera</p>
+                  <p className="font-display font-700 text-sm text-sidebar-text leading-tight tracking-tight">Finca Tigrillo</p>
+                  <p className="text-[11px] text-sidebar-muted leading-tight mt-0.5">Gestión Ganadera</p>
                 </div>
               </Link>
 
               <button
                 onClick={() => setIsCollapsed(true)}
-                className="hidden md:flex p-1.5 rounded-lg text-muted hover:text-foreground bg-muted/10 hover:bg-muted/20 border border-transparent hover:border-border transition-all items-center justify-center shrink-0"
+                className="hidden md:flex p-1.5 rounded-lg text-sidebar-muted hover:text-sidebar-text bg-white/8 hover:bg-white/12 border border-white/0 hover:border-white/15 transition-all items-center justify-center shrink-0"
                 aria-label="Colapsar menú"
                 title="Colapsar menú"
               >
@@ -162,7 +162,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
 
         {/* ── Navigation ─────────────────────────────────────────────── */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden" aria-label="Secciones principales">
-          {!isCollapsed && <p className="text-[10px] font-semibold text-muted uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Menú</p>}
+          {!isCollapsed && <p className="text-[10px] font-semibold text-sidebar-muted uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Menú</p>}
 
           {/* ── Top nav items: Inicio + Registrar Animal ──────────────── */}
           {navItems.filter(i => i.href === '/dashboard' || i.href === '/dashboard/animals').map(item => {
@@ -182,10 +182,10 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                 {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
                 {isActive && !isCollapsed && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden="true" />
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                 )}
                 {isActive && isCollapsed && (
-                  <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden="true" />
+                  <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                 )}
               </Link>
             )
@@ -206,7 +206,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 >
                   <Package className="w-4 h-4 shrink-0" aria-hidden="true" />
                   {inventoryActive && (
-                    <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden="true" />
+                    <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                   )}
                 </Link>
               ) : (
@@ -216,7 +216,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                     onClick={() => setInvOpen(o => !o)}
                     className={[
                       'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all',
-                      inventoryActive ? 'text-primary font-semibold' : 'nav-item-idle',
+                      inventoryActive ? 'text-sidebar-active font-semibold' : 'nav-item-idle',
                     ].join(' ')}
                     aria-expanded={invOpen}
                     aria-controls="inventory-submenu"
@@ -237,7 +237,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                       invOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
                     ].join(' ')}
                   >
-                    <div className="ml-3 pl-3 border-l border-border space-y-0.5 py-1">
+                    <div className="ml-3 pl-3 border-l border-white/20 space-y-0.5 py-1">
                       {visibleInventoryItems.map(sub => {
                         const isActive = pathname === sub.href || pathname.startsWith(sub.href)
                         const Icon = sub.icon
@@ -255,7 +255,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                             <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                             <span className="whitespace-nowrap">{sub.label}</span>
                             {isActive && (
-                              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden="true" />
+                              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                             )}
                           </Link>
                         )
@@ -283,10 +283,10 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                 {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
                 {isActive && !isCollapsed && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden="true" />
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                 )}
                 {isActive && isCollapsed && (
-                  <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden="true" />
+                  <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                 )}
               </Link>
             )
@@ -296,16 +296,16 @@ export function Sidebar({ userRole }: { userRole: string }) {
         {/* ── Role footer ────────────────────────────────────────────── */}
         <div className={`px-3 py-4 border-t border-(--sidebar-border) ${isCollapsed ? 'flex justify-center' : ''}`}>
           <div
-            className={`rounded-xl bg-primary/8 flex items-center ${isCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5 gap-2.5'}`}
+            className={`rounded-xl bg-white/10 flex items-center ${isCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5 gap-2.5'}`}
             title={isCollapsed ? `Rol: ${isAdmin ? 'Administrador' : 'Estudiante'}` : undefined}
           >
-            <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
               <Image src="/eloyAocelote1.png" alt="Role" width={16} height={16} className="object-contain opacity-80" />
             </div>
             {!isCollapsed && (
               <div className="whitespace-nowrap">
-                <p className="text-[10px] text-muted leading-none mb-0.5">Rol actual</p>
-                <p className="text-xs font-semibold text-primary capitalize">
+                <p className="text-[10px] text-sidebar-muted leading-none mb-0.5">Rol actual</p>
+                <p className="text-xs font-semibold text-sidebar-text capitalize">
                   {isAdmin ? 'Administrador' : 'Estudiante'}
                 </p>
               </div>

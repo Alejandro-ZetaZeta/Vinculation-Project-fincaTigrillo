@@ -232,6 +232,13 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
       if (filterStatus && animal.status !== filterStatus) return false
       if (filterSex && animal.sex !== filterSex) return false
       return true
+    }).sort((a, b) => {
+      const aActive = a.status === 'activo' ? 0 : 1
+      const bActive = b.status === 'activo' ? 0 : 1
+      if (aActive !== bActive) return aActive - bActive
+      const aDate = a.acquisition_date || a.created_at || ''
+      const bDate = b.acquisition_date || b.created_at || ''
+      return bDate.localeCompare(aDate)
     })
   }, [animals, search, filterCategory, filterType, filterStatus, filterSex, types])
 

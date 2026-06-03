@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       age_max_days,
       allowed_reproductive_states,
       default_next_dose_days,
+      total_doses,
       is_active,
     } = body
 
@@ -102,6 +103,7 @@ export async function POST(request: NextRequest) {
       age_max_days: age_max_days === '' ? null : (age_max_days ?? null),
       allowed_reproductive_states: normalizeAllowedReproStates(allowed_reproductive_states),
       default_next_dose_days: default_next_dose_days === '' ? null : (default_next_dose_days ?? null),
+      total_doses: total_doses === '' ? null : (total_doses ?? null),
       is_active: typeof is_active === 'boolean' ? is_active : true,
       created_by: userId,
     }

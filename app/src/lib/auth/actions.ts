@@ -269,7 +269,12 @@ export async function getCurrentUser() {
 
   const insforge = createInsForgeServerClient(accessToken)
   const { data, error } = await insforge.auth.getCurrentUser()
-  if (error || !data?.user) return null
+  if (error || !data?.user) {
+    // Token cookie exists but API rejected it — clear stale session so
+    // the proxy doesn't redirect /login and /register back to /dashboard.
+    await clearAuthCookies()
+    return null
+  }
 
   const { data: profile } = await insforge.database
     .from('user_profiles')
