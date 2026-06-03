@@ -177,7 +177,7 @@ Responde con este esquema JSON exacto:
     { "label": "Nombre del KPI", "value": "Valor", "trend": "positivo|negativo|neutro", "note": "Contexto del KPI" }
   ],
   "data_quality": "alta|media|baja",
-  "report_date": "${new Date().toISOString().split('T')[0]}"
+  "report_date": "${new Date(new Date().getTime() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10)}"
 }`
 
     // ─── Llamar a la IA ────────────────────────────────────────────────────────

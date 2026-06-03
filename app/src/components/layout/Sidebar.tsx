@@ -128,7 +128,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
               aria-label="Expandir menú"
               title="Expandir menú"
             >
-              <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain dark:invert" />
+              <Image src="/faviconOficial.svg" alt="Logo" width={34} height={34} className="object-contain invert" />
             </button>
           ) : (
             /* ── Expanded: icon links to /dashboard + collapse button ── */
@@ -140,7 +140,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 aria-label="Finca Tigrillo — Ir al inicio"
               >
                 <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors overflow-hidden">
-                  <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain dark:invert" />
+                  <Image src="/faviconOficial.svg" alt="Logo" width={34} height={34} className="object-contain invert" />
                 </div>
                 <div className="whitespace-nowrap opacity-100 transition-opacity duration-300">
                   <p className="font-display font-700 text-sm text-sidebar-text leading-tight tracking-tight">Finca Tigrillo</p>

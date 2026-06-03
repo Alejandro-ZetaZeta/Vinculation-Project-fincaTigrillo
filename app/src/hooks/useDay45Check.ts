@@ -34,7 +34,8 @@ export function useDay45Check() {
         const res = await fetch('/api/animals?type_slug=aves-de-corral&status=activo')
         if (!res.ok) return
         const batches: PoultryBatch[] = await res.json()
-        const todayStr = new Date().toISOString().split('T')[0]
+        const _d = new Date()
+        const todayStr = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`
 
         for (const batch of batches) {
           if (batch.sex !== 'mixto') continue

@@ -958,7 +958,11 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [newWeight, setNewWeight] = useState('')
-  const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0])
+  const [newDate, setNewDate] = useState(() => {
+    const t = new Date()
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+  })
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [newNotes, setNewNotes] = useState('')
   const chartRef = useRef<HTMLCanvasElement>(null)
   const chartInstance = useRef<Chart | null>(null)
@@ -981,8 +985,8 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
       type: 'line',
       data: {
         labels: weights.map(w => {
-          const d = new Date(w.recorded_at)
-          return d.toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })
+          const [y, m, d] = w.recorded_at.slice(0, 10).split('-')
+          return new Date(+y, +m - 1, +d).toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })
         }),
         datasets: [{
           label: 'Peso (kg)',
@@ -1039,6 +1043,23 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
     }
   }
 
+  async function handleDelete(weightId: string) {
+    setDeletingId(weightId)
+    try {
+      const res = await fetch(`/api/animals/${animalId}/weights/${weightId}`, { method: 'DELETE' })
+      if (res.ok) {
+        const remaining = weights.filter(w => w.id !== weightId)
+        setWeights(remaining)
+        const latest = [...remaining].sort((a, b) =>
+          new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime()
+        )[0]
+        if (latest) onWeightUpdated(latest.weight_kg)
+      }
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -1065,6 +1086,7 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
               <input
                 type="number"
                 step="0.01"
+                min="0"
                 required
                 value={newWeight}
                 onChange={e => setNewWeight(e.target.value)}
@@ -1116,17 +1138,35 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
               <History className="w-3 h-3" /> Últimos registros
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {[...weights].reverse().map(w => (
-                <div key={w.id} className="p-2 rounded-lg hover:bg-surface transition-colors">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold text-foreground">{w.weight_kg} kg</p>
-                    <p className="text-[10px] text-muted">{new Date(w.recorded_at).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: '2-digit' })}</p>
+              {[...weights].reverse().map(w => {
+                const [y, m, d] = w.recorded_at.slice(0, 10).split('-')
+                const dateLabel = `${d}/${m}/${y.slice(2)}`
+                return (
+                  <div key={w.id} className="p-2 rounded-lg hover:bg-surface transition-colors group">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-xs font-bold text-foreground">{w.weight_kg} kg</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[10px] text-muted">{dateLabel}</p>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDelete(w.id)}
+                            disabled={deletingId === w.id}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-danger hover:text-red-700 disabled:opacity-30"
+                            title="Eliminar registro"
+                          >
+                            {deletingId === w.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <Trash2 className="w-3 h-3" />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {w.notes && (
+                      <p className="text-[10px] text-muted mt-0.5 leading-snug">{w.notes}</p>
+                    )}
                   </div>
-                  {w.notes && (
-                    <p className="text-[10px] text-muted mt-0.5 leading-snug">{w.notes}</p>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>

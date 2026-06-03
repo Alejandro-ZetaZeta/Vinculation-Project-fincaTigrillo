@@ -31,9 +31,13 @@ REGLAS ESTRICTAS:
 export function buildReproductivePredictionPrompt(
   animals: AnimalContext[],
   events: ReproductiveEventContext[],
-  today: Date = new Date()
+  today?: Date
 ): string {
-  const todayStr = today.toISOString().split('T')[0]
+  // Use Colombia local date (UTC-5). Server runs in UTC, so subtract 5 h to avoid
+  // the date advancing at midnight UTC (= 7 PM local) and sending the wrong date to the AI.
+  const todayStr = today
+    ? `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    : new Date(new Date().getTime() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
   // Agrupar eventos por animal
   const eventsByAnimal = events.reduce<Record<string, ReproductiveEventContext[]>>((acc, ev) => {

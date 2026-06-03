@@ -1056,7 +1056,9 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
       const res = await fetch(`/api/invoices/${id}`)
       if (!res.ok) { setError('No se pudo descargar la factura'); return }
       const blob = await res.blob()
-      const date = createdAt ? new Date(createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+      const _dn = new Date()
+      const _todayLocal = `${_dn.getFullYear()}-${String(_dn.getMonth() + 1).padStart(2, '0')}-${String(_dn.getDate()).padStart(2, '0')}`
+      const date = createdAt ? new Date(createdAt).toISOString().split('T')[0] : _todayLocal
       const ext = fileUrl.endsWith('.png') ? 'png' : 'jpg'
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

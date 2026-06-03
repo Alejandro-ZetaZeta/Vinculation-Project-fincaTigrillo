@@ -45,7 +45,10 @@ export function AssignVaccineModal(props: {
   const [vaccines, setVaccines] = useState<VaccineCatalogItem[]>([])
   const [loadingVaccines, setLoadingVaccines] = useState(false)
   const [vaccineId, setVaccineId] = useState('')
-  const [appliedAt, setAppliedAt] = useState(new Date().toISOString().slice(0, 10))
+  const [appliedAt, setAppliedAt] = useState(() => {
+    const _d = new Date()
+    return `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`
+  })
   const [nextDoseAt, setNextDoseAt] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
