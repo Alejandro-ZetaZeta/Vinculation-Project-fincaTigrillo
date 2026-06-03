@@ -8,44 +8,54 @@ import {
   Menu, X, Users, ListTodo, Calculator, FileText,
   PanelLeftClose, Syringe, CalendarDays,
   Wrench, ChevronDown, Package, Sprout,
+  ShieldCheck, GraduationCap,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-// ── Flat nav items (non-grouped) ────────────────────────────────────────────
+// ── Flat nav items ───────────────────────────────────────────────────────────
 const allNavItems = [
   { href: '/dashboard',            label: 'Inicio',              icon: LayoutDashboard, adminOnly: false, viewerOnly: false },
   { href: '/dashboard/animals',    label: 'Registrar Animal',    icon: PawPrint,        adminOnly: true,  viewerOnly: false },
   { href: '/dashboard/vaccines',   label: 'Vacunas',             icon: Syringe,         adminOnly: true,  viewerOnly: false },
-  { href: '/dashboard/students',   label: 'Estudiantes',         icon: Users,           adminOnly: true,  viewerOnly: false },
-  { href: '/dashboard/activities', label: 'Actividades',         icon: ListTodo,        adminOnly: true,  viewerOnly: false },
-  { href: '/dashboard/activities', label: 'Mis Actividades',     icon: ListTodo,        adminOnly: false, viewerOnly: true  },
   { href: '/dashboard/sembrios',   label: 'Sembríos',            icon: Sprout,          adminOnly: true,  viewerOnly: false },
   { href: '/dashboard/reports',    label: 'Informes Operativos', icon: FileText,        adminOnly: false, viewerOnly: false },
   { href: '/dashboard/events',     label: 'Eventos',             icon: CalendarDays,    adminOnly: false, viewerOnly: false },
   { href: '/dashboard/calculators',label: 'Calculadoras',        icon: Calculator,      adminOnly: false, viewerOnly: false },
 ]
 
-// ── Inventory sub-items (always in the collapsible group) ───────────────────
+// ── Inventory sub-items ──────────────────────────────────────────────────────
 const inventoryItems = [
-  { href: '/dashboard/animals/list',      label: 'Animales',      icon: ClipboardList, adminOnly: false },
-  { href: '/dashboard/inventory/tools',   label: 'Herramientas',  icon: Wrench,        adminOnly: true  },
+  { href: '/dashboard/animals/list',    label: 'Animales',     icon: ClipboardList, adminOnly: false },
+  { href: '/dashboard/inventory/tools', label: 'Herramientas', icon: Wrench,        adminOnly: true  },
+]
+
+// ── People sub-items ─────────────────────────────────────────────────────────
+const peopleItems = [
+  { href: '/dashboard/students',   label: 'Estudiantes',     icon: Users,    adminOnly: true,  viewerOnly: false },
+  { href: '/dashboard/activities', label: 'Actividades',     icon: ListTodo, adminOnly: true,  viewerOnly: false },
+  { href: '/dashboard/activities', label: 'Mis Actividades', icon: ListTodo, adminOnly: false, viewerOnly: true  },
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
 export function Sidebar({ userRole }: { userRole: string }) {
-  const pathname    = usePathname()
+  const pathname = usePathname()
   const [mobileOpen, setMobileOpen]   = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const isAdmin = userRole === 'admin'
 
-  // Auto-open the inventory group when any child route is active
   const inventoryActive = inventoryItems.some(i => pathname.startsWith(i.href))
   const [invOpen, setInvOpen] = useState(inventoryActive)
 
-  // Keep open when navigating within inventory
-  useEffect(() => {
-    if (inventoryActive) setInvOpen(true)
-  }, [inventoryActive])
+  const visiblePeopleItems = peopleItems.filter(i => {
+    if (i.adminOnly && !isAdmin) return false
+    if (i.viewerOnly && isAdmin) return false
+    return true
+  })
+  const peopleActive = visiblePeopleItems.some(i => pathname.startsWith(i.href))
+  const [peopleOpen, setPeopleOpen] = useState(peopleActive)
+
+  useEffect(() => { if (inventoryActive) setInvOpen(true)  }, [inventoryActive])
+  useEffect(() => { if (peopleActive)    setPeopleOpen(true) }, [peopleActive])
 
   // Sync main-content margin on sidebar collapse
   useEffect(() => {
@@ -61,31 +71,40 @@ export function Sidebar({ userRole }: { userRole: string }) {
     }
   }, [isCollapsed])
 
-  // Filter flat nav items by role
   const navItems = allNavItems.filter(item => {
     if (item.adminOnly && !isAdmin) return false
     if (item.viewerOnly && isAdmin) return false
     return true
   })
-
-  // Filter inventory sub-items by role
   const visibleInventoryItems = inventoryItems.filter(i => !i.adminOnly || isAdmin)
 
-  // Shared link class builder
+  // Nav link classes — only maps to tokens that exist in @theme inline
   function linkCls(isActive: boolean, collapsed: boolean) {
     return [
-      'flex items-center gap-3 py-2.5 rounded-xl text-sm transition-all relative group',
+      'flex items-center gap-3 py-2.5 rounded-xl text-sm transition-all duration-200 relative group cursor-pointer',
       isActive ? 'nav-item-active' : 'nav-item-idle',
       collapsed ? 'px-0 justify-center' : 'px-3',
     ].join(' ')
   }
 
+  // Parent group header button class — keeps white text when child is active, avoids neon distortion
+  function groupHeaderCls(isGroupActive: boolean) {
+    return [
+      'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 cursor-pointer',
+      isGroupActive
+        ? 'text-sidebar-text font-semibold bg-white/10'   // white text + subtle bg — no neon
+        : 'nav-item-idle',
+    ].join(' ')
+  }
+
   return (
     <>
-      {/* ── Mobile hamburger ───────────────────────────────────────────── */}
+      {/* ── Mobile hamburger ────────────────────────────────────────── */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2.5 rounded-xl bg-surface border border-border shadow-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+        className="fixed top-4 left-4 z-50 md:hidden p-2.5 rounded-xl
+                   bg-sidebar-bg border border-sidebar-border shadow-lg
+                   text-sidebar-muted hover:text-sidebar-text transition-colors"
         id="sidebar-toggle"
         aria-label={mobileOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
         aria-expanded={mobileOpen}
@@ -97,60 +116,71 @@ export function Sidebar({ userRole }: { userRole: string }) {
         }
       </button>
 
-      {/* ── Mobile overlay ─────────────────────────────────────────────── */}
+      {/* ── Mobile overlay ──────────────────────────────────────────── */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden backdrop-blur-sm"
+          className="fixed inset-0 z-30 bg-black/60 md:hidden backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* ── Sidebar panel ──────────────────────────────────────────────── */}
+      {/* ── Sidebar panel ───────────────────────────────────────────── */}
       <aside
         id="app-sidebar"
         role="navigation"
         aria-label="Menú principal de la aplicación"
         className={[
           'sidebar-panel',
-          'fixed inset-y-0 left-0 z-40 flex flex-col transition-all duration-300',
+          'fixed inset-y-0 left-0 z-40 flex flex-col',
           isCollapsed ? 'w-[72px]' : 'w-64',
           mobileOpen ? 'translate-x-0 is-open' : '-translate-x-full',
           'md:translate-x-0',
         ].join(' ')}
       >
-        <div className="px-4 h-16 border-b border-(--sidebar-border) flex shrink-0 items-center justify-between">
+        {/* ── Brand header ────────────────────────────────────────── */}
+        <div className="px-4 h-16 border-b border-sidebar-border/60 flex shrink-0 items-center justify-between">
           {isCollapsed ? (
-            /* ── Collapsed (md+): icon acts as expand button ── */
             <button
               onClick={() => setIsCollapsed(false)}
-              className="hidden md:flex w-9 h-9 rounded-xl bg-white/15 border border-white/25 items-center justify-center shrink-0 hover:bg-white/25 transition-colors overflow-hidden mx-auto"
+              className="hidden md:flex w-10 h-10 rounded-2xl items-center justify-center shrink-0 mx-auto
+                         bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-200 overflow-hidden"
               aria-label="Expandir menú"
               title="Expandir menú"
             >
-              <Image src="/faviconOficial.svg" alt="Logo" width={34} height={34} className="object-contain invert" />
+              <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain invert" />
             </button>
           ) : (
-            /* ── Expanded: icon links to /dashboard + collapse button ── */
             <>
               <Link
                 href="/dashboard"
-                className="flex items-center gap-3 group rounded-lg p-1 -m-1"
+                className="flex items-center gap-3 group rounded-xl p-1 -m-1 transition-all duration-200"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Finca Tigrillo — Ir al inicio"
               >
-                <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors overflow-hidden">
-                  <Image src="/faviconOficial.svg" alt="Logo" width={34} height={34} className="object-contain invert" />
+                {/* Logo badge with emerald glow */}
+                <div className="relative w-10 h-10 rounded-2xl bg-white/12 border border-white/20 flex items-center justify-center shrink-0
+                               group-hover:bg-white/22 group-hover:border-white/35 transition-all duration-200 overflow-hidden
+                               shadow-[0_0_12px_rgba(74,222,128,0.2)]">
+                  <Image src="/faviconOficial.svg" alt="Logo Finca Tigrillo" width={28} height={28} className="object-contain invert" />
                 </div>
-                <div className="whitespace-nowrap opacity-100 transition-opacity duration-300">
-                  <p className="font-display font-700 text-sm text-sidebar-text leading-tight tracking-tight">Finca Tigrillo</p>
-                  <p className="text-[11px] text-sidebar-muted leading-tight mt-0.5">Gestión Ganadera</p>
+                <div className="whitespace-nowrap">
+                  {/* Explicit white — always visible on the dark forest-green sidebar */}
+                  <p className="font-display font-bold text-sm leading-tight tracking-tight" style={{ color: '#ffffff' }}>
+                    Finca Tigrillo
+                  </p>
+                  {/* Soft green-300 subtitle */}
+                  <p className="text-[10px] leading-tight mt-0.5 font-medium tracking-wide uppercase text-sidebar-muted">
+                    Gestión Ganadera
+                  </p>
                 </div>
               </Link>
 
               <button
                 onClick={() => setIsCollapsed(true)}
-                className="hidden md:flex p-1.5 rounded-lg text-sidebar-muted hover:text-sidebar-text bg-white/8 hover:bg-white/12 border border-white/0 hover:border-white/15 transition-all items-center justify-center shrink-0"
+                className="hidden md:flex p-1.5 rounded-lg text-sidebar-muted hover:text-sidebar-text
+                           bg-white/5 hover:bg-white/12 border border-transparent hover:border-white/15
+                           transition-all duration-200 items-center justify-center shrink-0"
                 aria-label="Colapsar menú"
                 title="Colapsar menú"
               >
@@ -160,11 +190,10 @@ export function Sidebar({ userRole }: { userRole: string }) {
           )}
         </div>
 
-        {/* ── Navigation ─────────────────────────────────────────────── */}
+        {/* ── Navigation ──────────────────────────────────────────── */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden" aria-label="Secciones principales">
-          {!isCollapsed && <p className="text-[10px] font-semibold text-sidebar-muted uppercase tracking-widest mb-2 px-3 whitespace-nowrap">Menú</p>}
 
-          {/* ── Top nav items: Inicio + Registrar Animal ──────────────── */}
+          {/* Top: Inicio + Registrar Animal */}
           {navItems.filter(i => i.href === '/dashboard' || i.href === '/dashboard/animals').map(item => {
             const isActive = pathname === item.href ||
               (item.href !== '/dashboard' && pathname.startsWith(item.href) &&
@@ -180,9 +209,9 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 title={isCollapsed ? item.label : undefined}
               >
                 <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                {!isCollapsed && <span className="whitespace-nowrap flex-1">{item.label}</span>}
                 {isActive && !isCollapsed && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
                 )}
                 {isActive && isCollapsed && (
                   <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
@@ -191,12 +220,10 @@ export function Sidebar({ userRole }: { userRole: string }) {
             )
           })}
 
-          {/* ── Collapsible Inventario group (below Registrar Animal) ── */}
+          {/* ── Collapsible Inventario ───────────────────────────── */}
           {visibleInventoryItems.length > 0 && (
             <div className="pt-0.5">
-              {/* Group header / toggle */}
               {isCollapsed ? (
-                /* Collapsed: show a Package icon linking to animals list as anchor */
                 <Link
                   href="/dashboard/animals/list"
                   onClick={() => setMobileOpen(false)}
@@ -214,10 +241,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                   <button
                     type="button"
                     onClick={() => setInvOpen(o => !o)}
-                    className={[
-                      'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all',
-                      inventoryActive ? 'text-sidebar-active font-semibold' : 'nav-item-idle',
-                    ].join(' ')}
+                    className={groupHeaderCls(inventoryActive)}
                     aria-expanded={invOpen}
                     aria-controls="inventory-submenu"
                   >
@@ -229,7 +253,6 @@ export function Sidebar({ userRole }: { userRole: string }) {
                     />
                   </button>
 
-                  {/* Sub-items with animated reveal */}
                   <div
                     id="inventory-submenu"
                     className={[
@@ -237,7 +260,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                       invOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
                     ].join(' ')}
                   >
-                    <div className="ml-3 pl-3 border-l border-white/20 space-y-0.5 py-1">
+                    <div className="ml-3 pl-3 border-l border-white/15 space-y-0.5 py-1">
                       {visibleInventoryItems.map(sub => {
                         const isActive = pathname === sub.href || pathname.startsWith(sub.href)
                         const Icon = sub.icon
@@ -248,14 +271,14 @@ export function Sidebar({ userRole }: { userRole: string }) {
                             onClick={() => setMobileOpen(false)}
                             aria-current={isActive ? 'page' : undefined}
                             className={[
-                              'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all',
+                              'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all duration-200',
                               isActive ? 'nav-item-active' : 'nav-item-idle',
                             ].join(' ')}
                           >
                             <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                            <span className="whitespace-nowrap">{sub.label}</span>
+                            <span className="whitespace-nowrap flex-1">{sub.label}</span>
                             {isActive && (
-                              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
                             )}
                           </Link>
                         )
@@ -266,47 +289,130 @@ export function Sidebar({ userRole }: { userRole: string }) {
               )}
             </div>
           )}
-          {/* ── Bottom nav items: everything after the inventory group ── */}
-          {navItems.filter(i => i.href !== '/dashboard' && i.href !== '/dashboard/animals').map(item => {
-            const isActive = pathname === item.href ||
-              (item.href !== '/dashboard' && pathname.startsWith(item.href))
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.href + item.label}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                aria-current={isActive ? 'page' : undefined}
-                className={linkCls(isActive, isCollapsed)}
-                title={isCollapsed ? item.label : undefined}
-              >
-                <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                {!isCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
-                {isActive && !isCollapsed && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
-                )}
-                {isActive && isCollapsed && (
-                  <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
-                )}
-              </Link>
+
+          {/* ── Collapsible Personas (Students + Activities) ─────── */}
+          {visiblePeopleItems.length > 0 && (
+            <div className="pt-0.5">
+              {isCollapsed ? (
+                <Link
+                  href={isAdmin ? '/dashboard/students' : '/dashboard/activities'}
+                  onClick={() => setMobileOpen(false)}
+                  className={linkCls(peopleActive, true)}
+                  title="Personas"
+                  aria-label="Personas"
+                >
+                  <Users className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  {peopleActive && (
+                    <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
+                  )}
+                </Link>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setPeopleOpen(o => !o)}
+                    className={groupHeaderCls(peopleActive)}
+                    aria-expanded={peopleOpen}
+                    aria-controls="people-submenu"
+                  >
+                    <Users className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <span className="flex-1 text-left whitespace-nowrap">Personas</span>
+                    <ChevronDown
+                      className={['w-3.5 h-3.5 transition-transform duration-200', peopleOpen ? 'rotate-180' : ''].join(' ')}
+                      aria-hidden="true"
+                    />
+                  </button>
+
+                  <div
+                    id="people-submenu"
+                    className={[
+                      'overflow-hidden transition-all duration-200',
+                      peopleOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
+                    ].join(' ')}
+                  >
+                    <div className="ml-3 pl-3 border-l border-white/15 space-y-0.5 py-1">
+                      {visiblePeopleItems.map(sub => {
+                        const isActive = pathname === sub.href || pathname.startsWith(sub.href)
+                        const Icon = sub.icon
+                        return (
+                          <Link
+                            key={sub.href + sub.label}
+                            href={sub.href}
+                            onClick={() => setMobileOpen(false)}
+                            aria-current={isActive ? 'page' : undefined}
+                            className={[
+                              'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all duration-200',
+                              isActive ? 'nav-item-active' : 'nav-item-idle',
+                            ].join(' ')}
+                          >
+                            <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            <span className="whitespace-nowrap flex-1">{sub.label}</span>
+                            {isActive && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
+                            )}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Remaining flat items ─────────────────────────────── */}
+          {navItems
+            .filter(i =>
+              i.href !== '/dashboard' &&
+              i.href !== '/dashboard/animals' &&
+              i.href !== '/dashboard/students' &&
+              i.href !== '/dashboard/activities'
             )
-          })}
+            .map(item => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href)
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.href + item.label}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={linkCls(isActive, isCollapsed)}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  {!isCollapsed && <span className="whitespace-nowrap flex-1">{item.label}</span>}
+                  {isActive && !isCollapsed && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
+                  )}
+                  {isActive && isCollapsed && (
+                    <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
+                  )}
+                </Link>
+              )
+            })
+          }
         </nav>
 
-        {/* ── Role footer ────────────────────────────────────────────── */}
-        <div className={`px-3 py-4 border-t border-(--sidebar-border) ${isCollapsed ? 'flex justify-center' : ''}`}>
+        {/* ── Role footer ──────────────────────────────────────────── */}
+        <div className={`px-3 py-3 border-t border-sidebar-border/50 ${isCollapsed ? 'flex justify-center' : ''}`}>
           <div
-            className={`rounded-xl bg-white/10 flex items-center ${isCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5 gap-2.5'}`}
+            className={`rounded-2xl bg-white/8 border border-white/10 flex items-center
+              ${isCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5 gap-2.5'}`}
             title={isCollapsed ? `Rol: ${isAdmin ? 'Administrador' : 'Estudiante'}` : undefined}
           >
-            <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-              <Image src="/faviconOficial.svg" alt="Role" width={16} height={16} className="object-contain opacity-80 dark:invert" />
+            <div className="w-8 h-8 rounded-xl bg-white/12 border border-white/15 flex items-center justify-center shrink-0">
+              {isAdmin
+                ? <ShieldCheck   className="w-4 h-4 text-sidebar-stripe" aria-hidden="true" />
+                : <GraduationCap className="w-4 h-4 text-sidebar-stripe" aria-hidden="true" />
+              }
             </div>
             {!isCollapsed && (
-              <div className="whitespace-nowrap">
-                <p className="text-[10px] text-sidebar-muted leading-none mb-0.5">Rol actual</p>
-                <p className="text-xs font-semibold text-sidebar-text capitalize">
+              <div className="whitespace-nowrap min-w-0">
+                <p className="text-[10px] text-sidebar-muted/70 leading-none mb-1 font-medium uppercase tracking-wide">Rol actual</p>
+                <p className="text-xs font-semibold text-sidebar-text capitalize flex items-center gap-1.5">
                   {isAdmin ? 'Administrador' : 'Estudiante'}
+                  <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe inline-block pulse-dot" aria-hidden="true" />
                 </p>
               </div>
             )}

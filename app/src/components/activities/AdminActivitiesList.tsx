@@ -142,8 +142,9 @@ export function AdminActivitiesList() {
                     </div>
                   ) : (
                     <button onClick={() => setConfirmDelete(activity.id)}
-                      className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10">
-                      <Trash2 className="w-4 h-4" />
+                      aria-label={`Eliminar actividad: ${activity.title}`}
+                      className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </button>
                   )}
                 </div>
