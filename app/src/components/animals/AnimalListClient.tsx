@@ -1117,18 +1117,13 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {[...weights].reverse().map(w => (
-                <div key={w.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-surface transition-colors">
-                  <div>
+                <div key={w.id} className="p-2 rounded-lg hover:bg-surface transition-colors">
+                  <div className="flex items-center justify-between">
                     <p className="text-xs font-bold text-foreground">{w.weight_kg} kg</p>
                     <p className="text-[10px] text-muted">{new Date(w.recorded_at).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: '2-digit' })}</p>
                   </div>
                   {w.notes && (
-                    <div className="group relative">
-                      <TrendingUp className="w-3 h-3 text-primary/40" />
-                      <span className="absolute bottom-full right-0 mb-2 w-32 p-2 bg-foreground text-background text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                        {w.notes}
-                      </span>
-                    </div>
+                    <p className="text-[10px] text-muted mt-0.5 leading-snug">{w.notes}</p>
                   )}
                 </div>
               ))}
