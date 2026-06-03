@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
   description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
   icons: {
-    icon: '/eloyAocelote1.png',
-    apple: '/eloyAocelote1.png',
+    icon: '/faviconOficial.svg',
+    apple: '/faviconOficial.svg',
   },
 }
 

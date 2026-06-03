@@ -39,11 +39,11 @@ export function EntryAnimation() {
       >
         <div className="w-24 h-24 mb-6 rounded-[2rem] bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden animate-pulse">
           <Image
-            src="/eloyAocelote1.png"
+            src="/faviconOficial.svg"
             alt="Finca Tigrillo Logo"
             width={72}
             height={72}
-            className="object-contain"
+            className="object-contain dark:invert"
             priority
           />
         </div>

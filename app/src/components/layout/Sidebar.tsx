@@ -128,7 +128,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
               aria-label="Expandir menú"
               title="Expandir menú"
             >
-              <Image src="/eloyAocelote1.png" alt="Logo" width={28} height={28} className="object-contain" />
+              <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain dark:invert" />
             </button>
           ) : (
             /* ── Expanded: icon links to /dashboard + collapse button ── */
@@ -140,7 +140,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 aria-label="Finca Tigrillo — Ir al inicio"
               >
                 <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 group-hover:bg-white/25 transition-colors overflow-hidden">
-                  <Image src="/eloyAocelote1.png" alt="Logo" width={28} height={28} className="object-contain" />
+                  <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain dark:invert" />
                 </div>
                 <div className="whitespace-nowrap opacity-100 transition-opacity duration-300">
                   <p className="font-display font-700 text-sm text-sidebar-text leading-tight tracking-tight">Finca Tigrillo</p>
@@ -300,7 +300,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
             title={isCollapsed ? `Rol: ${isAdmin ? 'Administrador' : 'Estudiante'}` : undefined}
           >
             <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-              <Image src="/eloyAocelote1.png" alt="Role" width={16} height={16} className="object-contain opacity-80" />
+              <Image src="/faviconOficial.svg" alt="Role" width={16} height={16} className="object-contain opacity-80 dark:invert" />
             </div>
             {!isCollapsed && (
               <div className="whitespace-nowrap">

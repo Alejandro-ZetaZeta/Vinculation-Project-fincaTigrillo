@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Remap dark: variant to app's data-theme selector instead of OS media query */
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ─────────────────────────────────────────────
    FONT REGISTRATION
 ───────────────────────────────────────────── */

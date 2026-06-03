@@ -606,7 +606,7 @@ export default function ReportsPage() {
               <div className="flex items-center justify-between border-b-2 border-border/60 pb-4 text-left">
                 <div className="flex items-center gap-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/eloyAocelote1.png" alt="Logo Finca Tigrillo" className="w-10 h-10 object-contain" />
+                  <img src="/faviconOficial.svg" alt="Logo Finca Tigrillo" className="w-10 h-10 object-contain dark:invert" />
                   <div>
                     <h1 className="font-black text-lg text-foreground leading-none mb-1">Finca Tigrillo</h1>
                     <p className="text-[10px] text-muted font-bold uppercase tracking-widest leading-none">Reporte Operativo Ganadero</p>

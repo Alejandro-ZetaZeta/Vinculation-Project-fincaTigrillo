@@ -3,13 +3,15 @@ import { getAccessToken } from '@/lib/auth/cookies'
 import { getCurrentUser } from '@/lib/auth/actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Milk, Ribbon, Drumstick, Egg, ArrowRight, ArrowLeft, PawPrint } from 'lucide-react'
+import { ArrowRight, ArrowLeft, PawPrint } from 'lucide-react'
 
-const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  'Milk': Milk,
-  'Ribbon': Ribbon,
-  'Drumstick': Drumstick,
-  'Egg': Egg,
+const typeIconSrcs: Record<string, string> = {
+  'bovino': '/ReBovino.svg',
+  'equino': '/ReEquino-_3_.svg',
+  'porcino': '/RePorcino.svg',
+  'patos': '/RePatos.svg',
+  'aves-de-corral': '/ReAves.svg',
+  'caprino': '/ReCaprino.svg',
 }
 
 const typeColors: Record<string, { bg: string; border: string; text: string; iconBg: string }> = {
@@ -104,7 +106,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         return (
           <div className={`grid grid-cols-1 md:grid-cols-2 gap-6${isSmallGrid ? ' lg:max-w-2xl lg:mx-auto' : ' lg:grid-cols-3'}`}>
             {types?.map((type: { id: string; name: string; slug: string; description: string; icon: string }) => {
-              const IconComponent = typeIcons[type.icon] || PawPrint
+              const iconSrc = typeIconSrcs[type.slug]
               const colors = typeColors[type.slug] || typeColors['bovino']
 
               return (
@@ -118,7 +120,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                 >
                   {/* Icon */}
                   <div className={`w-16 h-16 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5`}>
-                    <IconComponent className={`w-8 h-8 ${colors.text}`} />
+                    {iconSrc ? (
+                      <img src={iconSrc} alt={type.name} className="w-full h-full p-1.5 object-contain dark:invert" />
+                    ) : (
+                      <PawPrint className={`w-12 h-12 ${colors.text}`} />
+                    )}
                   </div>
 
                   {/* Content */}

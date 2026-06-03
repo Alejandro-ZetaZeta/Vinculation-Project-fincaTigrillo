@@ -1,11 +1,11 @@
 import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { getAccessToken } from '@/lib/auth/cookies'
 import Link from 'next/link'
-import { Beef, Bird, ArrowRight, PawPrint } from 'lucide-react'
+import { ArrowRight, PawPrint } from 'lucide-react'
 
-const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  'Beef': Beef,
-  'Bird': Bird,
+const categoryIconSrcs: Record<string, string> = {
+  'ganado-mayor': '/ReGanMayor.svg',
+  'ganado-menor': '/ReGanMenor.svg',
 }
 
 const categoryColors: Record<string, { bg: string; border: string; text: string; iconBg: string }> = {
@@ -53,7 +53,7 @@ export default async function AnimalsPage() {
       {/* Category Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:max-w-5xl lg:mx-auto">
         {categories?.map((category: { id: string; name: string; slug: string; description: string; icon: string }) => {
-          const IconComponent = categoryIcons[category.icon] || PawPrint
+          const iconSrc = categoryIconSrcs[category.slug]
           const colors = categoryColors[category.slug] || categoryColors['ganado-mayor']
 
           return (
@@ -64,7 +64,11 @@ export default async function AnimalsPage() {
             >
               {/* Icon */}
               <div className={`w-16 h-16 lg:w-24 lg:h-24 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5 lg:mb-7`}>
-                <IconComponent className={`w-8 h-8 lg:w-12 lg:h-12 ${colors.text}`} />
+                {iconSrc ? (
+                  <img src={iconSrc} alt={category.name} className="w-full h-full p-2 object-contain dark:invert" />
+                ) : (
+                  <PawPrint className={`w-12 h-12 lg:w-16 lg:h-16 ${colors.text}`} />
+                )}
               </div>
 
               {/* Content */}

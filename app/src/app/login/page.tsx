@@ -71,11 +71,11 @@ function LoginContent() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center rounded-2xl bg-primary/10 mb-4 overflow-hidden border border-primary/20">
             <Image
-              src="/eloyAocelote1.png"
+              src="/faviconOficial.svg"
               alt="Logo de Finca Tigrillo"
               width={80}
               height={80}
-              className="object-contain"
+              className="object-contain dark:invert"
             />
           </div>
           <h1 className="font-display text-3xl font-bold text-foreground tracking-tight">Finca Tigrillo</h1>
