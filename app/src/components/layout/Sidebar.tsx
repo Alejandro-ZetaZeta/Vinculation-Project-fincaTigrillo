@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, PawPrint, ClipboardList,
-  Menu, X, Users, ListTodo, Calculator, FileText,
+  Users, ListTodo, Calculator, FileText,
   PanelLeftClose, Syringe, CalendarDays,
   Wrench, ChevronDown, Package, Sprout,
   ShieldCheck, GraduationCap,
@@ -57,7 +57,14 @@ export function Sidebar({ userRole }: { userRole: string }) {
   useEffect(() => { if (inventoryActive) setInvOpen(true)  }, [inventoryActive])
   useEffect(() => { if (peopleActive)    setPeopleOpen(true) }, [peopleActive])
 
-  // Sync main-content margin on sidebar collapse
+  // Listen for open event dispatched by the Header's mobile logo button
+  useEffect(() => {
+    const handler = () => setMobileOpen(true)
+    window.addEventListener('sidebar:open', handler)
+    return () => window.removeEventListener('sidebar:open', handler)
+  }, [])
+
+  // Sync main-content margin on desktop sidebar collapse
   useEffect(() => {
     const wrapper = document.getElementById('main-content-wrapper')
     if (wrapper) {
@@ -78,7 +85,6 @@ export function Sidebar({ userRole }: { userRole: string }) {
   })
   const visibleInventoryItems = inventoryItems.filter(i => !i.adminOnly || isAdmin)
 
-  // Nav link classes — only maps to tokens that exist in @theme inline
   function linkCls(isActive: boolean, collapsed: boolean) {
     return [
       'flex items-center gap-3 py-2.5 rounded-xl text-sm transition-all duration-200 relative group cursor-pointer',
@@ -87,43 +93,27 @@ export function Sidebar({ userRole }: { userRole: string }) {
     ].join(' ')
   }
 
-  // Parent group header button class — keeps white text when child is active, avoids neon distortion
   function groupHeaderCls(isGroupActive: boolean) {
     return [
       'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 cursor-pointer',
       isGroupActive
-        ? 'text-sidebar-text font-semibold bg-white/10'   // white text + subtle bg — no neon
+        ? 'text-sidebar-text font-semibold bg-white/10'
         : 'nav-item-idle',
     ].join(' ')
   }
 
   return (
     <>
-      {/* ── Mobile hamburger ────────────────────────────────────────── */}
-      <button
-        onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2.5 rounded-xl
-                   bg-sidebar-bg border border-sidebar-border shadow-lg
-                   text-sidebar-muted hover:text-sidebar-text transition-colors"
-        id="sidebar-toggle"
-        aria-label={mobileOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
-        aria-expanded={mobileOpen}
-        aria-controls="app-sidebar"
-      >
-        {mobileOpen
-          ? <X    className="w-5 h-5" aria-hidden="true" />
-          : <Menu className="w-5 h-5" aria-hidden="true" />
-        }
-      </button>
-
       {/* ── Mobile overlay ──────────────────────────────────────────── */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/60 md:hidden backdrop-blur-sm"
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+      <div
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+        className={[
+          'fixed inset-0 z-30 md:hidden backdrop-blur-sm',
+          'bg-black/60 transition-opacity duration-300',
+          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
+        ].join(' ')}
+      />
 
       {/* ── Sidebar panel ───────────────────────────────────────────── */}
       <aside
@@ -133,61 +123,85 @@ export function Sidebar({ userRole }: { userRole: string }) {
         className={[
           'sidebar-panel',
           'fixed inset-y-0 left-0 z-40 flex flex-col',
-          isCollapsed ? 'w-[72px]' : 'w-64',
+          'transition-transform duration-300 ease-in-out',
+          mobileOpen ? 'w-64' : isCollapsed ? 'w-[72px]' : 'w-64',
           mobileOpen ? 'translate-x-0 is-open' : '-translate-x-full',
           'md:translate-x-0',
         ].join(' ')}
       >
         {/* ── Brand header ────────────────────────────────────────── */}
         <div className="px-4 h-16 border-b border-sidebar-border/60 flex shrink-0 items-center justify-between">
-          {isCollapsed ? (
-            <button
-              onClick={() => setIsCollapsed(false)}
-              className="hidden md:flex w-10 h-10 rounded-2xl items-center justify-center shrink-0 mx-auto
-                         bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-200 overflow-hidden"
-              aria-label="Expandir menú"
-              title="Expandir menú"
-            >
-              <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain invert" />
-            </button>
-          ) : (
-            <>
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-3 group rounded-xl p-1 -m-1 transition-all duration-200"
-                onClick={() => setMobileOpen(false)}
-                aria-label="Finca Tigrillo — Ir al inicio"
-              >
-                {/* Logo badge with emerald glow */}
-                <div className="relative w-10 h-10 rounded-2xl bg-white/12 border border-white/20 flex items-center justify-center shrink-0
-                               group-hover:bg-white/22 group-hover:border-white/35 transition-all duration-200 overflow-hidden
-                               shadow-[0_0_12px_rgba(74,222,128,0.2)]">
-                  <Image src="/faviconOficial.svg" alt="Logo Finca Tigrillo" width={28} height={28} className="object-contain invert" />
-                </div>
-                <div className="whitespace-nowrap">
-                  {/* Explicit white — always visible on the dark forest-green sidebar */}
-                  <p className="font-display font-bold text-sm leading-tight tracking-tight" style={{ color: '#ffffff' }}>
-                    Finca Tigrillo
-                  </p>
-                  {/* Soft green-300 subtitle */}
-                  <p className="text-[10px] leading-tight mt-0.5 font-medium tracking-wide uppercase text-sidebar-muted">
-                    Gestión Ganadera
-                  </p>
-                </div>
-              </Link>
 
+          {/* Mobile: full brand, tapping logo link closes sidebar */}
+          <div className="md:hidden flex w-full items-center">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 group rounded-xl p-1 -m-1 transition-all duration-200"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Finca Tigrillo — Ir al inicio"
+            >
+              <div className="relative w-10 h-10 rounded-2xl bg-white/12 border border-white/20 flex items-center justify-center shrink-0
+                             group-hover:bg-white/22 group-hover:border-white/35 transition-all duration-200 overflow-hidden
+                             shadow-[0_0_12px_rgba(74,222,128,0.2)]">
+                <Image src="/faviconOficial.svg" alt="Logo Finca Tigrillo" width={28} height={28} className="object-contain invert" />
+              </div>
+              <div className="whitespace-nowrap">
+                <p className="font-display font-bold text-sm leading-tight tracking-tight" style={{ color: '#ffffff' }}>
+                  Finca Tigrillo
+                </p>
+                <p className="text-[10px] leading-tight mt-0.5 font-medium tracking-wide uppercase text-sidebar-muted">
+                  Gestión Ganadera
+                </p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Desktop: controlled by isCollapsed */}
+          <div className="hidden md:flex w-full items-center justify-between">
+            {isCollapsed ? (
               <button
-                onClick={() => setIsCollapsed(true)}
-                className="hidden md:flex p-1.5 rounded-lg text-sidebar-muted hover:text-sidebar-text
-                           bg-white/5 hover:bg-white/12 border border-transparent hover:border-white/15
-                           transition-all duration-200 items-center justify-center shrink-0"
-                aria-label="Colapsar menú"
-                title="Colapsar menú"
+                onClick={() => setIsCollapsed(false)}
+                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mx-auto
+                           bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-200 overflow-hidden"
+                aria-label="Expandir menú"
+                title="Expandir menú"
               >
-                <PanelLeftClose className="w-4 h-4" />
+                <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain invert" />
               </button>
-            </>
-          )}
+            ) : (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-3 group rounded-xl p-1 -m-1 transition-all duration-200"
+                  aria-label="Finca Tigrillo — Ir al inicio"
+                >
+                  <div className="relative w-10 h-10 rounded-2xl bg-white/12 border border-white/20 flex items-center justify-center shrink-0
+                                 group-hover:bg-white/22 group-hover:border-white/35 transition-all duration-200 overflow-hidden
+                                 shadow-[0_0_12px_rgba(74,222,128,0.2)]">
+                    <Image src="/faviconOficial.svg" alt="Logo Finca Tigrillo" width={28} height={28} className="object-contain invert" />
+                  </div>
+                  <div className="whitespace-nowrap">
+                    <p className="font-display font-bold text-sm leading-tight tracking-tight" style={{ color: '#ffffff' }}>
+                      Finca Tigrillo
+                    </p>
+                    <p className="text-[10px] leading-tight mt-0.5 font-medium tracking-wide uppercase text-sidebar-muted">
+                      Gestión Ganadera
+                    </p>
+                  </div>
+                </Link>
+                <button
+                  onClick={() => setIsCollapsed(true)}
+                  className="p-1.5 rounded-lg text-sidebar-muted hover:text-sidebar-text
+                             bg-white/5 hover:bg-white/12 border border-transparent hover:border-white/15
+                             transition-all duration-200 flex items-center justify-center shrink-0"
+                  aria-label="Colapsar menú"
+                  title="Colapsar menú"
+                >
+                  <PanelLeftClose className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* ── Navigation ──────────────────────────────────────────── */}
@@ -393,6 +407,17 @@ export function Sidebar({ userRole }: { userRole: string }) {
             })
           }
         </nav>
+
+        {/* ── Pasture image — above role footer ─────────────── */}
+        {!isCollapsed && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/pastoSidepanel.png"
+            alt=""
+            aria-hidden="true"
+            className="w-full h-32 object-cover object-bottom opacity-75 pointer-events-none select-none"
+          />
+        )}
 
         {/* ── Role footer ──────────────────────────────────────────── */}
         <div className={`px-3 py-3 border-t border-sidebar-border/50 ${isCollapsed ? 'flex justify-center' : ''}`}>

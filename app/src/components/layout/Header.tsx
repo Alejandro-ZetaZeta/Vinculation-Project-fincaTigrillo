@@ -3,6 +3,7 @@
 import { signOut } from '@/lib/auth/actions'
 import { LogOut, Sun, Moon, Palette, Camera, Loader2, ChevronDown } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
 import { NotificationBell } from '@/components/layout/NotificationBell'
 import { Avatar } from '@/components/ui/Avatar'
@@ -71,8 +72,16 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
                    bg-header-bg border-b border-border
                    shadow-[0_1px_0_rgba(0,0,0,0.06),0_2px_12px_rgba(22,163,74,0.04)]"
       >
-        {/* Left — mobile spacer */}
-        <div className="md:hidden w-12" aria-hidden="true" />
+        {/* Left — mobile sidebar open button */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('sidebar:open'))}
+          className="md:hidden w-10 h-10 rounded-2xl flex items-center justify-center overflow-hidden shrink-0
+                     bg-sidebar-bg border border-sidebar-border shadow-sm
+                     hover:opacity-80 transition-opacity duration-200"
+          aria-label="Abrir menú de navegación"
+        >
+          <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain invert" />
+        </button>
         <div className="hidden md:block flex-1" aria-hidden="true" />
 
         {/* Right actions */}
