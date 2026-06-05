@@ -26,7 +26,9 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
   const { theme, setTheme } = useTheme()
 
   const isViewer  = userRole === 'viewer'
-  const roleLabel = userRole === 'admin' ? 'Administrador' : 'Estudiante'
+  const roleLabel = userRole === 'admin' ? 'Administrador'
+                  : userRole === 'teacher' ? 'Docente'
+                  : 'Estudiante'
 
   const fetchCooldown = useCallback(async () => {
     setCooldownLoading(true)
@@ -68,7 +70,7 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
       ───────────────────────────────────────────────────────────── */}
       <header
         id="app-header"
-        className="sticky top-0 z-20 h-16 flex items-center justify-between px-4 md:px-6 lg:px-8
+        className="sticky top-0 z-20 h-16 flex items-center justify-between pl-0 pr-4 md:pr-6 lg:pr-8
                    bg-header-bg border-b border-border
                    shadow-[0_1px_0_rgba(0,0,0,0.06),0_2px_12px_rgba(22,163,74,0.04)]"
       >
@@ -82,7 +84,24 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
         >
           <Image src="/faviconOficial.svg" alt="Logo" width={28} height={28} className="object-contain invert" />
         </button>
-        <div className="hidden md:block flex-1" aria-hidden="true" />
+        {/* Desktop-only decorative header illustration */}
+        <div className="hidden md:flex flex-1 self-stretch relative overflow-hidden" aria-hidden="true">
+          <div
+            className="absolute inset-0 pointer-events-none select-none"
+            style={{
+              backgroundImage: 'url(/headerbg.svg)',
+              backgroundSize: 'auto 100%',
+              backgroundRepeat: 'repeat-x',
+              backgroundPosition: '0 center',
+              filter: theme === 'uleam'
+                ? 'brightness(0) saturate(100%) invert(21%) sepia(86%) saturate(1200%) hue-rotate(199deg) brightness(96%) contrast(107%)'
+                : theme === 'dark'
+                ? 'brightness(0) saturate(100%) invert(67%) sepia(42%) saturate(700%) hue-rotate(110deg) brightness(103%) contrast(104%)'
+                : 'brightness(0) saturate(100%) invert(42%) sepia(89%) saturate(600%) hue-rotate(110deg) brightness(100%) contrast(97%)',
+              opacity: theme === 'dark' ? 0.15 : 0.28,
+            }}
+          />
+        </div>
 
         {/* Right actions */}
         <div className="flex items-center gap-1">
@@ -137,9 +156,9 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
             >
               {/* Role-colored avatar ring */}
               <div className={`rounded-full p-0.5 ${
-                userRole === 'admin'
-                  ? 'bg-gradient-to-br from-emerald-400 to-green-600'
-                  : 'bg-gradient-to-br from-amber-400 to-orange-500'
+                userRole === 'admin'   ? 'bg-gradient-to-br from-emerald-400 to-green-600'
+                : userRole === 'teacher' ? 'bg-gradient-to-br from-violet-400 to-purple-600'
+                : 'bg-gradient-to-br from-amber-400 to-orange-500'
               }`}>
                 <div className="bg-header-bg rounded-full p-0.5">
                   <Avatar src={avatarUrl} name={userName} size="sm" />
@@ -171,9 +190,9 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
                 <div className="p-4 border-b border-border bg-surface-hover/60">
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`rounded-full p-0.5 shrink-0 ${
-                      userRole === 'admin'
-                        ? 'bg-gradient-to-br from-emerald-400 to-green-600'
-                        : 'bg-gradient-to-br from-amber-400 to-orange-500'
+                      userRole === 'admin'    ? 'bg-gradient-to-br from-emerald-400 to-green-600'
+                      : userRole === 'teacher' ? 'bg-gradient-to-br from-violet-400 to-purple-600'
+                      : 'bg-gradient-to-br from-amber-400 to-orange-500'
                     }`}>
                       <div className="bg-surface rounded-full p-0.5">
                         <Avatar src={avatarUrl} name={userName} size="lg" />
@@ -183,8 +202,8 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
                       <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
                       <p className="text-xs text-muted truncate mt-0.5">{userEmail}</p>
                       <span className={`inline-block mt-1.5 text-[11px] px-2.5 py-0.5 rounded-full font-semibold
-                        ${userRole === 'admin'
-                          ? 'bg-primary/12 text-primary'
+                        ${userRole === 'admin'    ? 'bg-primary/12 text-primary'
+                          : userRole === 'teacher' ? 'bg-violet-500/12 text-violet-600 dark:text-violet-400'
                           : 'bg-accent/12 text-accent'}`}>
                         {roleLabel}
                       </span>

@@ -12,15 +12,16 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
+// adminOnly = admin only; staffOnly = admin + teacher (not viewer); viewerOnly = viewer only
 // ── Flat nav items ───────────────────────────────────────────────────────────
 const allNavItems = [
-  { href: '/dashboard',            label: 'Inicio',              icon: LayoutDashboard, adminOnly: false, viewerOnly: false },
-  { href: '/dashboard/animals',    label: 'Registrar Animal',    icon: PawPrint,        adminOnly: true,  viewerOnly: false },
-  { href: '/dashboard/vaccines',   label: 'Vacunas',             icon: Syringe,         adminOnly: true,  viewerOnly: false },
-  { href: '/dashboard/sembrios',   label: 'Sembríos',            icon: Sprout,          adminOnly: true,  viewerOnly: false },
-  { href: '/dashboard/reports',    label: 'Informes Operativos', icon: FileText,        adminOnly: false, viewerOnly: false },
-  { href: '/dashboard/events',     label: 'Eventos',             icon: CalendarDays,    adminOnly: false, viewerOnly: false },
-  { href: '/dashboard/calculators',label: 'Calculadoras',        icon: Calculator,      adminOnly: false, viewerOnly: false },
+  { href: '/dashboard',            label: 'Inicio',              icon: LayoutDashboard, adminOnly: false, staffOnly: false, viewerOnly: false },
+  { href: '/dashboard/animals',    label: 'Registrar Animal',    icon: PawPrint,        adminOnly: true,  staffOnly: false, viewerOnly: false },
+  { href: '/dashboard/vaccines',   label: 'Vacunas',             icon: Syringe,         adminOnly: false, staffOnly: true,  viewerOnly: false },
+  { href: '/dashboard/sembrios',   label: 'Sembríos',            icon: Sprout,          adminOnly: false, staffOnly: true,  viewerOnly: false },
+  { href: '/dashboard/reports',    label: 'Informes Operativos', icon: FileText,        adminOnly: false, staffOnly: false, viewerOnly: false },
+  { href: '/dashboard/events',     label: 'Eventos',             icon: CalendarDays,    adminOnly: false, staffOnly: false, viewerOnly: false },
+  { href: '/dashboard/calculators',label: 'Calculadoras',        icon: Calculator,      adminOnly: false, staffOnly: false, viewerOnly: false },
 ]
 
 // ── Inventory sub-items ──────────────────────────────────────────────────────
@@ -31,9 +32,9 @@ const inventoryItems = [
 
 // ── People sub-items ─────────────────────────────────────────────────────────
 const peopleItems = [
-  { href: '/dashboard/students',   label: 'Estudiantes',     icon: Users,    adminOnly: true,  viewerOnly: false },
-  { href: '/dashboard/activities', label: 'Actividades',     icon: ListTodo, adminOnly: true,  viewerOnly: false },
-  { href: '/dashboard/activities', label: 'Mis Actividades', icon: ListTodo, adminOnly: false, viewerOnly: true  },
+  { href: '/dashboard/students',   label: 'Estudiantes',     icon: Users,    adminOnly: false, staffOnly: true,  viewerOnly: false },
+  { href: '/dashboard/activities', label: 'Actividades',     icon: ListTodo, adminOnly: false, staffOnly: true,  viewerOnly: false },
+  { href: '/dashboard/activities', label: 'Mis Actividades', icon: ListTodo, adminOnly: false, staffOnly: false, viewerOnly: true  },
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -41,14 +42,17 @@ export function Sidebar({ userRole }: { userRole: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen]   = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const isAdmin = userRole === 'admin'
+  const isAdmin   = userRole === 'admin'
+  const isTeacher = userRole === 'teacher'
+  const isViewer  = userRole === 'viewer'
 
   const inventoryActive = inventoryItems.some(i => pathname.startsWith(i.href))
   const [invOpen, setInvOpen] = useState(inventoryActive)
 
   const visiblePeopleItems = peopleItems.filter(i => {
     if (i.adminOnly && !isAdmin) return false
-    if (i.viewerOnly && isAdmin) return false
+    if (i.staffOnly && isViewer) return false
+    if (i.viewerOnly && !isViewer) return false
     return true
   })
   const peopleActive = visiblePeopleItems.some(i => pathname.startsWith(i.href))
@@ -80,7 +84,8 @@ export function Sidebar({ userRole }: { userRole: string }) {
 
   const navItems = allNavItems.filter(item => {
     if (item.adminOnly && !isAdmin) return false
-    if (item.viewerOnly && isAdmin) return false
+    if (item.staffOnly && isViewer) return false
+    if (item.viewerOnly && !isViewer) return false
     return true
   })
   const visibleInventoryItems = inventoryItems.filter(i => !i.adminOnly || isAdmin)
@@ -309,7 +314,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
             <div className="pt-0.5">
               {isCollapsed ? (
                 <Link
-                  href={isAdmin ? '/dashboard/students' : '/dashboard/activities'}
+                  href={isViewer ? '/dashboard/activities' : '/dashboard/students'}
                   onClick={() => setMobileOpen(false)}
                   className={linkCls(peopleActive, true)}
                   title="Personas"
@@ -424,7 +429,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
           <div
             className={`rounded-2xl bg-white/8 border border-white/10 flex items-center
               ${isCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5 gap-2.5'}`}
-            title={isCollapsed ? `Rol: ${isAdmin ? 'Administrador' : 'Estudiante'}` : undefined}
+            title={isCollapsed ? `Rol: ${isAdmin ? 'Administrador' : isTeacher ? 'Docente' : 'Estudiante'}` : undefined}
           >
             <div className="w-8 h-8 rounded-xl bg-white/12 border border-white/15 flex items-center justify-center shrink-0">
               {isAdmin
@@ -436,7 +441,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
               <div className="whitespace-nowrap min-w-0">
                 <p className="text-[10px] text-sidebar-muted/70 leading-none mb-1 font-medium uppercase tracking-wide">Rol actual</p>
                 <p className="text-xs font-semibold text-sidebar-text capitalize flex items-center gap-1.5">
-                  {isAdmin ? 'Administrador' : 'Estudiante'}
+                  {isAdmin ? 'Administrador' : isTeacher ? 'Docente' : 'Estudiante'}
                   <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe inline-block pulse-dot" aria-hidden="true" />
                 </p>
               </div>

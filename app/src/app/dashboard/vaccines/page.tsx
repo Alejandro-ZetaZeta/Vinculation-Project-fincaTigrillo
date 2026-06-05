@@ -7,7 +7,7 @@ import { VaccineManager } from '@/components/vaccines/VaccineManager'
 export default async function VaccinesPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
-  if (user.role !== 'admin') redirect('/dashboard')
+  if (user.role === 'viewer') redirect('/dashboard')
 
   return (
     <div className="space-y-8" id="vaccines-page">
@@ -25,7 +25,7 @@ export default async function VaccinesPage() {
         <span className="text-foreground font-medium">Vacunas</span>
       </div>
 
-      <VaccineManager />
+      <VaccineManager userRole={user.role} />
     </div>
   )
 }

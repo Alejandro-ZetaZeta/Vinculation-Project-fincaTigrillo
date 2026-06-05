@@ -132,7 +132,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   const searchParams = useSearchParams()
 
   const [assignOpen, setAssignOpen] = useState(false)
-  const [assignAnimal, setAssignAnimal] = useState<{ id: string; typeId: string | null } | null>(null)
+  const [assignAnimal, setAssignAnimal] = useState<{ id: string; typeId: string | null; typeSlug: string | null } | null>(null)
 
   useEffect(() => {
     const shouldOpen = searchParams.get('assignVaccine') === '1'
@@ -142,7 +142,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     if (!exists) return
 
     setExpandedId(targetId)
-    setAssignAnimal({ id: targetId, typeId: exists.animal_types?.id ?? null })
+    setAssignAnimal({ id: targetId, typeId: exists.animal_types?.id ?? null, typeSlug: exists.animal_types?.slug ?? null })
     setAssignOpen(true)
     // Clear params to avoid reopening on refresh.
     router.replace('/dashboard/animals/list')
@@ -411,6 +411,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
         onClose={() => setAssignOpen(false)}
         defaultAnimalIds={assignAnimal ? [assignAnimal.id] : []}
         defaultTypeId={assignAnimal?.typeId ?? null}
+        animalTypeSlug={assignAnimal?.typeSlug ?? null}
         isAdmin={isAdmin}
         title="Programar vacunación"
       />
@@ -922,6 +923,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                           <AnimalVaccinationProfile
                             animalId={animal.id}
                             animalTypeId={animal.animal_types?.id ?? null}
+                            animalTypeSlug={animal.animal_types?.slug ?? null}
                             isAdmin={isAdmin}
                           />
                         </div>

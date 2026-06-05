@@ -39,8 +39,10 @@ export function AssignVaccineModal(props: {
   isAdmin: boolean
   title?: string
   defaultMode?: 'single' | 'group'
+  /** Slug of the animal type (used to detect poultry batches) */
+  animalTypeSlug?: string | null
 }) {
-  const { open, onClose, defaultAnimalIds, defaultTypeId, isAdmin, title, defaultMode } = props
+  const { open, onClose, defaultAnimalIds, defaultTypeId, isAdmin, title, defaultMode, animalTypeSlug } = props
 
   const [vaccines, setVaccines] = useState<VaccineCatalogItem[]>([])
   const [loadingVaccines, setLoadingVaccines] = useState(false)
@@ -59,13 +61,25 @@ export function AssignVaccineModal(props: {
   const [loadingEligible, setLoadingEligible] = useState(false)
   const [selectedAnimalIds, setSelectedAnimalIds] = useState<string[]>(defaultAnimalIds)
 
+  // Poultry batch: live bird count used for dose deduction and stock checks
+  const isPoultryBatch = animalTypeSlug === 'aves-de-corral' && defaultAnimalIds.length === 1
+  const [poultryLiveCount, setPoultryLiveCount] = useState<number | null>(null)
+  const [loadingPoultryCount, setLoadingPoultryCount] = useState(false)
+
   const selectedVaccine = useMemo(
     () => vaccines.find(v => v.id === vaccineId) || null,
     [vaccines, vaccineId]
   )
 
-  // How many animals will receive the vaccine
-  const animalCount = mode === 'single' ? defaultAnimalIds.length : selectedAnimalIds.length
+  // How many doses are actually needed:
+  // - poultry batch → live bird count (initial minus deaths)
+  // - everything else → number of selected animal rows
+  const effectiveDoseCount = isPoultryBatch
+    ? (poultryLiveCount ?? 0)
+    : (mode === 'single' ? defaultAnimalIds.length : selectedAnimalIds.length)
+
+  // For the stock-insufficient guard in the UI
+  const animalCount = effectiveDoseCount
   const stockInsufficient =
     selectedVaccine !== null &&
     typeof selectedVaccine.stock_doses === 'number' &&
@@ -76,7 +90,39 @@ export function AssignVaccineModal(props: {
     setError('')
     setSelectedAnimalIds(defaultAnimalIds)
     setMode(defaultMode ?? (defaultAnimalIds.length > 1 ? 'group' : 'single'))
+    setPoultryLiveCount(null)
   }, [open, defaultAnimalIds, defaultMode])
+
+  // Fetch live bird count for poultry batches
+  useEffect(() => {
+    if (!open || !isPoultryBatch || !defaultAnimalIds[0]) return
+    setLoadingPoultryCount(true)
+    const animalId = defaultAnimalIds[0]
+    fetch(`/api/reproductive-events?animal_id=${encodeURIComponent(animalId)}`)
+      .then(r => r.json())
+      .then((events: unknown) => {
+        // reproductive-events returns an array; count 'muerte' events
+        const list = Array.isArray(events) ? events as Array<{ event_type?: string; quantity?: unknown }> : []
+        const deaths = list.reduce((sum, ev) => {
+          if (ev?.event_type !== 'muerte') return sum
+          const q = typeof ev.quantity === 'number' ? ev.quantity : (parseInt(String(ev.quantity ?? ''), 10) || 0)
+          return sum + q
+        }, 0)
+        // Also fetch the initial batch count from the animal metadata
+        fetch(`/api/animals/${encodeURIComponent(animalId)}`)
+          .then(r2 => r2.json())
+          .then((animal: unknown) => {
+            const meta = (animal as { metadata?: Record<string, unknown> })?.metadata
+            const rawQty = meta?.cantidad
+            const initial = typeof rawQty === 'number' ? rawQty : (parseInt(String(rawQty ?? ''), 10) || 0)
+            setPoultryLiveCount(Math.max(0, initial - deaths))
+          })
+          .catch(() => setPoultryLiveCount(null))
+      })
+      .catch(() => setPoultryLiveCount(null))
+      .finally(() => setLoadingPoultryCount(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, isPoultryBatch, defaultAnimalIds[0]])
 
   useEffect(() => {
     if (!open) return
@@ -148,6 +194,15 @@ export function AssignVaccineModal(props: {
     const ids = mode === 'single' ? defaultAnimalIds : selectedAnimalIds
     if (!ids || ids.length === 0) { setError('Selecciona al menos un animal'); return }
 
+    if (isPoultryBatch && (poultryLiveCount === null || loadingPoultryCount)) {
+      setError('Espera a que se calcule el conteo de aves vivas')
+      return
+    }
+    if (isPoultryBatch && poultryLiveCount === 0) {
+      setError('No hay aves vivas en este lote')
+      return
+    }
+
     setSaving(true)
     try {
       const res = await fetch('/api/vaccinations/assign', {
@@ -159,6 +214,8 @@ export function AssignVaccineModal(props: {
           applied_at: appliedAt,
           next_dose_at: nextDoseAt || null,
           notes: notes || null,
+          // For poultry batches: deduct live bird count from stock, not 1
+          ...(isPoultryBatch && poultryLiveCount !== null ? { doses_count: poultryLiveCount } : {}),
         })
       })
       const json = await res.json()
@@ -205,7 +262,22 @@ export function AssignVaccineModal(props: {
               <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-700 dark:text-yellow-400 rounded-xl text-sm flex items-start gap-2" role="alert">
                 <span className="text-base leading-none mt-0.5" aria-hidden="true">⚠️</span>
                 <span>
-                  <strong>Stock insuficiente:</strong> {selectedVaccine.stock_doses} dosis disponible{selectedVaccine.stock_doses !== 1 ? 's' : ''}, se requieren {animalCount}.
+                  <strong>Stock insuficiente:</strong> {selectedVaccine.stock_doses} dosis disponible{selectedVaccine.stock_doses !== 1 ? 's' : ''},
+                  se requieren {animalCount}{isPoultryBatch ? ' (aves vivas en el lote)' : ''}.
+                </span>
+              </div>
+            )}
+
+            {/* Poultry batch live count info */}
+            {isPoultryBatch && (
+              <div className="p-3 bg-primary/8 border border-primary/20 text-primary rounded-xl text-sm flex items-start gap-2">
+                <span className="text-base leading-none mt-0.5" aria-hidden="true">🐔</span>
+                <span>
+                  {loadingPoultryCount
+                    ? 'Calculando aves vivas…'
+                    : poultryLiveCount === null
+                    ? 'No se pudo obtener el conteo de aves vivas'
+                    : <><strong>{poultryLiveCount} aves vivas</strong> en este lote — se descontarán <strong>{poultryLiveCount} dosis</strong> del inventario.</>}
                 </span>
               </div>
             )}

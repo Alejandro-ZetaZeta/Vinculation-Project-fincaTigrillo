@@ -63,7 +63,7 @@ function NotificationItem({ n, onDismiss }: { n: AppNotification; onDismiss: (id
 }
 
 export function NotificationBell({ userRole }: NotificationBellProps) {
-  if (userRole !== 'admin') return null
+  if (userRole === 'viewer') return null
   return <AdminNotificationBell />
 }
 

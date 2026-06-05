@@ -28,6 +28,15 @@ const CORS_HEADERS = {
 // Routes that don't require authentication
 const publicRoutes = ['/login', '/register', '/forgot-password']
 
+function isJwtExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return typeof payload.exp !== 'number' || payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const origin = request.headers.get('origin')
@@ -54,7 +63,8 @@ export function proxy(request: NextRequest) {
   }
 
   // --- Auth proxy ---
-  const accessToken = request.cookies.get('insforge_access_token')?.value
+  const rawToken = request.cookies.get('insforge_access_token')?.value
+  const accessToken = rawToken && !isJwtExpired(rawToken) ? rawToken : null
 
   // Allow static files and unmatched API routes through
   if (

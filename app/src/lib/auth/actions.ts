@@ -6,11 +6,13 @@ import { buildWelcomeEmail } from '@/lib/email/welcome'
 import { createGmailTransporter } from '@/lib/email/transporter'
 import { redirect } from 'next/navigation'
 
-// Registration is restricted to ULEAM institutional accounts only.
-const ALLOWED_EMAIL_DOMAIN = '@live.uleam.edu.ec'
-
-function isAllowedRegistrationEmail(email: string): boolean {
-  return email.toLowerCase().endsWith(ALLOWED_EMAIL_DOMAIN)
+// @live.uleam.edu.ec → student (viewer), @uleam.edu.ec → teacher
+// The live-subdomain check must come first to avoid matching the parent domain.
+function getRoleForEmail(email: string): 'viewer' | 'teacher' | null {
+  const lower = email.toLowerCase()
+  if (lower.endsWith('@live.uleam.edu.ec')) return 'viewer'
+  if (lower.endsWith('@uleam.edu.ec')) return 'teacher'
+  return null
 }
 
 export async function signIn(formData: FormData) {
@@ -56,11 +58,11 @@ export async function signUp(formData: FormData) {
   const career = String(formData.get('career') ?? '').trim() || null
   const semester = String(formData.get('semester') ?? '').trim() || null
 
-  if (!isAllowedRegistrationEmail(email)) {
+  if (!getRoleForEmail(email)) {
     return {
       success: false,
       requireVerification: false,
-      error: `Solo se permite el registro con correos institucionales ${ALLOWED_EMAIL_DOMAIN}.`,
+      error: 'Solo se permite el registro con correos institucionales @live.uleam.edu.ec (estudiantes) o @uleam.edu.ec (docentes).',
     }
   }
 
@@ -98,7 +100,7 @@ export async function signUp(formData: FormData) {
       const { error: profileError } = await createInsForgeServerClient(data.accessToken)
         .database.from('user_profiles').insert([{
           user_id: data.user?.id,
-          role: 'viewer',
+          role: getRoleForEmail(email) ?? 'viewer',
           full_name: name,
           semester,
           career,
@@ -152,7 +154,7 @@ export async function verifyEmailAndFinish(params: {
     const { error: profileError } = await createInsForgeServerClient(data.accessToken)
       .database.from('user_profiles').insert([{
         user_id: data.user?.id,
-        role: 'viewer',
+        role: getRoleForEmail(params.email) ?? 'viewer',
         full_name: params.name,
         semester: params.semester,
         career: params.career,
@@ -269,10 +271,17 @@ export async function getCurrentUser() {
 
   const insforge = createInsForgeServerClient(accessToken)
   const { data, error } = await insforge.auth.getCurrentUser()
+
   if (error || !data?.user) {
-    // Token cookie exists but API rejected it — clear stale session so
-    // the proxy doesn't redirect /login and /register back to /dashboard.
-    await clearAuthCookies()
+    // Only clear cookies when the backend definitively rejects the token
+    // (401 Unauthorized / 403 Forbidden). Any other failure (network error,
+    // 5xx, race condition right after login) is treated as transient — we
+    // return null without wiping the cookies so the next request can retry.
+    const statusCode = (error as { statusCode?: number } | null)?.statusCode
+    const isDefinitiveAuthFailure = statusCode === 401 || statusCode === 403
+    if (isDefinitiveAuthFailure) {
+      await clearAuthCookies()
+    }
     return null
   }
 

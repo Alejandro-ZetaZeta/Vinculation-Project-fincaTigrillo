@@ -1,25 +1,48 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { signOut } from '@/lib/auth/actions'
 
-// Silently refreshes the access token when the user interacts with the page.
-// Throttled to one call per 4 minutes to stay well within the 15-minute expiry.
 const THROTTLE_MS = 4 * 60 * 1000
+const INACTIVITY_LIMIT_MS = 30 * 60 * 1000
 
 export function SessionKeepAlive() {
-  const lastRef = useRef(0)
+  const lastRefreshRef = useRef(0)
+  const lastActivityRef = useRef(Date.now())
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    function scheduleInactivityCheck() {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => {
+        const idle = Date.now() - lastActivityRef.current
+        if (idle >= INACTIVITY_LIMIT_MS) {
+          signOut()
+        } else {
+          // Activity happened after timer was set — reschedule for remaining time
+          timerRef.current = setTimeout(() => signOut(), INACTIVITY_LIMIT_MS - idle)
+        }
+      }, INACTIVITY_LIMIT_MS)
+    }
+
     function handleActivity() {
+      lastActivityRef.current = Date.now()
+      scheduleInactivityCheck()
+
       const now = Date.now()
-      if (now - lastRef.current < THROTTLE_MS) return
-      lastRef.current = now
+      if (now - lastRefreshRef.current < THROTTLE_MS) return
+      lastRefreshRef.current = now
       fetch('/api/auth/refresh', { method: 'POST' }).catch(() => {})
     }
 
-    const events = ['click', 'scroll', 'keydown'] as const
+    scheduleInactivityCheck()
+
+    const events = ['click', 'scroll', 'keydown', 'mousemove', 'touchstart'] as const
     events.forEach(e => window.addEventListener(e, handleActivity, { passive: true }))
-    return () => events.forEach(e => window.removeEventListener(e, handleActivity))
+    return () => {
+      events.forEach(e => window.removeEventListener(e, handleActivity))
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
   }, [])
 
   return null
