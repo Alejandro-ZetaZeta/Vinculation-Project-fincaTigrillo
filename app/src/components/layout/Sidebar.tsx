@@ -152,6 +152,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
           mobileOpen ? 'translate-x-0 is-open' : '-translate-x-full',
           'md:translate-x-0',
         ].join(' ')}
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         {/* ── Brand header ────────────────────────────────────────── */}
         <div className="px-4 h-16 border-b border-sidebar-border/60 flex shrink-0 items-center justify-between">
