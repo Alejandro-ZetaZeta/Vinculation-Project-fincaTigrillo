@@ -51,6 +51,8 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
               "connect-src 'self' https://*.insforge.app",
+              "manifest-src 'self'",
+              "worker-src 'self'",
               "frame-ancestors 'none'",
             ].join("; "),
           },

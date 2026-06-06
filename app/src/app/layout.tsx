@@ -1,7 +1,8 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Syne } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { RegisterSW } from '@/components/pwa/RegisterSW'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -20,10 +21,24 @@ const syne = Syne({
 export const metadata: Metadata = {
   title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
   description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
+  manifest: '/manifest.webmanifest',
+  applicationName: 'Finca Tigrillo',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Tigrillo',
+  },
   icons: {
     icon: '/faviconOficial.svg',
     apple: '/faviconOficial.svg',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0f3d2e',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -50,6 +65,7 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
         </ThemeProvider>
+        <RegisterSW />
       </body>
     </html>
   )
