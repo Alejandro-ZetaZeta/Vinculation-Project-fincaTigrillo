@@ -31,7 +31,7 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
         <Sidebar userRole={user.role} />
       </div>
 
-      <div id="main-content-wrapper" className="flex-1 flex flex-col min-h-screen min-w-0 md:ml-64 print:ml-0 print:block print:min-h-0 print:h-auto transition-all duration-300">
+      <div id="main-content-wrapper" className="flex-1 flex flex-col min-h-screen min-w-0 md:ml-[72px] print:ml-0 print:block print:min-h-0 print:h-auto transition-all duration-300">
         <div className="print:hidden">
           <Header userName={user.fullName} userRole={user.role} userEmail={user.email} userAvatarUrl={user.avatarUrl} />
         </div>
@@ -60,7 +60,7 @@ function DashboardSkeleton() {
   return (
     <div className="min-h-screen flex bg-background animate-pulse">
       {/* Sidebar placeholder */}
-      <div className="hidden md:block w-64 bg-surface border-r border-border shrink-0" />
+      <div className="hidden md:block w-[72px] bg-surface border-r border-border shrink-0" />
       {/* Content placeholder */}
       <div className="flex-1 flex flex-col">
         <div className="h-16 bg-surface border-b border-border" />

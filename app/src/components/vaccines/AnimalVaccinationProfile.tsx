@@ -38,10 +38,11 @@ function formatDate(dateStr: string | null | undefined): string {
 export function AnimalVaccinationProfile(props: {
   animalId: string
   animalTypeId?: string | null
+  animalTypeSlug?: string | null
   isAdmin: boolean
   defaultOpenAssign?: boolean
 }) {
-  const { animalId, animalTypeId, isAdmin, defaultOpenAssign } = props
+  const { animalId, animalTypeId, animalTypeSlug, isAdmin, defaultOpenAssign } = props
   const [rows, setRows] = useState<VaccinationRow[]>([])
   const [loading, setLoading] = useState(true)
   const [assignOpen, setAssignOpen] = useState(!!defaultOpenAssign)
@@ -132,6 +133,7 @@ export function AnimalVaccinationProfile(props: {
         onClose={() => setAssignOpen(false)}
         defaultAnimalIds={[animalId]}
         defaultTypeId={animalTypeId ?? null}
+        animalTypeSlug={animalTypeSlug ?? null}
         isAdmin={isAdmin}
         title="Registrar Vacuna"
       />

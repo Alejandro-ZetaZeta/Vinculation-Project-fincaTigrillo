@@ -9,17 +9,19 @@ export default async function ActivitiesPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
 
-  const isAdmin = user.role === 'admin'
+  const isAdmin   = user.role === 'admin'
+  const isTeacher = user.role === 'teacher'
+  const isStaff   = isAdmin || isTeacher
 
   return (
     <div className="space-y-8" id="activities-page">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
           <ListTodo className="w-7 h-7 text-primary" />
-          {isAdmin ? 'Gestión de Actividades' : 'Mis Actividades'}
+          {isStaff ? 'Gestión de Actividades' : 'Mis Actividades'}
         </h1>
         <p className="text-muted mt-1">
-          {isAdmin
+          {isStaff
             ? 'Crea y administra actividades para los estudiantes'
             : 'Arrastra tus actividades entre columnas para actualizar tu progreso'}
         </p>
@@ -29,11 +31,11 @@ export default async function ActivitiesPage() {
       <div className="flex items-center gap-2 text-sm text-muted">
         <Link href="/dashboard" className="hover:text-primary">Inicio</Link>
         <span>/</span>
-        <span className="text-foreground font-medium">{isAdmin ? 'Actividades' : 'Mis Actividades'}</span>
+        <span className="text-foreground font-medium">{isStaff ? 'Actividades' : 'Mis Actividades'}</span>
       </div>
 
-      {isAdmin ? (
-        <AdminActivitiesList />
+      {isStaff ? (
+        <AdminActivitiesList userRole={user.role} userId={user.id} />
       ) : (
         <StudentKanban userId={user.id} />
       )}

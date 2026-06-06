@@ -1,0 +1,20 @@
+{
+  "name": "finca-tigrillo-android-shell",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capacitor native shell that wraps the deployed Finca Tigrillo PWA as a signed Android APK.",
+  "scripts": {
+    "sync": "cap sync android",
+    "open": "cap open android",
+    "add:android": "cap add android",
+    "build:debug": "cd android && ./gradlew assembleDebug",
+    "build:release": "cd android && ./gradlew assembleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/core": "^8.4.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.0"
+  }
+}

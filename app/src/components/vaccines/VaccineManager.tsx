@@ -36,7 +36,8 @@ const REPRO_STATE_OPTIONS: { value: string; label: string }[] = [
   { value: 'seca', label: 'Seca' },
 ]
 
-export function VaccineManager() {
+export function VaccineManager({ userRole }: { userRole?: string }) {
+  const isAdmin = userRole === 'admin'
   const [vaccines, setVaccines] = useState<Vaccine[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -249,20 +250,24 @@ export function VaccineManager() {
           <p className="text-sm text-muted">{vaccines.length} vacuna{vaccines.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setAssignOpen(true)}
-            className="px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-surface-hover"
-            type="button"
-          >
-            Asignar por grupo
-          </button>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark"
-            type="button"
-          >
-            <Plus className="w-4 h-4" aria-hidden="true" /> Nueva vacuna
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setAssignOpen(true)}
+              className="px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-surface-hover"
+              type="button"
+            >
+              Asignar por grupo
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark"
+              type="button"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" /> Nueva vacuna
+            </button>
+          )}
         </div>
       </div>
 
@@ -270,7 +275,7 @@ export function VaccineManager() {
         <div className="p-3 bg-danger/10 border border-danger/20 text-danger rounded-xl text-sm">{error}</div>
       )}
 
-      {showForm && (
+      {isAdmin && showForm && (
         <form onSubmit={createVaccine} className="bg-surface border border-border rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-foreground">Nueva vacuna</h3>
@@ -438,7 +443,7 @@ export function VaccineManager() {
         </form>
       )}
 
-      {editing && (
+      {isAdmin && editing && (
         <form onSubmit={updateVaccine} className="bg-surface border border-border rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-foreground">Editar vacuna</h3>
@@ -728,7 +733,7 @@ export function VaccineManager() {
                   </div>
 
                   {/* Inline stock replenishment form */}
-                  {stockOpen === v.id && (
+                  {isAdmin && stockOpen === v.id && (
                     <div className="mt-3 flex items-center gap-2">
                       <input
                         type="number"
@@ -763,6 +768,7 @@ export function VaccineManager() {
                   )}
                 </div>
 
+                {isAdmin && (
                 <div className="flex flex-col items-end gap-2">
                   {/* + Stock button */}
                   <button
@@ -810,6 +816,7 @@ export function VaccineManager() {
                     </button>
                   )}
                 </div>
+                )}
               </div>
             </div>
           ))}

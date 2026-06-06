@@ -12,13 +12,16 @@ interface Activity {
   target_semester: string
   due_date: string | null
   created_at: string
+  created_by: string
+  created_by_name: string | null
   total: number
   todo: number
   in_progress: number
   done: number
 }
 
-export function AdminActivitiesList() {
+export function AdminActivitiesList({ userRole, userId }: { userRole?: string; userId?: string }) {
+  const isAdmin = userRole === 'admin'
   const [activities, setActivities] = useState<Activity[]>([])
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -103,6 +106,11 @@ export function AdminActivitiesList() {
                         Fecha límite: {formatDate(activity.due_date)}
                       </span>
                     )}
+                    {activity.created_by_name && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-muted/10 text-muted font-medium">
+                        Asignada por: {activity.created_by_name}
+                      </span>
+                    )}
                   </div>
 
                   {/* Progress */}
@@ -129,22 +137,25 @@ export function AdminActivitiesList() {
 
                 <div className="flex flex-col items-end gap-2">
                   <span className="text-xs text-muted">{formatDate(activity.created_at)}</span>
-                  {confirmDelete === activity.id ? (
-                    <div className="flex gap-1">
-                      <button onClick={() => handleDelete(activity.id)} disabled={deleting}
-                        className="px-2 py-1 text-xs rounded-lg bg-danger text-white hover:bg-danger/80 disabled:opacity-50">
-                        {deleting ? '...' : 'Sí'}
+                  {(isAdmin || activity.created_by === userId) && (
+                    confirmDelete === activity.id ? (
+                      <div className="flex gap-1">
+                        <button onClick={() => handleDelete(activity.id)} disabled={deleting}
+                          className="px-2 py-1 text-xs rounded-lg bg-danger text-white hover:bg-danger/80 disabled:opacity-50">
+                          {deleting ? '...' : 'Sí'}
+                        </button>
+                        <button onClick={() => setConfirmDelete(null)}
+                          className="px-2 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover">
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setConfirmDelete(activity.id)}
+                        aria-label={`Eliminar actividad: ${activity.title}`}
+                        className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
                       </button>
-                      <button onClick={() => setConfirmDelete(null)}
-                        className="px-2 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover">
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={() => setConfirmDelete(activity.id)}
-                      className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    )
                   )}
                 </div>
               </div>
