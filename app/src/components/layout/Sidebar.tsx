@@ -10,7 +10,7 @@ import {
   Wrench, ChevronDown, Package, Sprout,
   ShieldCheck, GraduationCap,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // adminOnly = admin only; staffOnly = admin + teacher (not viewer); viewerOnly = viewer only
 // ── Flat nav items ───────────────────────────────────────────────────────────
@@ -41,7 +41,10 @@ const peopleItems = [
 export function Sidebar({ userRole }: { userRole: string }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen]   = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true)
+  const [isLargeScreen, setIsLargeScreen] = useState(false)
+  const isLargeScreenRef = useRef(false)
+  const effectivelyCollapsed = isCollapsed && !mobileOpen
   const isAdmin   = userRole === 'admin'
   const isTeacher = userRole === 'teacher'
   const isViewer  = userRole === 'viewer'
@@ -68,19 +71,33 @@ export function Sidebar({ userRole }: { userRole: string }) {
     return () => window.removeEventListener('sidebar:open', handler)
   }, [])
 
-  // Sync main-content margin on desktop sidebar collapse
+  // Track lg breakpoint (1024px) to separate tablet vs laptop behavior
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)')
+    isLargeScreenRef.current = mql.matches
+    setIsLargeScreen(mql.matches)
+    const handler = (e: MediaQueryListEvent) => {
+      isLargeScreenRef.current = e.matches
+      setIsLargeScreen(e.matches)
+    }
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
+  // Tablet (md→lg): auto-collapse on nav. Laptop (lg+): stays expanded.
+  // Uses ref so isLargeScreen changes never spuriously fire this effect.
+  useEffect(() => {
+    if (!isLargeScreenRef.current) setIsCollapsed(true)
+    setMobileOpen(false)
+  }, [pathname])
+
+  // Laptop only: push content via inline style (beats CSS class specificity).
+  // Tablet/mobile: sidebar overlays — inline style stays clear, CSS handles margin.
   useEffect(() => {
     const wrapper = document.getElementById('main-content-wrapper')
-    if (wrapper) {
-      if (isCollapsed) {
-        wrapper.classList.remove('md:ml-64')
-        wrapper.classList.add('md:ml-[72px]')
-      } else {
-        wrapper.classList.remove('md:ml-[72px]')
-        wrapper.classList.add('md:ml-64')
-      }
-    }
-  }, [isCollapsed])
+    if (!wrapper) return
+    wrapper.style.marginLeft = (isLargeScreen && !isCollapsed) ? '16rem' : ''
+  }, [isCollapsed, isLargeScreen])
 
   const navItems = allNavItems.filter(item => {
     if (item.adminOnly && !isAdmin) return false
@@ -109,14 +126,16 @@ export function Sidebar({ userRole }: { userRole: string }) {
 
   return (
     <>
-      {/* ── Mobile overlay ──────────────────────────────────────────── */}
+      {/* ── Mobile + tablet overlay ─────────────────────────────────── */}
       <div
-        onClick={() => setMobileOpen(false)}
+        onClick={() => { setMobileOpen(false); setIsCollapsed(true) }}
         aria-hidden="true"
         className={[
-          'fixed inset-0 z-30 md:hidden backdrop-blur-sm',
+          'fixed inset-0 z-30 lg:hidden backdrop-blur-sm',
           'bg-black/60 transition-opacity duration-300',
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
+          (mobileOpen || (!isCollapsed && !isLargeScreen))
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none',
         ].join(' ')}
       />
 
@@ -127,7 +146,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
         aria-label="Menú principal de la aplicación"
         className={[
           'sidebar-panel',
-          'fixed inset-y-0 left-0 z-40 flex flex-col',
+          'fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden',
           'transition-transform duration-300 ease-in-out',
           mobileOpen ? 'w-64' : isCollapsed ? 'w-[72px]' : 'w-64',
           mobileOpen ? 'translate-x-0 is-open' : '-translate-x-full',
@@ -224,15 +243,15 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 aria-current={isActive ? 'page' : undefined}
-                className={linkCls(isActive, isCollapsed)}
-                title={isCollapsed ? item.label : undefined}
+                className={linkCls(isActive, effectivelyCollapsed)}
+                title={effectivelyCollapsed ? item.label : undefined}
               >
                 <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                {!isCollapsed && <span className="whitespace-nowrap flex-1">{item.label}</span>}
-                {isActive && !isCollapsed && (
+                {!effectivelyCollapsed && <span className="whitespace-nowrap flex-1">{item.label}</span>}
+                {isActive && !effectivelyCollapsed && (
                   <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
                 )}
-                {isActive && isCollapsed && (
+                {isActive && effectivelyCollapsed && (
                   <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                 )}
               </Link>
@@ -242,7 +261,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
           {/* ── Collapsible Inventario ───────────────────────────── */}
           {visibleInventoryItems.length > 0 && (
             <div className="pt-0.5">
-              {isCollapsed ? (
+              {effectivelyCollapsed ? (
                 <Link
                   href="/dashboard/animals/list"
                   onClick={() => setMobileOpen(false)}
@@ -312,7 +331,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
           {/* ── Collapsible Personas (Students + Activities) ─────── */}
           {visiblePeopleItems.length > 0 && (
             <div className="pt-0.5">
-              {isCollapsed ? (
+              {effectivelyCollapsed ? (
                 <Link
                   href={isViewer ? '/dashboard/activities' : '/dashboard/students'}
                   onClick={() => setMobileOpen(false)}
@@ -396,15 +415,15 @@ export function Sidebar({ userRole }: { userRole: string }) {
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={linkCls(isActive, isCollapsed)}
-                  title={isCollapsed ? item.label : undefined}
+                  className={linkCls(isActive, effectivelyCollapsed)}
+                  title={effectivelyCollapsed ? item.label : undefined}
                 >
                   <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                  {!isCollapsed && <span className="whitespace-nowrap flex-1">{item.label}</span>}
-                  {isActive && !isCollapsed && (
+                  {!effectivelyCollapsed && <span className="whitespace-nowrap flex-1">{item.label}</span>}
+                  {isActive && !effectivelyCollapsed && (
                     <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
                   )}
-                  {isActive && isCollapsed && (
+                  {isActive && effectivelyCollapsed && (
                     <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                   )}
                 </Link>
@@ -414,7 +433,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
         </nav>
 
         {/* ── Pasture image — above role footer ─────────────── */}
-        {!isCollapsed && (
+        {!effectivelyCollapsed && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src="/pastoSidepanel.png"
@@ -425,11 +444,11 @@ export function Sidebar({ userRole }: { userRole: string }) {
         )}
 
         {/* ── Role footer ──────────────────────────────────────────── */}
-        <div className={`px-3 py-3 border-t border-sidebar-border/50 ${isCollapsed ? 'flex justify-center' : ''}`}>
+        <div className={`px-3 py-3 border-t border-sidebar-border/50 ${effectivelyCollapsed ? 'flex justify-center' : ''}`}>
           <div
             className={`rounded-2xl bg-white/8 border border-white/10 flex items-center
-              ${isCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5 gap-2.5'}`}
-            title={isCollapsed ? `Rol: ${isAdmin ? 'Administrador' : isTeacher ? 'Docente' : 'Estudiante'}` : undefined}
+              ${effectivelyCollapsed ? 'p-2 justify-center' : 'px-3 py-2.5 gap-2.5'}`}
+            title={effectivelyCollapsed ? `Rol: ${isAdmin ? 'Administrador' : isTeacher ? 'Docente' : 'Estudiante'}` : undefined}
           >
             <div className="w-8 h-8 rounded-xl bg-white/12 border border-white/15 flex items-center justify-center shrink-0">
               {isAdmin
@@ -437,7 +456,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 : <GraduationCap className="w-4 h-4 text-sidebar-stripe" aria-hidden="true" />
               }
             </div>
-            {!isCollapsed && (
+            {!effectivelyCollapsed && (
               <div className="whitespace-nowrap min-w-0">
                 <p className="text-[10px] text-sidebar-muted/70 leading-none mb-1 font-medium uppercase tracking-wide">Rol actual</p>
                 <p className="text-xs font-semibold text-sidebar-text capitalize flex items-center gap-1.5">

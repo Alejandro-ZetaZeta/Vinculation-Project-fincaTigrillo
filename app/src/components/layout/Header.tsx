@@ -70,7 +70,7 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
       ───────────────────────────────────────────────────────────── */}
       <header
         id="app-header"
-        className="sticky top-0 z-20 h-16 flex items-center justify-between pl-0 pr-4 md:pr-6 lg:pr-8
+        className="sticky top-0 z-20 h-16 flex items-center justify-between pl-2 pr-4 md:pl-0 md:pr-6 lg:pr-8
                    bg-header-bg border-b border-border
                    shadow-[0_1px_0_rgba(0,0,0,0.06),0_2px_12px_rgba(22,163,74,0.04)]"
       >

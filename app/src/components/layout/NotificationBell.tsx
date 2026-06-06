@@ -53,7 +53,7 @@ function NotificationItem({ n, onDismiss }: { n: AppNotification; onDismiss: (id
       </div>
       <button
         onClick={() => onDismiss(n.id)}
-        className="opacity-0 group-hover:opacity-100 mt-0.5 w-5 h-5 rounded-md flex items-center justify-center text-muted hover:text-foreground hover:bg-border transition-all shrink-0"
+        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 mt-0.5 w-5 h-5 rounded-md flex items-center justify-center text-muted hover:text-foreground hover:bg-border transition-all shrink-0"
         aria-label="Descartar notificación"
       >
         <X className="w-3 h-3" />
@@ -115,7 +115,7 @@ function AdminNotificationBell() {
         <div
           role="dialog"
           aria-label="Panel de notificaciones"
-          className="absolute right-0 top-full mt-2 w-80 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-50"
+          className="fixed top-[4.5rem] inset-x-2 sm:left-auto sm:right-2 sm:w-80 md:absolute md:inset-x-auto md:right-0 md:top-full md:mt-2 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-50"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-hover/30">
