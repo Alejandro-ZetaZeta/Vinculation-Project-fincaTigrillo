@@ -7,7 +7,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 // Replace `FINCA_TIGRILLO_PROD_URL` with the production domain before building
 // (e.g. https://tigrillo.example.com). The placeholder fails fast at build time
 // if forgotten.
-const PROD_URL = process.env.FINCA_TIGRILLO_PROD_URL ?? 'https://REPLACE_ME.example.com'
+const PROD_URL = process.env.FINCA_TIGRILLO_PROD_URL ?? 'https://fincatigrillo.vercel.app'
 
 const config: CapacitorConfig = {
   appId: 'com.fincatigrillo.app',
@@ -20,6 +20,15 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: false,
+  },
+  plugins: {
+    StatusBar: {
+      // WebView sits below the status bar — no edge-to-edge.
+      // This lets Android's per-app "automatic" notch setting work correctly.
+      overlaysWebView: false,
+      backgroundColor: '#0f3d2e',
+      style: 'LIGHT',
+    },
   },
 }
 

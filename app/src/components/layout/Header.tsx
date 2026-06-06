@@ -70,10 +70,12 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
       ───────────────────────────────────────────────────────────── */}
       <header
         id="app-header"
-        className="sticky top-0 z-20 h-16 flex items-center justify-between pl-2 pr-4 md:pl-0 md:pr-6 lg:pr-8
+        className="sticky top-0 z-20 flex flex-col
                    bg-header-bg border-b border-border
                    shadow-[0_1px_0_rgba(0,0,0,0.06),0_2px_12px_rgba(22,163,74,0.04)]"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
+      <div className="h-16 flex items-center justify-between pl-2 pr-4 md:pl-0 md:pr-6 lg:pr-8">
         {/* Left — mobile sidebar open button */}
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('sidebar:open'))}
@@ -256,6 +258,7 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
             )}
           </div>
         </div>
+      </div>
       </header>
 
       {/* Avatar upload modal */}
