@@ -1060,11 +1060,27 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
       const _todayLocal = `${_dn.getFullYear()}-${String(_dn.getMonth() + 1).padStart(2, '0')}-${String(_dn.getDate()).padStart(2, '0')}`
       const date = createdAt ? new Date(createdAt).toISOString().split('T')[0] : _todayLocal
       const ext = fileUrl.endsWith('.png') ? 'png' : 'jpg'
+      const filename = `Tigrillo invoice ${date}.${ext}`
+
+      // Android WebView ignores detached-anchor clicks and doesn't route blob URLs
+      // through the download manager. Web Share API opens the native share sheet
+      // (Save to Downloads, WhatsApp, etc.) and works reliably on Android.
+      if (navigator.canShare) {
+        const file = new File([blob], filename, { type: blob.type })
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: filename })
+          return
+        }
+      }
+
+      // Desktop fallback: anchor must be in DOM for the click to register.
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `Tigrillo invoice ${date}.${ext}`
+      a.download = filename
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch {
       setError('Error al descargar la factura')
