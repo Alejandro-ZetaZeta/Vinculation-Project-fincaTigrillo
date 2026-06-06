@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { Filesystem, Directory } from '@capacitor/filesystem'
 import {
   CalendarDays, HeartPulse, AlertTriangle, Droplets,
   Plus, Trash2, Calendar, Loader2, ChevronUp, Lock,
@@ -1062,11 +1064,10 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
       const ext = fileUrl.endsWith('.png') ? 'png' : 'jpg'
       const filename = `Tigrillo invoice ${date}.${ext}`
 
-      // Capacitor Android: blob downloads are sandboxed inside the WebView and never
-      // reach the system Downloads folder. Use the Filesystem plugin bridge directly
-      // (injected into every page by the native shell) to write the file natively.
-      const cap = (window as any).Capacitor
-      if (cap?.isNativePlatform?.()) {
+      // Capacitor Android: use typed Filesystem API (raw window.Capacitor.Plugins
+      // bridge changed in v8 and is unreliable). Try public Downloads first;
+      // fall back to app-specific external storage if scoped-storage blocks it.
+      if (Capacitor.isNativePlatform()) {
         let base64: string
         try {
           base64 = await new Promise<string>((resolve, reject) => {
@@ -1076,21 +1077,32 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
             reader.readAsDataURL(blob)
           })
         } catch {
-          setError('Error al leer el archivo descargado'); return
+          setError('Error al leer el archivo'); return
         }
         try {
-          // Directory.ExternalStorage = public external storage root on Android.
-          // Path 'Download/<file>' writes into the system Downloads folder.
-          await cap.Plugins.Filesystem.writeFile({
+          await Filesystem.writeFile({
             path: `Download/${filename}`,
             data: base64,
-            directory: 'EXTERNAL_STORAGE',
+            directory: Directory.ExternalStorage,
             recursive: true,
           })
           setError(`✅ Guardada en Descargas: ${filename}`)
           setTimeout(() => setError(''), 4000)
-        } catch (fsErr: any) {
-          setError(`Error al guardar archivo: ${fsErr?.message ?? 'permiso denegado'}`)
+        } catch {
+          // Android 10+ scoped storage may block ExternalStorage; fall back to
+          // app-specific external dir (accessible via Files → Android → data → com.fincatigrillo.app)
+          try {
+            await Filesystem.writeFile({
+              path: filename,
+              data: base64,
+              directory: Directory.External,
+              recursive: true,
+            })
+            setError(`✅ Guardada en almacenamiento de la app`)
+            setTimeout(() => setError(''), 4000)
+          } catch (fsErr: any) {
+            setError(`Error al guardar: ${fsErr?.message ?? 'permiso denegado'}`)
+          }
         }
         return
       }

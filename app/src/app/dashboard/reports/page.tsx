@@ -1,6 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core'
+import { Filesystem, Directory } from '@capacitor/filesystem'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { Chart, registerables } from 'chart.js';
 import {
   Printer, FileText, Calendar, Loader2, Info, PieChart,
@@ -70,6 +74,7 @@ export default function ReportsPage() {
   const [aiMeta, setAiMeta] = useState<AIMeta | null>(null);
   const [userQuestion, setUserQuestion] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [pdfMsg, setPdfMsg] = useState('');
 
   const pieChartRef = useRef<HTMLCanvasElement>(null);
   const barChartRef = useRef<HTMLCanvasElement>(null);
@@ -346,6 +351,222 @@ export default function ReportsPage() {
     'Analiza la eficiencia operativa de la finca',
   ];
 
+  async function generateAndDownloadPDF() {
+    setPdfMsg('Generando PDF...')
+    try {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pageW = doc.internal.pageSize.getWidth()
+      const margin = 14
+      const dateStr = new Date().toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' })
+      let y = 0
+
+      // ── Header bar ──────────────────────────────────────────────────────
+      doc.setFillColor(15, 61, 46)
+      doc.rect(0, 0, pageW, 28, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Finca Tigrillo', margin, 12)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.text('Informe Operativo Ganadero', margin, 20)
+      doc.text(dateStr, pageW - margin, 20, { align: 'right' })
+      y = 36
+
+      // Filters applied
+      const activeFilters: string[] = []
+      if (filterModule !== 'todos') activeFilters.push(`Módulo: ${filterModule}`)
+      if (filterStatus !== 'todos') activeFilters.push(`Estado: ${filterStatus}`)
+      if (filterSex !== 'todos') activeFilters.push(`Sexo: ${filterSex}`)
+      if (filterPeriod !== 'all') activeFilters.push(`Período: ${filterPeriod}`)
+      if (activeFilters.length > 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text(`Filtros activos: ${activeFilters.join(' · ')}`, margin, y)
+        y += 6
+      }
+
+      // ── Resumen general ──────────────────────────────────────────────────
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(15, 61, 46)
+      doc.text('Resumen General', margin, y)
+      y += 2
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Métrica', 'Valor']],
+        body: [
+          ['Total de animales registrados', summaryData.length.toString()],
+          ['Animales activos', `${activeCount} (${operativity})`],
+          ['Machos / Hembras / Mixtos', `${machosCount} / ${hembrasCount} / ${mixtosCount}`],
+          ['Tasa de mortalidad', mortalityRate],
+          ['Hembras preñadas', pregnantCount.toString()],
+          ['Edad promedio', avgAgeText],
+          ['Peso total del hato', weightText],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [15, 61, 46] as [number,number,number], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+        bodyStyles: { fontSize: 9 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 100 } },
+        margin: { left: margin, right: margin },
+      })
+      y = (doc as any).lastAutoTable.finalY + 8
+
+      // ── Distribución por categoría ───────────────────────────────────────
+      const distribution: Record<string, number> = {}
+      summaryData.forEach(a => {
+        const label = a.animal_types?.name || a.category_name || a.type || 'Otros'
+        distribution[label] = (distribution[label] || 0) + 1
+      })
+
+      if (Object.keys(distribution).length > 0) {
+        if (y > 230) { doc.addPage(); y = 20 }
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(15, 61, 46)
+        doc.text('Distribución por Categoría Animal', margin, y)
+        y += 2
+        autoTable(doc, {
+          startY: y,
+          head: [['Categoría', 'Cantidad', '% del total']],
+          body: Object.entries(distribution).sort((a, b) => b[1] - a[1]).map(([k, v]) => [
+            k, v.toString(), summaryData.length > 0 ? `${((v / summaryData.length) * 100).toFixed(1)}%` : '0%',
+          ]),
+          theme: 'striped',
+          headStyles: { fillColor: [15, 61, 46] as [number,number,number], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 9 },
+          margin: { left: margin, right: margin },
+        })
+        y = (doc as any).lastAutoTable.finalY + 8
+      }
+
+      // ── Sexo ─────────────────────────────────────────────────────────────
+      const sinDefinirCount = summaryData.length - machosCount - hembrasCount - mixtosCount
+      const sexRows = ([
+        ['Machos', machosCount],
+        ['Hembras', hembrasCount],
+        ['Mixtos', mixtosCount],
+        ['Sin definir', sinDefinirCount],
+      ] as [string, number][]).filter(([, v]) => v > 0)
+
+      if (sexRows.length > 0) {
+        if (y > 230) { doc.addPage(); y = 20 }
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(15, 61, 46)
+        doc.text('Distribución por Sexo', margin, y)
+        y += 2
+        autoTable(doc, {
+          startY: y,
+          head: [['Sexo', 'Cantidad', '%']],
+          body: sexRows.map(([label, count]) => [
+            label, count.toString(),
+            summaryData.length > 0 ? `${((count / summaryData.length) * 100).toFixed(1)}%` : '0%',
+          ]),
+          theme: 'striped',
+          headStyles: { fillColor: [15, 61, 46] as [number,number,number], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 9 },
+          margin: { left: margin, right: margin },
+        })
+        y = (doc as any).lastAutoTable.finalY + 8
+      }
+
+      // ── Estado sanitario (vacunas) ────────────────────────────────────────
+      const vacDist: Record<string, number> = { Vacunados: 0, 'No vacunados': 0, Programados: 0, 'Sin registro': 0 }
+      summaryData.forEach(a => {
+        const e = a.metadata?.estado_vacunacion?.toLowerCase()
+        if (e === 'vacunado') vacDist['Vacunados']++
+        else if (e === 'no vacunado') vacDist['No vacunados']++
+        else if (e === 'programado') vacDist['Programados']++
+        else vacDist['Sin registro']++
+      })
+      const vacRows = Object.entries(vacDist).filter(([, v]) => v > 0)
+      if (vacRows.length > 0) {
+        if (y > 230) { doc.addPage(); y = 20 }
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(15, 61, 46)
+        doc.text('Estado Sanitario — Vacunación', margin, y)
+        y += 2
+        autoTable(doc, {
+          startY: y,
+          head: [['Estado', 'Cantidad', '%']],
+          body: vacRows.map(([k, v]) => [k, v.toString(), summaryData.length > 0 ? `${((v / summaryData.length) * 100).toFixed(1)}%` : '0%']),
+          theme: 'striped',
+          headStyles: { fillColor: [15, 61, 46] as [number,number,number], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 9 },
+          margin: { left: margin, right: margin },
+        })
+        y = (doc as any).lastAutoTable.finalY + 8
+      }
+
+      // ── Inventario detallado ──────────────────────────────────────────────
+      if (summaryData.length > 0) {
+        if (y > 200) { doc.addPage(); y = 20 }
+        const limit = 80
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(15, 61, 46)
+        doc.text(
+          summaryData.length > limit
+            ? `Inventario de Animales — primeros ${limit} de ${summaryData.length}`
+            : `Inventario de Animales (${summaryData.length})`,
+          margin, y
+        )
+        y += 2
+        autoTable(doc, {
+          startY: y,
+          head: [['Código', 'Nombre', 'Categoría', 'Sexo', 'Estado', 'Kg']],
+          body: summaryData.slice(0, limit).map(a => [
+            a.identification_code || '-',
+            a.name || '-',
+            a.animal_types?.name || a.category_name || a.type || 'Otros',
+            a.sex || '-',
+            a.status || '-',
+            (a.weight_kg || a.weight || 0) > 0 ? String(a.weight_kg || a.weight) : '-',
+          ]),
+          theme: 'striped',
+          headStyles: { fillColor: [15, 61, 46] as [number,number,number], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+          bodyStyles: { fontSize: 8 },
+          margin: { left: margin, right: margin },
+        })
+      }
+
+      // ── Footer on every page ──────────────────────────────────────────────
+      const totalPages = (doc as any).internal.getNumberOfPages()
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i)
+        doc.setFontSize(7)
+        doc.setTextColor(150, 150, 150)
+        doc.text(
+          `Finca Tigrillo · Informe generado el ${dateStr} · Página ${i} de ${totalPages}`,
+          pageW / 2, doc.internal.pageSize.getHeight() - 8,
+          { align: 'center' }
+        )
+      }
+
+      // ── Save ──────────────────────────────────────────────────────────────
+      const filename = `Reporte-FincaTigrillo-${new Date().toISOString().split('T')[0]}.pdf`
+      if (Capacitor.isNativePlatform()) {
+        const base64 = doc.output('datauristring').split(',')[1]
+        try {
+          await Filesystem.writeFile({ path: `Download/${filename}`, data: base64, directory: Directory.ExternalStorage, recursive: true })
+          setPdfMsg(`✅ Guardado en Descargas: ${filename}`)
+        } catch {
+          await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.External, recursive: true })
+          setPdfMsg('✅ Guardado en almacenamiento de la app')
+        }
+      } else {
+        doc.save(filename)
+        setPdfMsg('')
+      }
+    } catch (err: any) {
+      setPdfMsg(`Error al generar PDF: ${err?.message ?? 'desconocido'}`)
+    }
+    setTimeout(() => setPdfMsg(''), 5000)
+  }
+
   return (
     <div className="space-y-6 animate-fade-in p-3 sm:p-4 md:p-8 print:p-0 print:m-0 print:block print:space-y-4 print:overflow-visible min-w-0 w-full print:w-full print:h-auto overflow-x-hidden">
       {/* Header */}
@@ -368,11 +589,8 @@ export default function ReportsPage() {
           </button>
           <button
             onClick={() => {
-              // window.print() is a no-op in Capacitor WebView.
-              // Open in system browser (Chrome) where print/save-as-PDF works.
-              const cap = (window as any).Capacitor
-              if (cap?.isNativePlatform?.()) {
-                window.open(window.location.href, '_system')
+              if (Capacitor.isNativePlatform()) {
+                generateAndDownloadPDF()
               } else {
                 window.print()
               }
@@ -380,9 +598,14 @@ export default function ReportsPage() {
             className="flex items-center justify-center gap-2 bg-linear-to-r from-slate-700 to-slate-900 dark:from-slate-200 dark:to-slate-400 text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-md hover:shadow-lg transition-all text-sm font-bold"
           >
             <Printer className="w-4 h-4" />
-            Imprimir
+            {pdfMsg === 'Generando PDF...' ? 'Generando...' : 'Imprimir / PDF'}
           </button>
         </div>
+        {pdfMsg && (
+          <p className={`text-xs mt-1 font-medium ${pdfMsg.startsWith('✅') ? 'text-primary' : 'text-red-500'}`}>
+            {pdfMsg}
+          </p>
+        )}
       </div>
 
       {errorApi && (
