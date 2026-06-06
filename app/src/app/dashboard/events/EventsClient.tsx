@@ -1062,18 +1062,29 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
       const ext = fileUrl.endsWith('.png') ? 'png' : 'jpg'
       const filename = `Tigrillo invoice ${date}.${ext}`
 
-      // Android WebView ignores detached-anchor clicks and doesn't route blob URLs
-      // through the download manager. Web Share API opens the native share sheet
-      // (Save to Downloads, WhatsApp, etc.) and works reliably on Android.
-      if (navigator.canShare) {
-        const file = new File([blob], filename, { type: blob.type })
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: filename })
-          return
-        }
+      // Capacitor Android: blob downloads are sandboxed inside the WebView and never
+      // reach the system Downloads folder. Use the Filesystem plugin bridge directly
+      // (injected into every page by the native shell) to write the file natively.
+      const cap = (window as any).Capacitor
+      if (cap?.isNativePlatform?.()) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1])
+          reader.onerror = reject
+          reader.readAsDataURL(blob)
+        })
+        await cap.Plugins.Filesystem.writeFile({
+          path: filename,
+          data: base64,
+          directory: 'DOWNLOADS',
+          recursive: true,
+        })
+        setError(`✅ Guardada en Descargas: ${filename}`)
+        setTimeout(() => setError(''), 4000)
+        return
       }
 
-      // Desktop fallback: anchor must be in DOM for the click to register.
+      // Browser fallback: anchor must be appended to DOM so click registers.
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
