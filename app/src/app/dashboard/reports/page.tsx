@@ -367,7 +367,16 @@ export default function ReportsPage() {
             Analizar con IA
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => {
+              // window.print() is a no-op in Capacitor WebView.
+              // Open in system browser (Chrome) where print/save-as-PDF works.
+              const cap = (window as any).Capacitor
+              if (cap?.isNativePlatform?.()) {
+                window.open(window.location.href, '_system')
+              } else {
+                window.print()
+              }
+            }}
             className="flex items-center justify-center gap-2 bg-linear-to-r from-slate-700 to-slate-900 dark:from-slate-200 dark:to-slate-400 text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-md hover:shadow-lg transition-all text-sm font-bold"
           >
             <Printer className="w-4 h-4" />
