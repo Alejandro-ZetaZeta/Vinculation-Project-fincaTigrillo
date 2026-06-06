@@ -1067,20 +1067,31 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
       // (injected into every page by the native shell) to write the file natively.
       const cap = (window as any).Capacitor
       if (cap?.isNativePlatform?.()) {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve((reader.result as string).split(',')[1])
-          reader.onerror = reject
-          reader.readAsDataURL(blob)
-        })
-        await cap.Plugins.Filesystem.writeFile({
-          path: filename,
-          data: base64,
-          directory: 'DOWNLOADS',
-          recursive: true,
-        })
-        setError(`✅ Guardada en Descargas: ${filename}`)
-        setTimeout(() => setError(''), 4000)
+        let base64: string
+        try {
+          base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve((reader.result as string).split(',')[1])
+            reader.onerror = reject
+            reader.readAsDataURL(blob)
+          })
+        } catch {
+          setError('Error al leer el archivo descargado'); return
+        }
+        try {
+          // Directory.ExternalStorage = public external storage root on Android.
+          // Path 'Download/<file>' writes into the system Downloads folder.
+          await cap.Plugins.Filesystem.writeFile({
+            path: `Download/${filename}`,
+            data: base64,
+            directory: 'EXTERNAL_STORAGE',
+            recursive: true,
+          })
+          setError(`✅ Guardada en Descargas: ${filename}`)
+          setTimeout(() => setError(''), 4000)
+        } catch (fsErr: any) {
+          setError(`Error al guardar archivo: ${fsErr?.message ?? 'permiso denegado'}`)
+        }
         return
       }
 
@@ -1094,7 +1105,7 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch {
-      setError('Error al descargar la factura')
+      setError('Error al descargar la factura (red)')
     }
   }
 
