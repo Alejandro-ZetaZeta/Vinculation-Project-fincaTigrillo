@@ -10,7 +10,13 @@ import { useTheme } from '@/components/ThemeProvider'
 
 const CAREERS   = ['Agropecuaria']
 const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-const ALLOWED_EMAIL_DOMAIN = '@live.uleam.edu.ec'
+
+function detectRole(email: string): 'viewer' | 'teacher' | null {
+  const lower = email.toLowerCase()
+  if (lower.endsWith('@live.uleam.edu.ec')) return 'viewer'
+  if (lower.endsWith('@uleam.edu.ec')) return 'teacher'
+  return null
+}
 
 type Step = 'register' | 'verify'
 
@@ -19,7 +25,9 @@ export default function RegisterPage() {
   const [error, setError]             = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [password, setPassword]       = useState('')
+  const [emailValue, setEmailValue]   = useState('')
   const [isPending, startTransition]  = useTransition()
+  const detectedRole = detectRole(emailValue)
 
   const pwChecks = {
     length:    password.length >= 6,
@@ -45,15 +53,17 @@ export default function RegisterPage() {
     setError('')
     const formData = new FormData(e.currentTarget)
 
-    if (!formData.get('career'))   { setError('Selecciona tu carrera');   return }
-    if (!formData.get('semester')) { setError('Selecciona tu semestre');  return }
-    if (!pwValid) { setError('La contraseña no cumple los requisitos'); return }
-
-    const emailValue = String(formData.get('email') ?? '').trim().toLowerCase()
-    if (!emailValue.endsWith(ALLOWED_EMAIL_DOMAIN)) {
-      setError(`Solo se permite el registro con correos institucionales ${ALLOWED_EMAIL_DOMAIN}.`)
+    const emailVal = String(formData.get('email') ?? '').trim().toLowerCase()
+    const role = detectRole(emailVal)
+    if (!role) {
+      setError('Solo se permite el registro con correos institucionales @live.uleam.edu.ec (estudiantes) o @uleam.edu.ec (docentes).')
       return
     }
+    if (role === 'viewer') {
+      if (!formData.get('career'))   { setError('Selecciona tu carrera');   return }
+      if (!formData.get('semester')) { setError('Selecciona tu semestre');  return }
+    }
+    if (!pwValid) { setError('La contraseña no cumple los requisitos'); return }
 
     startTransition(async () => {
       const result = await signUp(formData)
@@ -143,7 +153,9 @@ export default function RegisterPage() {
           </div>
           <h1 className="font-display text-3xl font-bold text-foreground tracking-tight">Finca Tigrillo</h1>
           <p className="text-muted mt-1.5 text-sm">
-            {step === 'register' ? 'Crear cuenta de estudiante' : 'Verificación de correo'}
+            {step === 'register'
+              ? detectedRole === 'teacher' ? 'Crear cuenta de docente' : 'Crear cuenta de estudiante'
+              : 'Verificación de correo'}
           </p>
         </div>
 
@@ -190,13 +202,16 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" aria-hidden="true" />
                     <input id="email" name="email" type="email" required autoComplete="email"
-                      pattern={`[^@\\s]+${ALLOWED_EMAIL_DOMAIN.replace('.', '\\.')}`}
-                      title={`Usa tu correo institucional ${ALLOWED_EMAIL_DOMAIN}`}
-                      placeholder={`usuario${ALLOWED_EMAIL_DOMAIN}`}
+                      placeholder="usuario@live.uleam.edu.ec"
+                      value={emailValue}
+                      onChange={e => setEmailValue(e.target.value.trim())}
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
                   </div>
                   <p className="text-xs text-muted">
-                    Solo se aceptan correos institucionales <span className="font-mono text-foreground">{ALLOWED_EMAIL_DOMAIN}</span>.
+                    {detectedRole === 'teacher'
+                      ? <>Correo docente detectado — se registrará como <span className="font-semibold text-foreground">Docente</span>.</>
+                      : <>Estudiantes: <span className="font-mono text-foreground">@live.uleam.edu.ec</span> · Docentes: <span className="font-mono text-foreground">@uleam.edu.ec</span></>
+                    }
                   </p>
                 </div>
 
@@ -240,35 +255,38 @@ export default function RegisterPage() {
                   )}
                 </div>
 
-                {/* Career */}
-                <div className="space-y-1.5">
-                  <label htmlFor="career" className="block text-sm font-medium text-foreground">
-                    Carrera
-                  </label>
-                  <div className="relative">
-                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" aria-hidden="true" />
-                    <select id="career" name="career" required defaultValue=""
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary appearance-none">
-                      <option value="" disabled>Selecciona tu carrera</option>
-                      {CAREERS.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                </div>
+                {/* Career + Semester — students only */}
+                {detectedRole !== 'teacher' && (
+                  <>
+                    <div className="space-y-1.5">
+                      <label htmlFor="career" className="block text-sm font-medium text-foreground">
+                        Carrera
+                      </label>
+                      <div className="relative">
+                        <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" aria-hidden="true" />
+                        <select id="career" name="career" defaultValue=""
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary appearance-none">
+                          <option value="" disabled>Selecciona tu carrera</option>
+                          {CAREERS.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    </div>
 
-                {/* Semester */}
-                <div className="space-y-1.5">
-                  <label htmlFor="semester" className="block text-sm font-medium text-foreground">
-                    Semestre
-                  </label>
-                  <div className="relative">
-                    <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" aria-hidden="true" />
-                    <select id="semester" name="semester" required defaultValue=""
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary appearance-none">
-                      <option value="" disabled>Selecciona tu semestre</option>
-                      {SEMESTERS.map(s => <option key={s} value={s}>{s}° Semestre</option>)}
-                    </select>
-                  </div>
-                </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="semester" className="block text-sm font-medium text-foreground">
+                        Semestre
+                      </label>
+                      <div className="relative">
+                        <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" aria-hidden="true" />
+                        <select id="semester" name="semester" defaultValue=""
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary appearance-none">
+                          <option value="" disabled>Selecciona tu semestre</option>
+                          {SEMESTERS.map(s => <option key={s} value={s}>{s}° Semestre</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <button type="submit" disabled={isPending}
                   className="w-full py-2.5 px-4 rounded-xl bg-primary text-white font-semibold hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"

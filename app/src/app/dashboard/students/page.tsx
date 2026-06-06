@@ -8,7 +8,7 @@ import { StudentsClient } from '@/components/students/StudentsClient'
 
 export default async function StudentsPage() {
   const user = await getCurrentUser()
-  if (!user || user.role !== 'admin') redirect('/dashboard')
+  if (!user || user.role === 'viewer') redirect('/dashboard')
 
   const accessToken = await getAccessToken()
   const insforge = createInsForgeServerClient(accessToken)
@@ -69,7 +69,7 @@ export default async function StudentsPage() {
       </div>
 
       {/* Client component */}
-      <StudentsClient students={studentList} />
+      <StudentsClient students={studentList} userRole={user.role} />
     </div>
   )
 }

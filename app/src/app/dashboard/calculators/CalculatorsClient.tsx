@@ -253,7 +253,7 @@ function CalcHuevos() {
 
   return (
     <CalcCard title="Producción de Huevos" icon={<Egg className="w-5 h-5 text-primary" />}
-      hint="Gallina ponedora comercial: ~0.75 huevos/día">
+      hint="Gallina ponedora comercial: ~0.75 huevos/día" centered>
       <div className="grid grid-cols-2 gap-3">
         <NumField label="Gallinas ponedoras" value={hens} onChange={setHens} min={1} />
         <NumField label="Tasa huevo/día" value={rate} onChange={setRate} min={0} step="0.05" />
@@ -342,16 +342,28 @@ function CalcFCRCard() {
 /* ════════════════════════════════════════
    COMPONENTES REUTILIZABLES
    ════════════════════════════════════════ */
-function CalcCard({ title, icon, hint, children }: {
-  title: string; icon: React.ReactNode; hint?: string; children: React.ReactNode
+function CalcCard({ title, icon, hint, children, centered }: {
+  title: string; icon: React.ReactNode; hint?: string; children: React.ReactNode; centered?: boolean
 }) {
   return (
-    <div className="bg-surface border border-border rounded-2xl p-5 space-y-4">
-      <div>
-        <div className="flex items-center gap-2 mb-1">{icon}<h3 className="font-semibold text-foreground">{title}</h3></div>
-        {hint && <p className="text-xs text-muted flex items-center gap-1"><Info className="w-3 h-3" />{hint}</p>}
-      </div>
-      {children}
+    <div className="bg-surface border border-border rounded-2xl p-5 flex flex-col h-full">
+      {centered ? (
+        <div className="flex-1 flex flex-col justify-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">{icon}<h3 className="font-semibold text-foreground">{title}</h3></div>
+            {hint && <p className="text-xs text-muted flex items-center gap-1"><Info className="w-3 h-3" />{hint}</p>}
+          </div>
+          {children}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">{icon}<h3 className="font-semibold text-foreground">{title}</h3></div>
+            {hint && <p className="text-xs text-muted flex items-center gap-1"><Info className="w-3 h-3" />{hint}</p>}
+          </div>
+          {children}
+        </div>
+      )}
     </div>
   )
 }

@@ -26,7 +26,8 @@ function formatDate(dateStr: string): string {
 }
 
 
-export function StudentsClient({ students: initialStudents }: { students: Student[] }) {
+export function StudentsClient({ students: initialStudents, userRole }: { students: Student[]; userRole?: string }) {
+  const isAdmin = userRole === 'admin'
   const [students, setStudents] = useState(initialStudents)
   const [search, setSearch] = useState('')
   const [filterCareer, setFilterCareer] = useState('')
@@ -166,7 +167,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
       </div>
 
       {/* Actions bar */}
-      {selected.size > 0 && (
+      {isAdmin && selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-xl" id="students-actions-bar">
           <span className="text-sm font-medium text-primary">{selected.size} seleccionado{selected.size > 1 ? 's' : ''}</span>
           <div className="flex-1" />
@@ -194,7 +195,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
       )}
 
       {/* Delete confirmation */}
-      {confirmDeleteIds && (
+      {isAdmin && confirmDeleteIds && (
         <div className="p-4 bg-danger/5 border border-danger/20 rounded-xl" id="confirm-delete">
           <p className="text-sm text-foreground mb-3">
             ¿Estás seguro de eliminar <strong>{confirmDeleteIds.length}</strong> estudiante{confirmDeleteIds.length > 1 ? 's' : ''}? Esta acción no se puede deshacer.
@@ -213,7 +214,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
       )}
 
       {/* Bulk edit modal */}
-      {bulkEditOpen && (
+      {isAdmin && bulkEditOpen && (
         <div className="p-4 bg-surface border border-border rounded-xl space-y-3" id="bulk-edit-form">
           <p className="text-sm font-medium text-foreground">Editar {selectedStudents.length} estudiantes</p>
           <div className="flex gap-3">
@@ -248,6 +249,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-surface-hover">
+                  {isAdmin && (
                   <th className="w-10 px-3 py-3">
                     <button onClick={toggleAll} className="text-muted hover:text-foreground">
                       {selected.size === filtered.length && filtered.length > 0
@@ -255,6 +257,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
                         : <Square className="w-4 h-4" />}
                     </button>
                   </th>
+                  )}
                   <th className="text-left px-5 py-3 font-semibold text-muted">Nombre</th>
                   <th className="text-left px-5 py-3 font-semibold text-muted">Carrera</th>
                   <th className="text-left px-5 py-3 font-semibold text-muted">Semestre</th>
@@ -265,6 +268,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
               <tbody>
                 {filtered.map(student => (
                   <tr key={student.id} className={`border-b border-border last:border-0 ${selected.has(student.id) ? 'bg-primary/5' : 'hover:bg-surface-hover'}`}>
+                    {isAdmin && (
                     <td className="px-3 py-3 text-center">
                       <button onClick={() => toggleSelect(student.id)} className="text-muted hover:text-foreground">
                         {selected.has(student.id)
@@ -272,6 +276,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
                           : <Square className="w-4 h-4" />}
                       </button>
                     </td>
+                    )}
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2.5">
                         <Avatar src={student.avatar_url} name={student.full_name || '?'} size="sm" />
@@ -301,6 +306,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
                       ) : <span className="text-muted">—</span>}
                     </td>
                     <td className="px-5 py-3 text-muted">{formatDate(student.created_at)}</td>
+                    {isAdmin && (
                     <td className="px-3 py-3">
                       {editingId === student.id ? (
                         <div className="flex gap-1">
@@ -320,6 +326,7 @@ export function StudentsClient({ students: initialStudents }: { students: Studen
                         </button>
                       )}
                     </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

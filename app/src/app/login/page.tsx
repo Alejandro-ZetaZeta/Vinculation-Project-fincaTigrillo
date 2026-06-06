@@ -211,7 +211,7 @@ function LoginContent() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted/60 mt-6">
+        <p className="text-center text-xs text-muted mt-6">
           © 2026 Finca Tigrillo. Todos los derechos reservados.
         </p>
       </div>

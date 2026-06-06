@@ -60,14 +60,15 @@ export default async function AnimalsPage() {
             <Link
               key={category.id}
               href={`/dashboard/animals/${category.slug}`}
-              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 lg:p-10 ${colors.bg}`}
+              aria-label={`Registrar ${category.name}`}
+              className={`group relative bg-surface border ${colors.border} rounded-2xl p-6 lg:p-10 ${colors.bg} transition-all duration-200`}
             >
               {/* Icon */}
               <div className={`w-16 h-16 lg:w-24 lg:h-24 rounded-2xl ${colors.iconBg} flex items-center justify-center mb-5 lg:mb-7`}>
                 {iconSrc ? (
-                  <img src={iconSrc} alt={category.name} className="w-full h-full p-2 object-contain dark:invert" />
+                  <img src={iconSrc} alt="" role="presentation" className="w-full h-full p-2 object-contain dark:invert" />
                 ) : (
-                  <PawPrint className={`w-12 h-12 lg:w-16 lg:h-16 ${colors.text}`} />
+                  <PawPrint className={`w-12 h-12 lg:w-16 lg:h-16 ${colors.text}`} aria-hidden="true" />
                 )}
               </div>
 
@@ -79,9 +80,9 @@ export default async function AnimalsPage() {
                 {category.description}
               </p>
 
-              {/* Arrow */}
-              <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-background flex items-center justify-center">
-                <ArrowRight className="w-4 h-4 text-primary" />
+              {/* Arrow — decorative */}
+              <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-background flex items-center justify-center" aria-hidden="true">
+                <ArrowRight className="w-4 h-4 text-primary" aria-hidden="true" />
               </div>
             </Link>
           )

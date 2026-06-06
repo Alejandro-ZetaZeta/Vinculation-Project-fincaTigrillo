@@ -21,14 +21,17 @@ export async function GET() {
 
     const { data: activities } = await client.database
       .from('activities')
-      .select('*, activity_assignments(id, status, student_id)')
+      .select('*, user_profiles!created_by(full_name), activity_assignments(id, status, student_id)')
       .order('created_at', { ascending: false })
 
-    // Add counts
+    // Add counts and flatten creator name
     const withCounts = (activities || []).map((a: Record<string, unknown>) => {
       const assignments = (a.activity_assignments || []) as { status: string }[]
+      const profile = a.user_profiles as { full_name?: string } | null
       return {
         ...a,
+        created_by_name: profile?.full_name ?? null,
+        user_profiles: undefined,
         total: assignments.length,
         todo: assignments.filter(x => x.status === 'todo').length,
         in_progress: assignments.filter(x => x.status === 'in_progress').length,
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
   try {
     const { client, role, userId } = await getAuthClient()
     if (!client) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
-    if (role !== 'admin') return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+    if (role !== 'admin' && role !== 'teacher') return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
     const body = await request.json()
     const { title, description, target_career, target_semester, due_date } = body

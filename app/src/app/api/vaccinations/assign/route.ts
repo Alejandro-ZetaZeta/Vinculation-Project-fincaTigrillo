@@ -56,12 +56,16 @@ export async function POST(request: NextRequest) {
     if (!client) return NextResponse.json({ error }, { status })
 
     const body = await request.json()
-    const { animal_ids, vaccine_id, applied_at, next_dose_at, notes } = body as {
+    const { animal_ids, vaccine_id, applied_at, next_dose_at, notes, doses_count } = body as {
       animal_ids: string[]
       vaccine_id: string
       applied_at: string
       next_dose_at?: string | null
       notes?: string | null
+      // For batch animals (e.g. poultry), the caller can supply the actual
+      // number of doses to deduct from stock (current live bird count).
+      // If omitted, the RPC defaults to array_length(animal_ids).
+      doses_count?: number | null
     }
 
     // --- Input validation (API layer) ---
@@ -70,6 +74,9 @@ export async function POST(request: NextRequest) {
     }
     if (!vaccine_id || !applied_at) {
       return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
+    }
+    if (doses_count !== undefined && doses_count !== null && (typeof doses_count !== 'number' || !Number.isInteger(doses_count) || doses_count <= 0)) {
+      return NextResponse.json({ error: 'doses_count debe ser un entero positivo' }, { status: 400 })
     }
 
     // --- Fetch interval for next-dose logic and single-dose duplicate check ---
@@ -116,6 +123,9 @@ export async function POST(request: NextRequest) {
     }
 
     // --- Atomic RPC: stock check + bulk insert + stock decrement in one transaction ---
+    // p_doses_count: when vaccinating a batch animal (e.g. a poultry batch of 280 birds),
+    // pass the live bird count so the RPC deducts the correct number of doses.
+    // If null/undefined, the RPC defaults to array_length(p_animal_ids).
     const { data: rpcData, error: rpcError } = await client.database.rpc(
       'assign_vaccines_and_deduct_stock',
       {
@@ -125,6 +135,7 @@ export async function POST(request: NextRequest) {
         p_next_dose_at: computedNext,
         p_notes:        notes ?? null,
         p_created_by:   userId,
+        p_doses_count:  typeof doses_count === 'number' ? doses_count : null,
       }
     )
 
