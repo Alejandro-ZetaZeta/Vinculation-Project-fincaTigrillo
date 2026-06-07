@@ -50,7 +50,7 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative bg-background">
+    <div className="min-h-screen flex items-center justify-center px-4 relative bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
 
       {/* Theme toggle */}
       <button

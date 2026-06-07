@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative bg-background">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
 
       {/* Theme toggle */}
       <button
