@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/vaccine-reminders",
+      "schedule": "0 13 * * *"
+    },
+    {
       "path": "/api/cron/weekly-feed",
       "schedule": "0 13 * * 6"
     },
