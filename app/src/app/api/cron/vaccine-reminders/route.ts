@@ -48,12 +48,21 @@ async function handle(req: NextRequest) {
       id: string
       animal_id: string
       next_dose_at: string
-      vaccine_catalog: { id: string; name: string } | null
-      animals: { id: string; name: string | null; identification_code: string | null; status: string } | null
+      vaccine_catalog: { id: string; name: string } | { id: string; name: string }[] | null
+      animals: { id: string; name: string | null; identification_code: string | null; status: string } | { id: string; name: string | null; identification_code: string | null; status: string }[] | null
     }
 
-    const active = ((dueDoses ?? []) as DoseRow[]).filter(
-      d => d.animals?.status === 'activo' && d.vaccine_catalog
+    function getVaccineCatalog(d: DoseRow) {
+      if (!d.vaccine_catalog) return null
+      return Array.isArray(d.vaccine_catalog) ? d.vaccine_catalog[0] ?? null : d.vaccine_catalog
+    }
+    function getAnimal(d: DoseRow) {
+      if (!d.animals) return null
+      return Array.isArray(d.animals) ? d.animals[0] ?? null : d.animals
+    }
+
+    const active = ((dueDoses ?? []) as unknown as DoseRow[]).filter(
+      d => getAnimal(d)?.status === 'activo' && getVaccineCatalog(d)
     )
 
     if (active.length === 0) {
@@ -77,13 +86,16 @@ async function handle(req: NextRequest) {
     /* 4. Insert one notification per new due dose */
     let inserted = 0
     for (const dose of active) {
-      const vaccineName = dose.vaccine_catalog!.name
-      const animalLabel = dose.animals!.name || dose.animals!.identification_code || dose.animal_id
+      const vaccine = getVaccineCatalog(dose)!
+      const animal = getAnimal(dose)!
+      const vaccineName = vaccine.name
+      const animalLabel = animal.name || animal.identification_code || dose.animal_id
       const title = `💉 Vacuna: ${vaccineName} — ${animalLabel}`
 
       if (alreadyNotified.has(title)) continue
 
       const message = `El animal/lote "${animalLabel}" requiere una dosis de ${vaccineName} hoy (${todayISO}).`
+
 
       const { error: insertErr } = await db.from('notifications').insert({
         title,
