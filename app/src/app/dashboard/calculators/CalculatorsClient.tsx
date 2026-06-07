@@ -54,8 +54,8 @@ export default function CalculatorsClient({ isAdmin: _isAdmin }: { isAdmin: bool
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CalcRoss308 />
-        <CalcParto />
         <CalcAlimento />
+        <CalcParto />
         <CalcHuevos />
         <CalcReproductivo />
         <CalcFCRCard />
@@ -107,6 +107,13 @@ function CalcRoss308() {
             value={data.total_bags === 0 ? 'Sin lotes activos' : `${data.total_bags} sacos`}
             accent={data.total_bags > 0}
           />
+          {data.batches.length > 0 && (
+            <ResultBox
+              label="Aves vivas — total lotes mixtos engorde"
+              value={`${data.batches.reduce((s, b) => s + Math.round(b.live_count), 0).toLocaleString('es-CO')} aves`}
+              accent={false}
+            />
+          )}
           {data.batches.length > 0 && (
             <div className="overflow-x-auto rounded-xl border border-border text-xs">
               <table className="w-full min-w-[420px]">

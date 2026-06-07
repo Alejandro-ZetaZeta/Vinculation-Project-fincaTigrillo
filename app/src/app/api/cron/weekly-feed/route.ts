@@ -50,7 +50,7 @@ async function handle(req: NextRequest) {
       return (at as { slug: string }).slug
     }
     const poultryBatches = ((batches || []) as BatchRow[]).filter(
-      b => getSlug(b.animal_types) === 'aves-de-corral'
+      b => getSlug(b.animal_types) === 'aves-de-corral' && (b.metadata?.proposito as string) === 'engorde'
     )
 
     if (poultryBatches.length === 0) {

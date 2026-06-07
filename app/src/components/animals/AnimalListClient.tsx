@@ -11,6 +11,7 @@ import {
 import { Chart, registerables } from 'chart.js'
 import { AnimalVaccinationProfile } from '@/components/vaccines/AnimalVaccinationProfile'
 import { AssignVaccineModal } from '@/components/vaccines/AssignVaccineModal'
+import { usePoultryStageSync } from '@/hooks/usePoultryStageSync'
 
 if (typeof window !== 'undefined') {
   Chart.register(...registerables)
@@ -133,6 +134,8 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
 
   const [assignOpen, setAssignOpen] = useState(false)
   const [assignAnimal, setAssignAnimal] = useState<{ id: string; typeId: string | null; typeSlug: string | null } | null>(null)
+
+  usePoultryStageSync(() => router.refresh())
 
   useEffect(() => {
     const shouldOpen = searchParams.get('assignVaccine') === '1'
@@ -905,7 +908,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             ))}
                         </div>
                         {/* Weight History Section — Only for specific types */}
-                        {['bovino', 'equino', 'porcino', 'caprino'].includes(animal.animal_types?.slug) && (
+                        {['bovino', 'equino', 'porcino', 'caprino', 'aves-de-corral'].includes(animal.animal_types?.slug) && (
                           <div className="mt-6 pt-6 border-t border-border">
                             <WeightHistorySection
                               animalId={animal.id}
@@ -915,6 +918,9 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                                   a.id === animal.id ? { ...a, weight_kg: newWeight } : a
                                 ))
                               }}
+                              baselineDate={animal.acquisition_date || animal.birth_date}
+                              isPoultry={animal.animal_types?.slug === 'aves-de-corral'}
+                              poultryEtapa={animal.metadata?.etapa as string | undefined}
                             />
                           </div>
                         )}
@@ -952,8 +958,9 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   )
 }
 
-function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
+function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate, isPoultry, poultryEtapa }: {
   animalId: string; isAdmin: boolean; onWeightUpdated: (w: number) => void
+  baselineDate?: string | null; isPoultry?: boolean; poultryEtapa?: string
 }) {
   const [weights, setWeights] = useState<{ id: string; weight_kg: number; recorded_at: string; notes: string | null }[]>([])
   const [loading, setLoading] = useState(true)
@@ -969,6 +976,12 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
   const chartRef = useRef<HTMLCanvasElement>(null)
   const chartInstance = useRef<Chart | null>(null)
 
+  const isGrams = isPoultry && poultryEtapa === 'pollitos'
+  const isLbs = isPoultry && !!poultryEtapa && poultryEtapa !== 'pollitos'
+  const weightUnit = isGrams ? 'g' : isLbs ? 'lbs' : 'kg'
+  function kgToDisplay(kg: number) { return isGrams ? kg * 1000 : isLbs ? kg * 2.20462 : kg }
+  function displayToKg(v: number) { return isGrams ? v / 1000 : isLbs ? v / 2.20462 : v }
+
   useEffect(() => {
     fetch(`/api/animals/${animalId}/weights`)
       .then(r => r.json())
@@ -983,16 +996,22 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
 
     if (chartInstance.current) chartInstance.current.destroy()
 
+    const base = baselineDate ? new Date(baselineDate + 'T00:00:00') : null
     chartInstance.current = new Chart(ctx, {
       type: 'line',
       data: {
         labels: weights.map(w => {
+          if (base) {
+            const rec = new Date(w.recorded_at.slice(0, 10) + 'T00:00:00')
+            const day = Math.max(1, Math.floor((rec.getTime() - base.getTime()) / 86_400_000) + 1)
+            return `Día ${day}`
+          }
           const [y, m, d] = w.recorded_at.slice(0, 10).split('-')
           return new Date(+y, +m - 1, +d).toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })
         }),
         datasets: [{
-          label: 'Peso (kg)',
-          data: weights.map(w => w.weight_kg),
+          label: `Peso (${weightUnit})`,
+          data: weights.map(w => parseFloat(kgToDisplay(w.weight_kg).toFixed(isGrams ? 0 : 3))),
           borderColor: '#61810b',
           backgroundColor: '#61810b22',
           fill: true,
@@ -1013,7 +1032,8 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
     })
 
     return () => chartInstance.current?.destroy()
-  }, [weights])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weights, weightUnit, baselineDate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -1024,7 +1044,7 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          weight_kg: parseFloat(newWeight),
+          weight_kg: displayToKg(parseFloat(newWeight)),
           recorded_at: newDate,
           notes: newNotes
         })
@@ -1035,7 +1055,7 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
           new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
         )
         setWeights(updatedWeights)
-        onWeightUpdated(parseFloat(newWeight))
+        onWeightUpdated(result.data.weight_kg)
         setShowForm(false)
         setNewWeight('')
         setNewNotes('')
@@ -1084,10 +1104,10 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
         <form onSubmit={handleSubmit} className="bg-background border border-border rounded-xl p-4 animate-scale-in space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-bold text-muted uppercase mb-1">Peso (kg)</label>
+              <label className="block text-[10px] font-bold text-muted uppercase mb-1">Peso ({weightUnit})</label>
               <input
                 type="number"
-                step="0.01"
+                step={isGrams ? '1' : '0.001'}
                 min="0"
                 required
                 value={newWeight}
@@ -1146,7 +1166,9 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated }: {
                 return (
                   <div key={w.id} className="p-2 rounded-lg hover:bg-surface transition-colors group">
                     <div className="flex items-center justify-between gap-1">
-                      <p className="text-xs font-bold text-foreground">{w.weight_kg} kg</p>
+                      <p className="text-xs font-bold text-foreground">
+                        {parseFloat(kgToDisplay(w.weight_kg).toFixed(isGrams ? 0 : 3))} {weightUnit}
+                      </p>
                       <div className="flex items-center gap-1.5">
                         <p className="text-[10px] text-muted">{dateLabel}</p>
                         {isAdmin && (
