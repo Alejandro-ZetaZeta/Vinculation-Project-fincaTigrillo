@@ -55,7 +55,8 @@ function LoginContent() {
       {/* Theme toggle */}
       <button
         onClick={toggleTheme}
-        className="absolute top-4 right-4 p-2.5 rounded-xl bg-surface border border-border text-muted hover:text-foreground hover:bg-surface-hover shadow-sm transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="absolute right-4 p-2.5 rounded-xl bg-surface border border-border text-muted hover:text-foreground hover:bg-surface-hover shadow-sm transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
         id="login-theme-toggle"
         aria-label={theme === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
       >
