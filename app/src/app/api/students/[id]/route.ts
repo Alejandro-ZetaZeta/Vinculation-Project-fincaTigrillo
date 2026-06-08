@@ -50,7 +50,7 @@ export async function PUT(
   }
 }
 
-// Admin deletes student profile
+// Admin deletes student profile + auth account
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -60,13 +60,35 @@ export async function DELETE(
     const { client } = await getAdminClient()
     if (!client) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
-    const { error } = await client.database
+    // Fetch user_id before deleting profile
+    const { data: profile, error: fetchError } = await client.database
+      .from('user_profiles')
+      .select('user_id')
+      .eq('id', id)
+      .eq('role', 'viewer')
+      .maybeSingle()
+
+    if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 400 })
+    if (!profile) return NextResponse.json({ error: 'Estudiante no encontrado' }, { status: 404 })
+
+    // Delete profile row
+    const { error: deleteError } = await client.database
       .from('user_profiles')
       .delete()
       .eq('id', id)
       .eq('role', 'viewer')
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+    if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 400 })
+
+    // Delete auth account via admin API
+    const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL!
+    const apiKey  = process.env.INSFORGE_API_KEY!
+    await fetch(`${baseUrl}/api/auth/users`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userIds: [profile.user_id] }),
+    })
+
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

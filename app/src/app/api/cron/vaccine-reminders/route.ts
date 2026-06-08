@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createInsForgeServerClient } from '@/lib/insforge/server'
+import { createInsForgeAdminClient } from '@/lib/insforge/server'
 
 /* ─────────────────────────────────────────────────────────────────
    GET /api/cron/vaccine-reminders
-   Invoked daily at 08:00 UTC by Vercel Cron.
+   Invoked daily at 08:00 Ecuador (13:00 UTC) by Vercel Cron.
    Protected by Authorization: Bearer <CRON_SECRET>.
    Queries animal_vaccinations where next_dose_at = today,
    skips already-notified pairs, inserts one notification per due dose.
@@ -20,15 +20,27 @@ async function handle(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const serviceKey = process.env.INSFORGE_API_KEY
-  if (!serviceKey) {
+  // Use admin client (service key) so RLS does not hide rows.
+  if (!process.env.INSFORGE_API_KEY) {
     console.error('[cron/vaccine-reminders] INSFORGE_API_KEY not set')
     return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
   }
-  const db = createInsForgeServerClient(serviceKey).database
+  const db = createInsForgeAdminClient().database
 
   try {
-    const todayISO = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+    // Ecuador time (UTC-5). Vercel Cron schedule is UTC; reminders should follow Ecuador calendar day.
+    const now = new Date()
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Guayaquil',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(now)
+    const y = parts.find(p => p.type === 'year')?.value
+    const m = parts.find(p => p.type === 'month')?.value
+    const d = parts.find(p => p.type === 'day')?.value
+    if (!y || !m || !d) throw new Error('Failed to compute Ecuador date')
+    const todayISO = `${y}-${m}-${d}` // YYYY-MM-DD (Ecuador)
 
     /* 2. Doses due today on active animals */
     const { data: dueDoses, error: doseErr } = await db
@@ -71,7 +83,8 @@ async function handle(req: NextRequest) {
     }
 
     /* 3. Fetch existing vaccine-reminder notifications created today to avoid duplicates */
-    const todayStart = `${todayISO}T00:00:00`
+    // Start of Ecuador day in UTC (UTC-5 => +05:00Z)
+    const todayStart = `${todayISO}T05:00:00.000Z`
     const { data: existing, error: existErr } = await db
       .from('notifications')
       .select('title')

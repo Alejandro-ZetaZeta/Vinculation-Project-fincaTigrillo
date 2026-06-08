@@ -58,6 +58,16 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'IDs requeridos' }, { status: 400 })
     }
 
+    // Fetch user_ids before deleting profiles
+    const { data: profiles, error: fetchError } = await client.database
+      .from('user_profiles')
+      .select('user_id')
+      .in('id', ids)
+      .eq('role', 'viewer')
+
+    if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 400 })
+
+    // Delete profile rows
     const { error } = await client.database
       .from('user_profiles')
       .delete()
@@ -65,6 +75,19 @@ export async function DELETE(request: NextRequest) {
       .eq('role', 'viewer')
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+    // Delete auth accounts via admin API (batch)
+    const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL!
+    const apiKey  = process.env.INSFORGE_API_KEY!
+    const userIds = (profiles ?? []).map(p => p.user_id).filter(Boolean)
+    if (userIds.length > 0) {
+      await fetch(`${baseUrl}/api/auth/users`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds }),
+      })
+    }
+
     return NextResponse.json({ success: true, deleted: ids.length })
   } catch {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

@@ -8,11 +8,24 @@ const PRODUCTION_ORIGIN = 'https://fincatigrillo.vercel.app'
 const EXTRA_ORIGINS =
   process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) ?? []
 
+function safeOriginFromUrl(url: string | undefined): string | null {
+  if (!url) return null
+  try {
+    return new URL(url).origin
+  } catch {
+    return null
+  }
+}
+
+// Auto-allow AI provider tunnel origin when present.
+const OLLAMA_ORIGIN = safeOriginFromUrl(process.env.OLLAMA_URL)
+
 function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false
   if (origin === PRODUCTION_ORIGIN) return true
   // Environment-variable allowlist (replaces hardcoded preview URLs)
   if (EXTRA_ORIGINS.includes(origin)) return true
+  if (OLLAMA_ORIGIN && origin === OLLAMA_ORIGIN) return true
   // localhost during development
   if (process.env.NODE_ENV === 'development' && /^http:\/\/localhost(:\d+)?$/.test(origin)) return true
   return false

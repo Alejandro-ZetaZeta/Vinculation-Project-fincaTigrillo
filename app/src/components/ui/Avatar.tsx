@@ -20,6 +20,13 @@ const SIZE_CLASSES = {
   lg: 'w-14 h-14 text-base',
 }
 
+const SIZE_PX: Record<keyof typeof SIZE_CLASSES, string> = {
+  xs: '24px',
+  sm: '32px',
+  md: '36px',
+  lg: '56px',
+}
+
 interface AvatarProps {
   src?: string | null
   name: string
@@ -38,6 +45,7 @@ export function Avatar({ src, name, size = 'sm', className = '' }: AvatarProps) 
           src={src}
           alt={name}
           fill
+          sizes={SIZE_PX[size]}
           className="object-cover"
           onError={() => setImgError(true)}
         />
