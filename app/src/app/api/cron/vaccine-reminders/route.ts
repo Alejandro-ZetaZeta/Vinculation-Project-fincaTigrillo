@@ -45,13 +45,8 @@ async function handle(req: NextRequest) {
     /* 2. Doses due today on active animals */
     const { data: dueDoses, error: doseErr } = await db
       .from('animal_vaccinations')
-      .select(`
-        id,
-        animal_id,
-        next_dose_at,
-        vaccine_catalog ( id, name ),
-        animals ( id, name, identification_code, status )
-      `)
+      // Keep PostgREST select syntax tight (no spaces before parentheses)
+      .select('id, animal_id, next_dose_at, vaccine_catalog(id, name), animals(id, name, identification_code, status)')
       .eq('next_dose_at', todayISO)
 
     if (doseErr) throw new Error(doseErr.message)
@@ -73,9 +68,20 @@ async function handle(req: NextRequest) {
       return Array.isArray(d.animals) ? d.animals[0] ?? null : d.animals
     }
 
-    const active = ((dueDoses ?? []) as unknown as DoseRow[]).filter(
-      d => getAnimal(d)?.status === 'activo' && getVaccineCatalog(d)
-    )
+    const rows = (dueDoses ?? []) as unknown as DoseRow[]
+    const active = rows.filter(d => getAnimal(d)?.status === 'activo' && getVaccineCatalog(d))
+
+    if (rows.length > 0 && active.length === 0) {
+      const missingAnimal = rows.filter(d => !getAnimal(d)).length
+      const missingVax = rows.filter(d => !getVaccineCatalog(d)).length
+      const nonActivo = rows.filter(d => {
+        const a = getAnimal(d)
+        return !!a && a.status !== 'activo'
+      }).length
+      console.log(
+        `[cron/vaccine-reminders] Due rows=${rows.length} but none eligible. missingAnimal=${missingAnimal} missingVax=${missingVax} nonActivo=${nonActivo}`
+      )
+    }
 
     if (active.length === 0) {
       console.log('[cron/vaccine-reminders] No doses due today')

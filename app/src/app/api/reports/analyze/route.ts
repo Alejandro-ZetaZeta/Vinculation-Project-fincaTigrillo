@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     // 3. Eventos Reproductivos
     const { data: reproEvents, error: reproError } = await insforge.database
       .from('reproductive_events')
-      .select('*, animals(name)')
+      .select('*, animals!reproductive_events_animal_id_fkey(name)')
       .order('event_date', { ascending: false })
       .limit(30)
       
