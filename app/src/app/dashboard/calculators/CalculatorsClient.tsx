@@ -45,7 +45,7 @@ export default function CalculatorsClient({ isAdmin: _isAdmin }: { isAdmin: bool
   return (
     <div className="space-y-6 overflow-hidden min-w-0">
       <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+        <h1 className="font-display tracking-tight text-xl sm:text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
           <Calculator className="w-7 h-7 text-primary" />
           Calculadoras
         </h1>

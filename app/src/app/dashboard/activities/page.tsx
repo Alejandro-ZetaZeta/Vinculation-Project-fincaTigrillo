@@ -16,7 +16,7 @@ export default async function ActivitiesPage() {
   return (
     <div className="space-y-8" id="activities-page">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+        <h1 className="font-display tracking-tight text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
           <ListTodo className="w-7 h-7 text-primary" />
           {isStaff ? 'Gestión de Actividades' : 'Mis Actividades'}
         </h1>

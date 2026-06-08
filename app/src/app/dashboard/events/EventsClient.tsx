@@ -26,6 +26,37 @@ function fmtDate(d: Date | null | string) {
   return date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 function toIso(d: Date) { return d.toISOString().split('T')[0] }
+function localIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function mondayOfWeek(d: Date): Date {
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  const m = new Date(d); m.setDate(d.getDate() + diff); m.setHours(0, 0, 0, 0); return m
+}
+function isoWeekStr(d: Date): string {
+  const thu = new Date(d); thu.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 3)
+  const year = thu.getFullYear()
+  const jan4 = new Date(year, 0, 4)
+  const wk = Math.ceil(((thu.getTime() - jan4.getTime()) / 86400000 + ((jan4.getDay() + 6) % 7) + 1) / 7)
+  return `${year}-W${String(wk).padStart(2, '0')}`
+}
+function daysUntilExpiry(createdAt: string): number {
+  const expires = new Date(createdAt)
+  expires.setMonth(expires.getMonth() + 2)
+  expires.setHours(0, 0, 0, 0)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  return Math.ceil((expires.getTime() - today.getTime()) / 86400000)
+}
+function weekRangeFromIso(isoWeek: string): [string, string] {
+  const [ys, ws] = isoWeek.split('-W')
+  const year = parseInt(ys), week = parseInt(ws)
+  const jan4 = new Date(year, 0, 4)
+  const jan4Dow = (jan4.getDay() + 6) % 7
+  const monday = new Date(year, 0, 4 - jan4Dow + (week - 1) * 7)
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6)
+  return [localIso(monday), localIso(sunday)]
+}
 
 /* ──────────── tipos ──────────── */
 interface AnimalOption {
@@ -100,7 +131,7 @@ export default function EventsClient({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className="space-y-6 overflow-hidden min-w-0">
       <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+        <h1 className="font-display tracking-tight text-xl sm:text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
           <CalendarDays className="w-7 h-7 text-primary" />
           Eventos
         </h1>
@@ -225,8 +256,16 @@ function ReproductivosTab({
     : allFemales
 
   // ── log: filter state ─────────────────────────────────────────────
-  const [filterSpecies, setFilterSpecies] = useState('')    // '' = all
-  const [filterEventType, setFilterEventType] = useState('') // '' = all
+  const [filterSpecies, setFilterSpecies] = useState('')
+  const [filterEventType, setFilterEventType] = useState('')
+  type FilterMode = '' | 'dia' | 'semana_pasada' | 'semana' | 'mes' | 'ultimos_6_meses' | 'anio'
+  const [filterMode, setFilterMode] = useState<FilterMode>('mes')
+  const [filterDay, setFilterDay] = useState(() => localIso(new Date()))
+  const [filterWeek, setFilterWeek] = useState(() => isoWeekStr(new Date()))
+  const [filterMonth, setFilterMonth] = useState(() => {
+    const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [filterYear, setFilterYear] = useState(() => String(new Date().getFullYear()))
 
   // derive unique species & event types from loaded events
   const logSpecies = Array.from(
@@ -238,9 +277,38 @@ function ReproductivosTab({
   )
   const logEventTypes = Array.from(new Set(events.map(ev => ev.event_type)))
 
+  // ── date range ─────────────────────────────────────────────────────
+  const toLocalIsoEv = (iso: string | undefined) =>
+    iso ? toIso(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso + 'T12:00:00' : iso)) : ''
+  let rangeStart = '', rangeEnd = ''
+  const _today = new Date()
+  if (filterMode === 'dia') {
+    rangeStart = rangeEnd = filterDay
+  } else if (filterMode === 'semana_pasada') {
+    const curMon = mondayOfWeek(_today)
+    const lastMon = new Date(curMon); lastMon.setDate(curMon.getDate() - 7)
+    const lastSun = new Date(lastMon); lastSun.setDate(lastMon.getDate() + 6)
+    rangeStart = localIso(lastMon); rangeEnd = localIso(lastSun)
+  } else if (filterMode === 'semana' && filterWeek) {
+    ;[rangeStart, rangeEnd] = weekRangeFromIso(filterWeek)
+  } else if (filterMode === 'mes' && filterMonth) {
+    const [y, m] = filterMonth.split('-').map(Number)
+    rangeStart = `${y}-${String(m).padStart(2, '0')}-01`
+    rangeEnd = `${y}-${String(m).padStart(2, '0')}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`
+  } else if (filterMode === 'ultimos_6_meses') {
+    const start = new Date(_today); start.setMonth(_today.getMonth() - 6)
+    rangeStart = localIso(start); rangeEnd = localIso(_today)
+  } else if (filterMode === 'anio' && filterYear) {
+    rangeStart = `${filterYear}-01-01`; rangeEnd = `${filterYear}-12-31`
+  }
+
   const filteredEvents = events.filter(ev => {
     if (filterSpecies && ev.animals?.animal_types?.slug !== filterSpecies) return false
     if (filterEventType && ev.event_type !== filterEventType) return false
+    if (rangeStart) {
+      const d = toLocalIsoEv(ev.event_date)
+      if (d < rangeStart || d > rangeEnd) return false
+    }
     return true
   })
 
@@ -404,7 +472,7 @@ function ReproductivosTab({
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
                 filterSpecies === ''
                   ? 'bg-primary text-white border-primary shadow-sm'
-                  : 'text-muted border-border hover:bg-surface-hover'
+                  : 'bg-surface text-muted border-border hover:text-foreground hover:bg-surface-hover'
               }`}
             >
               Todos
@@ -416,7 +484,7 @@ function ReproductivosTab({
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
                   filterSpecies === slug
                     ? 'bg-primary text-white border-primary shadow-sm'
-                    : 'text-muted border-border hover:bg-surface-hover'
+                    : 'bg-surface text-muted border-border hover:text-foreground hover:bg-surface-hover'
                 }`}
               >
                 {SPECIES_NAME[slug] ?? slug}
@@ -433,7 +501,7 @@ function ReproductivosTab({
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
                   filterEventType === ''
                     ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
-                    : 'text-muted border-border hover:bg-surface-hover'
+                    : 'bg-surface text-muted border-border hover:text-foreground hover:bg-surface-hover'
                 }`}
               >
                 Todos
@@ -445,7 +513,7 @@ function ReproductivosTab({
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
                     filterEventType === et
                       ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
-                      : 'text-muted border-border hover:bg-surface-hover'
+                      : 'bg-surface text-muted border-border hover:text-foreground hover:bg-surface-hover'
                   }`}
                 >
                   {eventTypeLabel[et] ?? et}
@@ -453,6 +521,52 @@ function ReproductivosTab({
               ))}
             </div>
           )}
+
+          {/* Period filter row */}
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-xs text-muted font-medium shrink-0">Período:</span>
+            <select
+              value={filterMode}
+              onChange={e => setFilterMode(e.target.value as FilterMode)}
+              className="input-calc !py-1 !text-xs w-auto"
+            >
+              <option value="">Todas las fechas</option>
+              <option value="dia">Día específico</option>
+              <option value="semana_pasada">Semana pasada</option>
+              <option value="semana">Semana específica</option>
+              <option value="mes">Mes</option>
+              <option value="ultimos_6_meses">Últimos 6 meses</option>
+              <option value="anio">Año</option>
+            </select>
+            {filterMode === 'dia' && (
+              <input type="date" value={filterDay} onChange={e => setFilterDay(e.target.value)}
+                className="input-calc !py-1 !text-xs w-auto" />
+            )}
+            {filterMode === 'semana' && (
+              <input type="week" value={filterWeek} onChange={e => setFilterWeek(e.target.value)}
+                className="input-calc !py-1 !text-xs w-auto" />
+            )}
+            {filterMode === 'mes' && (
+              <input type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
+                className="input-calc !py-1 !text-xs w-auto" />
+            )}
+            {filterMode === 'anio' && (
+              <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
+                className="input-calc !py-1 !text-xs w-auto">
+                {Array.from({ length: 6 }, (_, i) => String(new Date().getFullYear() - i)).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            )}
+            {(filterMode === 'semana_pasada' || filterMode === 'ultimos_6_meses') && rangeStart && (
+              <span className="text-xs text-muted">
+                {fmtDate(rangeStart + 'T12:00:00')} — {fmtDate(rangeEnd + 'T12:00:00')}
+              </span>
+            )}
+            <span className="text-xs text-muted ml-auto">
+              {filteredEvents.length} evento{filteredEvents.length !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
       )}
 
@@ -519,6 +633,16 @@ function MortalidadTab({
   const [deathCount, setDeathCount] = useState(1)
   const [notes, setNotes] = useState('')
 
+  // ── filter state ──────────────────────────────────────────────────
+  type FilterMode = 'dia' | 'semana_pasada' | 'semana' | 'mes' | 'ultimos_6_meses' | 'anio'
+  const [filterMode, setFilterMode] = useState<FilterMode>('mes')
+  const [filterDay, setFilterDay] = useState(() => localIso(new Date()))
+  const [filterWeek, setFilterWeek] = useState(() => isoWeekStr(new Date()))
+  const [filterMonth, setFilterMonth] = useState(() => {
+    const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [filterYear, setFilterYear] = useState(() => String(new Date().getFullYear()))
+
   const poultryBatches = animals.filter(a => a.animal_types?.slug === 'aves-de-corral')
 
   useEffect(() => {
@@ -565,6 +689,39 @@ function MortalidadTab({
   }
 
   if (loading || loadingAnimals) return <TabSpinner />
+
+  // ── compute date range ────────────────────────────────────────────
+  const toLocalIsoEv = (iso: string | undefined) =>
+    iso ? toIso(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso + 'T12:00:00' : iso)) : ''
+
+  let rangeStart = '', rangeEnd = ''
+  const _today = new Date()
+  if (filterMode === 'dia') {
+    rangeStart = rangeEnd = filterDay
+  } else if (filterMode === 'semana_pasada') {
+    const curMon = mondayOfWeek(_today)
+    const lastMon = new Date(curMon); lastMon.setDate(curMon.getDate() - 7)
+    const lastSun = new Date(lastMon); lastSun.setDate(lastMon.getDate() + 6)
+    rangeStart = localIso(lastMon); rangeEnd = localIso(lastSun)
+  } else if (filterMode === 'semana' && filterWeek) {
+    ;[rangeStart, rangeEnd] = weekRangeFromIso(filterWeek)
+  } else if (filterMode === 'mes' && filterMonth) {
+    const [y, m] = filterMonth.split('-').map(Number)
+    rangeStart = `${y}-${String(m).padStart(2, '0')}-01`
+    rangeEnd = `${y}-${String(m).padStart(2, '0')}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`
+  } else if (filterMode === 'ultimos_6_meses') {
+    const start = new Date(_today); start.setMonth(_today.getMonth() - 6)
+    rangeStart = localIso(start); rangeEnd = localIso(_today)
+  } else if (filterMode === 'anio' && filterYear) {
+    rangeStart = `${filterYear}-01-01`; rangeEnd = `${filterYear}-12-31`
+  }
+
+  const filtered = rangeStart
+    ? events.filter(ev => { const d = toLocalIsoEv(ev.event_date); return d >= rangeStart && d <= rangeEnd })
+    : events
+
+  const totalDeaths = filtered.reduce((sum, ev) => sum + (typeof ev.quantity === 'number' ? ev.quantity : 0), 0)
+  const uniqueBatches = new Set(filtered.map(ev => ev.animal_id)).size
 
   return (
     <div className="space-y-4">
@@ -618,43 +775,120 @@ function MortalidadTab({
         </form>
       )}
 
-      {events.length > 0 ? (
-        <div className="space-y-2">
-          {events.map(ev => (
-            <div
-              key={ev.id}
-              className="bg-surface border border-border rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-danger/10 text-danger">
-                    Muerte / Baja
-                  </span>
-                  <span className="text-sm font-semibold text-foreground truncate">
-                    {ev.animals?.name || ev.animals?.identification_code || 'Lote'}
-                  </span>
-                  <span className="text-xs text-muted">({ev.animals?.animal_types?.name})</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted">
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{fmtDate(ev.event_date)}</span>
-                  {typeof ev.quantity === 'number' && (
-                    <span className="font-semibold text-danger">−{ev.quantity} aves</span>
-                  )}
-                  {ev.notes && <span className="italic truncate max-w-[200px]">{ev.notes}</span>}
-                </div>
-              </div>
-              {isAdmin && (
-                <DeleteControls
-                  id={ev.id}
-                  deleteId={deleteId}
-                  setDeleteId={setDeleteId}
-                  onConfirm={handleDelete}
-                />
-              )}
+      {events.length > 0 && (
+        <div className="space-y-3">
+          {/* ── Filter bar ──────────────────────────────────────────── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(
+                [
+                  { key: 'dia', label: 'Día' },
+                  { key: 'semana_pasada', label: 'Sem. pasada' },
+                  { key: 'semana', label: 'Semana' },
+                  { key: 'mes', label: 'Mes' },
+                  { key: 'ultimos_6_meses', label: '6 meses' },
+                  { key: 'anio', label: 'Año' },
+                ] as { key: FilterMode; label: string }[]
+              ).map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setFilterMode(key)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                    filterMode === key
+                      ? 'bg-primary text-white'
+                      : 'bg-surface border border-border text-muted hover:text-foreground hover:bg-surface-hover'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-          ))}
+            <div className="flex items-center gap-2 flex-wrap">
+              {filterMode === 'dia' && (
+                <input type="date" value={filterDay} onChange={e => setFilterDay(e.target.value)}
+                  className="input-calc !py-1 !text-xs w-auto" />
+              )}
+              {filterMode === 'semana' && (
+                <input type="week" value={filterWeek} onChange={e => setFilterWeek(e.target.value)}
+                  className="input-calc !py-1 !text-xs w-auto" />
+              )}
+              {filterMode === 'mes' && (
+                <input type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
+                  className="input-calc !py-1 !text-xs w-auto" />
+              )}
+              {filterMode === 'anio' && (
+                <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
+                  className="input-calc !py-1 !text-xs w-auto">
+                  {Array.from({ length: 6 }, (_, i) => String(new Date().getFullYear() - i)).map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              )}
+              {(filterMode === 'semana_pasada' || filterMode === 'ultimos_6_meses') && rangeStart && (
+                <span className="text-xs text-muted">
+                  {fmtDate(rangeStart + 'T12:00:00')} — {fmtDate(rangeEnd + 'T12:00:00')}
+                </span>
+              )}
+              <div className="flex items-center gap-3 ml-auto text-xs text-muted">
+                <span>
+                  <span className="font-semibold text-foreground">{uniqueBatches}</span>
+                  {' '}lote{uniqueBatches !== 1 ? 's' : ''}
+                </span>
+                <span>
+                  <span className="font-semibold text-danger">{totalDeaths}</span>
+                  {' '}bajas
+                </span>
+                <span>{filtered.length} registro{filtered.length !== 1 ? 's' : ''}</span>
+              </div>
+            </div>
+          </div>
+
+          {filtered.length > 0 ? (
+            <div className="space-y-2">
+              {filtered.map(ev => (
+                <div
+                  key={ev.id}
+                  className="bg-surface border border-border rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-danger/10 text-danger">
+                        Muerte / Baja
+                      </span>
+                      <span className="text-sm font-semibold text-foreground truncate">
+                        {ev.animals?.name || ev.animals?.identification_code || 'Lote'}
+                      </span>
+                      <span className="text-xs text-muted">({ev.animals?.animal_types?.name})</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted">
+                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{fmtDate(ev.event_date)}</span>
+                      {typeof ev.quantity === 'number' && (
+                        <span className="font-semibold text-danger">−{ev.quantity} aves</span>
+                      )}
+                      {ev.notes && <span className="italic truncate max-w-[200px]">{ev.notes}</span>}
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <DeleteControls
+                      id={ev.id}
+                      deleteId={deleteId}
+                      setDeleteId={setDeleteId}
+                      onConfirm={handleDelete}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={<AlertTriangle className="w-10 h-10 text-muted/30 mx-auto mb-2" />}
+              message="Ningún registro para el período seleccionado"
+            />
+          )}
         </div>
-      ) : (
+      )}
+
+      {events.length === 0 && (
         <EmptyState
           icon={<AlertTriangle className="w-10 h-10 text-muted/30 mx-auto mb-2" />}
           message="No hay registros de bajas"
@@ -684,8 +918,15 @@ function ProduccionLecheTab({
   const [litersPm, setLitersPm] = useState('')
   const [notes, setNotes] = useState('')
 
-  // ── date filter ───────────────────────────────────────────────────
-  const [filterDate, setFilterDate] = useState('')   // ISO date or ''
+  // ── filter state ──────────────────────────────────────────────────
+  type FilterMode = 'dia' | 'semana_pasada' | 'semana' | 'mes' | 'ultimos_6_meses' | 'anio'
+  const [filterMode, setFilterMode] = useState<FilterMode>('mes')
+  const [filterDay, setFilterDay] = useState(() => localIso(new Date()))
+  const [filterWeek, setFilterWeek] = useState(() => isoWeekStr(new Date()))
+  const [filterMonth, setFilterMonth] = useState(() => {
+    const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [filterYear, setFilterYear] = useState(() => String(new Date().getFullYear()))
 
   const PAGE_SIZE = 7
 
@@ -738,25 +979,47 @@ function ProduccionLecheTab({
 
   if (loading || loadingAnimals) return <TabSpinner />
 
-  // Aggregate totals per animal for summary bar (all records, not filtered)
-  const totalsByAnimal = events.reduce<Record<string, { name: string; total: number }>>((acc, ev) => {
+  // ── compute date range from active filter ─────────────────────────
+  const toLocalIso = (iso: string | undefined) =>
+    iso ? toIso(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso + 'T12:00:00' : iso)) : ''
+
+  let rangeStart = '', rangeEnd = ''
+  const _today = new Date()
+  if (filterMode === 'dia') {
+    rangeStart = rangeEnd = filterDay
+  } else if (filterMode === 'semana_pasada') {
+    const curMon = mondayOfWeek(_today)
+    const lastMon = new Date(curMon); lastMon.setDate(curMon.getDate() - 7)
+    const lastSun = new Date(lastMon); lastSun.setDate(lastMon.getDate() + 6)
+    rangeStart = localIso(lastMon); rangeEnd = localIso(lastSun)
+  } else if (filterMode === 'semana' && filterWeek) {
+    ;[rangeStart, rangeEnd] = weekRangeFromIso(filterWeek)
+  } else if (filterMode === 'mes' && filterMonth) {
+    const [y, m] = filterMonth.split('-').map(Number)
+    rangeStart = `${y}-${String(m).padStart(2, '0')}-01`
+    rangeEnd = `${y}-${String(m).padStart(2, '0')}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`
+  } else if (filterMode === 'ultimos_6_meses') {
+    const start = new Date(_today); start.setMonth(_today.getMonth() - 6)
+    rangeStart = localIso(start); rangeEnd = localIso(_today)
+  } else if (filterMode === 'anio' && filterYear) {
+    rangeStart = `${filterYear}-01-01`; rangeEnd = `${filterYear}-12-31`
+  }
+
+  const filtered = rangeStart
+    ? events.filter(ev => { const d = toLocalIso(ev.recorded_date); return d >= rangeStart && d <= rangeEnd })
+    : events
+  const visibleRows = filtered.slice(0, PAGE_SIZE)
+  const hasMore = filtered.length > PAGE_SIZE
+
+  // Aggregate totals per animal for the active filter period
+  const totalsByAnimal = filtered.reduce<Record<string, { name: string; total: number }>>((acc, ev) => {
     const key = ev.animal_id
     const name = ev.animals?.name || ev.animals?.identification_code || 'Animal'
     if (!acc[key]) acc[key] = { name, total: 0 }
     acc[key].total += Number(ev.total_liters) || 0
     return acc
   }, {})
-
-  // Apply date filter then cap at PAGE_SIZE.
-  // Parse recorded_date as local noon (same normalization as fmtDate) so the
-  // filtered day matches what the user sees displayed on screen.
-  const toLocalIso = (iso: string | undefined) =>
-    iso ? toIso(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso + 'T12:00:00' : iso)) : ''
-  const filtered = filterDate
-    ? events.filter(ev => toLocalIso(ev.recorded_date) === filterDate)
-    : events
-  const visibleRows = filtered.slice(0, PAGE_SIZE)
-  const hasMore = filtered.length > PAGE_SIZE
+  const uniqueCowCount = Object.keys(totalsByAnimal).length
 
   return (
     <div className="space-y-4">
@@ -837,34 +1100,74 @@ function ProduccionLecheTab({
 
       {events.length > 0 && (
         <>
-          {/* ── Date filter bar ───────────────────────────────────────── */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <label className="text-xs font-medium text-muted shrink-0">Filtrar por fecha:</label>
-            <div className="flex items-center gap-1">
-              <input
-                type="date"
-                value={filterDate}
-                onChange={e => setFilterDate(e.target.value)}
-                className="input-calc !py-1 !text-xs w-auto"
-              />
-              {filterDate && (
+          {/* ── Filter bar ────────────────────────────────────────────── */}
+          <div className="space-y-2">
+            {/* Mode pills */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(
+                [
+                  { key: 'dia', label: 'Día' },
+                  { key: 'semana_pasada', label: 'Sem. pasada' },
+                  { key: 'semana', label: 'Semana' },
+                  { key: 'mes', label: 'Mes' },
+                  { key: 'ultimos_6_meses', label: '6 meses' },
+                  { key: 'anio', label: 'Año' },
+                ] as { key: FilterMode; label: string }[]
+              ).map(({ key, label }) => (
                 <button
-                  onClick={() => setFilterDate('')}
-                  className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface-hover transition-colors"
-                  title="Limpiar filtro"
+                  key={key}
+                  onClick={() => setFilterMode(key)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                    filterMode === key
+                      ? 'bg-primary text-white'
+                      : 'bg-surface border border-border text-muted hover:text-foreground hover:bg-surface-hover'
+                  }`}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  {label}
                 </button>
-              )}
+              ))}
             </div>
-            {(filterDate || hasMore) && (
-              <span className="text-xs text-muted ml-auto">
-                {visibleRows.length === filtered.length
-                  ? `${filtered.length} registro${filtered.length !== 1 ? 's' : ''}`
-                  : `${visibleRows.length} de ${filtered.length} registros (más recientes)`
-                }
-              </span>
-            )}
+
+            {/* Sub-input + stats row */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {filterMode === 'dia' && (
+                <input type="date" value={filterDay} onChange={e => setFilterDay(e.target.value)}
+                  className="input-calc !py-1 !text-xs w-auto" />
+              )}
+              {filterMode === 'semana' && (
+                <input type="week" value={filterWeek} onChange={e => setFilterWeek(e.target.value)}
+                  className="input-calc !py-1 !text-xs w-auto" />
+              )}
+              {filterMode === 'mes' && (
+                <input type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
+                  className="input-calc !py-1 !text-xs w-auto" />
+              )}
+              {filterMode === 'anio' && (
+                <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
+                  className="input-calc !py-1 !text-xs w-auto">
+                  {Array.from({ length: 6 }, (_, i) => String(new Date().getFullYear() - i)).map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              )}
+              {(filterMode === 'semana_pasada' || filterMode === 'ultimos_6_meses') && rangeStart && (
+                <span className="text-xs text-muted">
+                  {fmtDate(rangeStart + 'T12:00:00')} — {fmtDate(rangeEnd + 'T12:00:00')}
+                </span>
+              )}
+
+              <div className="flex items-center gap-3 ml-auto text-xs text-muted">
+                <span>
+                  <span className="font-semibold text-foreground">{uniqueCowCount}</span>
+                  {' '}vaca{uniqueCowCount !== 1 ? 's' : ''}
+                </span>
+                <span>
+                  {hasMore
+                    ? `${visibleRows.length} de ${filtered.length} registros`
+                    : `${filtered.length} registro${filtered.length !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* ── Table ─────────────────────────────────────────────────── */}
@@ -998,6 +1301,10 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
   const fileRef = React.useRef<HTMLInputElement>(null)
+
+  type InvFilterMode = 'todo' | 'hoy' | 'esta_semana' | 'semana_pasada' | 'semana'
+  const [filterMode, setFilterMode] = useState<InvFilterMode>('todo')
+  const [filterWeek, setFilterWeek] = useState(() => isoWeekStr(new Date()))
 
   useEffect(() => {
     fetch('/api/invoices')
@@ -1133,6 +1440,29 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
 
   if (loading) return <TabSpinner />
 
+  // ── filter compute ────────────────────────────────────────────────
+  const toLocalIsoInv = (iso: string | undefined) =>
+    iso ? toIso(new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso + 'T12:00:00' : iso)) : ''
+  const _today = new Date()
+  let invRangeStart = '', invRangeEnd = ''
+  if (filterMode === 'hoy') {
+    invRangeStart = invRangeEnd = localIso(_today)
+  } else if (filterMode === 'esta_semana') {
+    const mon = mondayOfWeek(_today)
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
+    invRangeStart = localIso(mon); invRangeEnd = localIso(sun)
+  } else if (filterMode === 'semana_pasada') {
+    const curMon = mondayOfWeek(_today)
+    const lastMon = new Date(curMon); lastMon.setDate(curMon.getDate() - 7)
+    const lastSun = new Date(lastMon); lastSun.setDate(lastMon.getDate() + 6)
+    invRangeStart = localIso(lastMon); invRangeEnd = localIso(lastSun)
+  } else if (filterMode === 'semana' && filterWeek) {
+    ;[invRangeStart, invRangeEnd] = weekRangeFromIso(filterWeek)
+  }
+  const filteredInvoices = invRangeStart
+    ? invoices.filter(inv => { const d = toLocalIsoInv(inv.created_at); return d >= invRangeStart && d <= invRangeEnd })
+    : invoices
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -1193,73 +1523,132 @@ function InvoicesTab({ isAdmin }: { isAdmin: boolean }) {
 
       {error && <ErrorBanner message={error} />}
 
-      {invoices.length > 0 ? (
-        <div className="space-y-2">
-          {invoices.map(inv => (
-            <div
-              key={inv.id}
-              className="bg-surface border border-border rounded-xl px-4 py-3 flex items-center gap-3"
-            >
-              <Receipt className="w-4 h-4 text-muted shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{inv.title}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted">{fmtDate(inv.created_at)}</span>
-                  {inv.notes && (
-                    <span className="text-xs text-muted italic truncate max-w-[200px]" title={inv.notes}>
-                      — {inv.notes}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => handlePreview(inv.id)}
-                  disabled={loadingPreview}
-                  className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover transition-colors text-foreground disabled:opacity-50"
-                >
-                  {loadingPreview
-                    ? <Loader2 className="w-3 h-3 animate-spin" />
-                    : <Eye className="w-3 h-3" />}
-                  Vista previa
-                </button>
-                <button
-                  onClick={() => handleDownload(inv.id, inv.file_url, inv.created_at)}
-                  className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover transition-colors text-foreground"
-                >
-                  <Download className="w-3 h-3" />
-                  Descargar
-                </button>
-                {isAdmin && (
-                  deleteId === inv.id ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDelete(inv.id)}
-                        className="px-3 py-1 text-xs rounded-lg bg-danger text-white hover:bg-danger/80"
-                      >
-                        Sí, eliminar
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(null)}
-                        className="px-3 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover"
-                      >
-                        Cancelar
-                      </button>
+      {invoices.length > 0 && (
+        <>
+          {/* ── Filter pills ──────────────────────────────────────── */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {(
+              [
+                { key: 'todo', label: 'Todo' },
+                { key: 'hoy', label: 'Hoy' },
+                { key: 'esta_semana', label: 'Esta semana' },
+                { key: 'semana_pasada', label: 'Sem. pasada' },
+                { key: 'semana', label: 'Semana específica' },
+              ] as { key: InvFilterMode; label: string }[]
+            ).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilterMode(key)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                  filterMode === key
+                    ? 'bg-primary text-white'
+                    : 'bg-surface border border-border text-muted hover:text-foreground hover:bg-surface-hover'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            {filterMode === 'semana' && (
+              <input type="week" value={filterWeek} onChange={e => setFilterWeek(e.target.value)}
+                className="input-calc !py-1 !text-xs w-auto" />
+            )}
+            <span className="text-xs text-muted ml-auto">
+              {filteredInvoices.length} factura{filteredInvoices.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {/* ── Invoice cards ─────────────────────────────────────── */}
+          {filteredInvoices.length > 0 ? (
+            <div className="space-y-2">
+              {filteredInvoices.map(inv => {
+                const days = daysUntilExpiry(inv.created_at)
+                const expiryClass = days <= 7 ? 'text-danger' : days <= 30 ? 'text-amber-500' : 'text-muted'
+                const expiryLabel = days < 0
+                  ? 'Pendiente elim.'
+                  : days === 0
+                    ? 'Vence hoy'
+                    : `${days}d restantes`
+                return (
+                  <div
+                    key={inv.id}
+                    className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4"
+                  >
+                    {/* Info block */}
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <Receipt className="w-4 h-4 text-muted shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-semibold text-foreground truncate">{inv.title}</p>
+                          <span className={`text-xs font-medium shrink-0 ${expiryClass}`}>{expiryLabel}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                          <span className="text-xs text-muted">{fmtDate(inv.created_at)}</span>
+                          {inv.notes && (
+                            <span className="text-xs text-muted italic truncate max-w-[180px]" title={inv.notes}>
+                              — {inv.notes}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => setDeleteId(inv.id)}
-                      className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )
-                )}
-              </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:shrink-0">
+                      <button
+                        onClick={() => handlePreview(inv.id)}
+                        disabled={loadingPreview}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-hover transition-colors text-foreground disabled:opacity-50"
+                      >
+                        {loadingPreview ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye className="w-3 h-3" />}
+                        Vista previa
+                      </button>
+                      <button
+                        onClick={() => handleDownload(inv.id, inv.file_url, inv.created_at)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-hover transition-colors text-foreground"
+                      >
+                        <Download className="w-3 h-3" />
+                        Descargar
+                      </button>
+                      {isAdmin && (
+                        deleteId === inv.id ? (
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <button
+                              onClick={() => handleDelete(inv.id)}
+                              className="flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-lg bg-danger text-white hover:bg-danger/80"
+                            >
+                              Sí, eliminar
+                            </button>
+                            <button
+                              onClick={() => setDeleteId(null)}
+                              className="flex-1 sm:flex-none px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-surface-hover"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteId(inv.id)}
+                            className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          ))}
-        </div>
-      ) : (
+          ) : (
+            <EmptyState
+              icon={<Receipt className="w-10 h-10 text-muted/30 mx-auto mb-2" />}
+              message="Ninguna factura en el período seleccionado"
+            />
+          )}
+        </>
+      )}
+
+      {invoices.length === 0 && (
         <EmptyState
           icon={<Receipt className="w-10 h-10 text-muted/30 mx-auto mb-2" />}
           message="No hay facturas adjuntas"

@@ -572,7 +572,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
+          <h1 className="font-display tracking-tight text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
             Informes <span className="text-primary">&amp; Gráficos Operativos</span>
           </h1>
           <p className="text-muted mt-1 text-sm">

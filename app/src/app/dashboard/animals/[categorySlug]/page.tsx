@@ -78,7 +78,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">{category.name}</h1>
+        <h1 className="font-display tracking-tight text-2xl md:text-3xl font-bold text-foreground">{category.name}</h1>
         <p className="text-muted mt-1">{category.description}</p>
       </div>
 

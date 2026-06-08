@@ -49,6 +49,7 @@
   --surface:        #ffffff;   /* pure white cards                      */
   --surface-hover:  #f0fdf4;   /* green-50 — hover tint                 */
   --border-color:   #d1fae5;   /* emerald-100 — very soft dividers      */
+  --input-border:   #15803d;   /* green-700 — medium-dark green         */
   --muted:          #4b5563;   /* neutral-600 — 6.1:1 on white, passes AA */
   --danger:         #dc2626;
   --success:        #16a34a;
@@ -81,6 +82,7 @@
   --surface:        #0d170d;   /* very dark forest surface              */
   --surface-hover:  #132013;   /* slightly lighter                      */
   --border-color:   #1a3320;   /* dark emerald border                   */
+  --input-border:   #2d6a4f;   /* emerald mid-dark — visible on surface */
   --muted:          #6b7280;   /* neutral-500 — stronger on dark surfaces */
   --danger:         #f87171;
   --success:        #34d399;
@@ -114,6 +116,7 @@
   --surface:        #ffffff;
   --surface-hover:  #eff6ff;
   --border-color:   #bfdbfe;
+  --input-border:   #93c5fd;   /* blue-300 — visible input stroke       */
   --muted:          #4b7fa3;
   --danger:         #cc1416;
   --success:        #047857;
@@ -300,15 +303,27 @@ body {
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   background: var(--background);
-  border: 1.5px solid var(--border-color);
+  border: 1.5px solid var(--input-border);
   color: var(--foreground);
   font-size: 0.875rem;
   transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
 }
 .input-calc:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
   border-color: var(--primary);
   outline: none;
+}
+select.input-calc {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+[data-theme="dark"] select.input-calc {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
 /* ─────────────────────────────────────────────

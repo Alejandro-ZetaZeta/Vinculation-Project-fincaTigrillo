@@ -39,7 +39,7 @@ export default async function AnimalsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Registrar Animal</h1>
+        <h1 className="font-display tracking-tight text-2xl md:text-3xl font-bold text-foreground">Registrar Animal</h1>
         <p className="text-muted mt-1">Selecciona la categoría del animal que deseas registrar</p>
       </div>
 

@@ -318,7 +318,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Registrar {typeName}</h1>
+          <h1 className="font-display tracking-tight text-2xl md:text-3xl font-bold text-foreground">Registrar {typeName}</h1>
           <p className="text-muted mt-1">Completa la información del animal</p>
         </div>
         {/* Tablet / mobile: small icon to the right of heading, sticky below header */}

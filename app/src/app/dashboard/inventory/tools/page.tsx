@@ -14,7 +14,7 @@ export default async function ToolsInventoryPage() {
     <div className="space-y-8" id="tools-inventory-page">
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+        <h1 className="font-display tracking-tight text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
           <Wrench className="w-7 h-7 text-primary" aria-hidden="true" />
           Inventario de Herramientas
         </h1>
