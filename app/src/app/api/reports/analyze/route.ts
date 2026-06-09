@@ -3,6 +3,9 @@ import { cookies } from 'next/headers'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { aiChat } from '@/lib/ai/factory'
 
+
+export const maxDuration = 60
+
 // ─── Sistema prompt para informes operativos ─────────────────────────────────
 const REPORTS_SYSTEM_PROMPT = `Eres un asesor experto en gestión ganadera para la Finca Tigrillo, ubicada en Colombia.
 Tu función es analizar datos operativos del inventario animal, actividades y eventos reproductivos, y generar informes profesionales en español.

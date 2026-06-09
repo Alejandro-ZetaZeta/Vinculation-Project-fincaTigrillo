@@ -116,13 +116,13 @@ export async function aiChat(messages: ChatMessage[]): Promise<{
   model: string
 }> {
   const { client, model, providerName } = createAIClient()
-
+  const isLocal = providerName === 'local'
   const completion = await client.chat.completions.create({
     model,
     messages,
     temperature: 0.3,   // baja temperatura = respuestas más deterministas
-    max_tokens: 4096,
-    response_format: { type: 'json_object' },
+    max_tokens: isLocal ? 2000 : 4096,
+    ...(isLocal ? {} : {response_format: {type: 'json_object'}}),
   })
 
   const content = completion.choices[0]?.message?.content ?? '{}'
