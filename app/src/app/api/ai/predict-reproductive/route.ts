@@ -6,7 +6,7 @@ import { buildReproductivePredictionPrompt } from '@/lib/ai/prompts'
 import type { AnimalContext, ReproductiveEventContext } from '@/lib/ai/provider'
 
 
-export const maxDuration = 360
+export const maxDuration = 300
 /**
  * POST /api/ai/predict-reproductive
  *

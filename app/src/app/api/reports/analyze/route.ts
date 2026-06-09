@@ -4,7 +4,7 @@ import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { aiChat } from '@/lib/ai/factory'
 
 
-export const maxDuration = 360
+export const maxDuration = 300
 
 // ─── Sistema prompt para informes operativos ─────────────────────────────────
 const REPORTS_SYSTEM_PROMPT = `Eres un asesor experto en gestión ganadera para la Finca Tigrillo, ubicada en Colombia.
