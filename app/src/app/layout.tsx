@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     apple: '/faviconOficial.svg',
   },
   verification: {
-    google: 'JECF0PWZw27Rn0nQnPVNA92pP6FAEcmXF1D5mwixndw',
+    google: 'o3DzClk0eI-CVW7kn3tbyHSPy-Gx-eOL8ce0zwBm6Ps',
   },
   openGraph: {
     type: 'website',
