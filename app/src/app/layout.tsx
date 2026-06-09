@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     icon: '/faviconOficial.svg',
     apple: '/faviconOficial.svg',
   },
+  verification: {
+    google: 'JECF0PWZw27Rn0nQnPVNA92pP6FAEcmXF1D5mwixndw',
+  },
   openGraph: {
     type: 'website',
     siteName: 'Finca Tigrillo',
