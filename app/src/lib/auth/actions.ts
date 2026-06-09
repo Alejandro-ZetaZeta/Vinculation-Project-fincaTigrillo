@@ -40,9 +40,27 @@ export async function signIn(formData: FormData) {
     .maybeSingle()
 
   if (!profile) {
-    return {
-      success: false,
-      error: 'Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y la carpeta de spam o correo no deseado).',
+    // Self-heal: account verified but profile row missing (insert failed or
+    // the user abandoned the OTP step after verifying). Without this the
+    // account is permanently locked out with a misleading "verify" message.
+    if (data.user?.emailVerified) {
+      const { error: healError } = await createInsForgeServerClient(data.accessToken)
+        .database.from('user_profiles').insert([{
+          user_id: data.user.id,
+          role: getRoleForEmail(email) ?? 'viewer',
+          full_name: data.user.profile?.name || '',
+          semester: null,
+          career: null,
+        }])
+
+      if (healError) {
+        return { success: false, error: 'Error al recuperar tu perfil. Contacta al administrador.' }
+      }
+    } else {
+      return {
+        success: false,
+        error: 'Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada (y la carpeta de spam o correo no deseado).',
+      }
     }
   }
 

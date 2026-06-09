@@ -1,4 +1,9 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 import { getCurrentUser } from '@/lib/auth/actions'
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'

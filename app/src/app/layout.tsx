@@ -18,7 +18,10 @@ const syne = Syne({
   variable: '--ft-font-display',
 })
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fincatigrillo.vercel.app'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
   description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
   manifest: '/manifest.webmanifest',
@@ -31,6 +34,18 @@ export const metadata: Metadata = {
   icons: {
     icon: '/faviconOficial.svg',
     apple: '/faviconOficial.svg',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Finca Tigrillo',
+    title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
+    description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
+    locale: 'es_EC',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
+    description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
   },
 }
 
