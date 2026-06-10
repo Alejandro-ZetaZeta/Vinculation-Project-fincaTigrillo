@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createInsForgeServerClient } from '@/lib/insforge/server'
+import { createInsForgeServerClient, createInsForgeAdminClient } from '@/lib/insforge/server'
 import { cookies } from 'next/headers'
 
 async function getAdminClient() {
@@ -31,7 +31,10 @@ export async function DELETE(
     const { client, error, status } = await getAdminClient()
     if (!client) return NextResponse.json({ error }, { status })
 
-    const { error: dbError } = await client.database
+    // Use service-role client to bypass RLS for the actual write operations
+    const db = createInsForgeAdminClient()
+
+    const { error: dbError } = await db.database
       .from('animal_weights')
       .delete()
       .eq('id', weightId)
@@ -40,7 +43,7 @@ export async function DELETE(
     if (dbError) return NextResponse.json({ error: dbError.message }, { status: 400 })
 
     // Recalculate current weight from remaining records
-    const { data: latestWeight } = await client.database
+    const { data: latestWeight } = await db.database
       .from('animal_weights')
       .select('weight_kg')
       .eq('animal_id', id)
@@ -48,7 +51,7 @@ export async function DELETE(
       .limit(1)
       .maybeSingle()
 
-    await client.database
+    await db.database
       .from('animals')
       .update({ weight_kg: latestWeight?.weight_kg ?? null })
       .eq('id', id)

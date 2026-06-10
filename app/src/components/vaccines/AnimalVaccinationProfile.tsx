@@ -50,15 +50,17 @@ export function AnimalVaccinationProfile(props: {
   const [actionError, setActionError] = useState<string>('')
 
   useEffect(() => {
+    const controller = new AbortController()
     setLoading(true)
-    fetch(`/api/animals/${animalId}/vaccinations`)
+    fetch(`/api/animals/${animalId}/vaccinations`, { signal: controller.signal })
       .then(r => r.json())
       .then(json => {
         const list = Array.isArray(json?.data) ? (json.data as VaccinationRow[]) : []
         setRows(list)
       })
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false))
+      .catch(e => { if (e.name !== 'AbortError') { setRows([]); setLoading(false) } })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    return () => controller.abort()
   }, [animalId, assignOpen])
 
   async function deleteRecord(id: string) {

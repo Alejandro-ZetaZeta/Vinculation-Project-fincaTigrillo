@@ -983,25 +983,26 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
   function displayToKg(v: number) { return isGrams ? v / 1000 : isLbs ? v / 2.20462 : v }
 
   useEffect(() => {
-    fetch(`/api/animals/${animalId}/weights`)
+    const controller = new AbortController()
+    fetch(`/api/animals/${animalId}/weights`, { signal: controller.signal })
       .then(r => r.json())
       .then(d => { if (Array.isArray(d.data)) setWeights(d.data) })
-      .finally(() => setLoading(false))
+      .catch(e => { if (e.name !== 'AbortError') console.error(e) })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    return () => controller.abort()
   }, [animalId])
 
   useEffect(() => {
     if (!chartRef.current || weights.length === 0) return
     const ctx = chartRef.current.getContext('2d')
     if (!ctx) return
-
     if (chartInstance.current) chartInstance.current.destroy()
-
     const base = baselineDate ? new Date(baselineDate + 'T00:00:00') : null
     chartInstance.current = new Chart(ctx, {
       type: 'line',
       data: {
         labels: weights.map(w => {
-          if (base) {
+          if (base && isPoultry) {
             const rec = new Date(w.recorded_at.slice(0, 10) + 'T00:00:00')
             const day = Math.max(1, Math.floor((rec.getTime() - base.getTime()) / 86_400_000) + 1)
             return `Día ${day}`
@@ -1023,6 +1024,7 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: { legend: { display: false } },
         scales: {
           y: { beginAtZero: false, grid: { color: '#e2e8f033' } },
@@ -1030,7 +1032,11 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
         }
       }
     })
-
+    // Restart CSS reveal animation on each render
+    const canvas = chartRef.current
+    canvas.classList.remove('animate-chart-reveal')
+    void canvas.offsetWidth
+    canvas.classList.add('animate-chart-reveal')
     return () => chartInstance.current?.destroy()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weights, weightUnit, baselineDate])
@@ -1152,7 +1158,7 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
         <div className="flex items-center justify-center py-6 text-muted"><Loader2 className="w-5 h-5 animate-spin" /></div>
       ) : weights.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-background border border-border rounded-xl p-3 h-48 relative">
+          <div className="lg:col-span-2 bg-background border border-border rounded-xl p-3 h-48 relative animate-fade-in">
             <canvas ref={chartRef}></canvas>
           </div>
           <div className="bg-background border border-border rounded-xl overflow-hidden flex flex-col h-48">
@@ -1175,7 +1181,7 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
                           <button
                             onClick={() => handleDelete(w.id)}
                             disabled={deletingId === w.id}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-danger hover:text-red-700 disabled:opacity-30"
+                            className="opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity text-danger hover:text-red-700 disabled:opacity-30"
                             title="Eliminar registro"
                           >
                             {deletingId === w.id

@@ -398,6 +398,16 @@ select.input-calc {
   animation: fade-up 0.35s ease both;
 }
 
+@keyframes chart-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0% 0 0);   }
+}
+
+/* Class selector beats * in reduced-motion rule (higher specificity wins !important) */
+.animate-chart-reveal {
+  animation: chart-reveal 1s ease-in-out forwards !important;
+}
+
 /* Stagger helpers — applied via inline style delay */
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.10s; }
