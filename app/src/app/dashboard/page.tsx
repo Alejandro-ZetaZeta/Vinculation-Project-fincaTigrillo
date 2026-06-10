@@ -5,6 +5,7 @@ import { getAccessToken } from '@/lib/auth/cookies'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
 import { PawPrint, ShoppingCart, CheckCircle, BarChart2, ArrowRight, TrendingUp } from 'lucide-react'
 import { StudentKanban } from '@/components/activities/StudentKanban'
+import { LocalDate } from '@/components/layout/LocalDate'
 
 /* ─────────────────────────────────────────────
    Reference data
@@ -274,7 +275,7 @@ export default async function DashboardPage() {
           <div>
             <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-1 flex items-center gap-1.5">
               <span className="w-3 h-px bg-primary inline-block" aria-hidden="true" />
-              {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+              <LocalDate />
             </p>
             <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground tracking-tight">
               Hola, <span className="text-primary">{firstName}</span>

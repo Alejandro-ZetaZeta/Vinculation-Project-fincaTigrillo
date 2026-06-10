@@ -22,6 +22,31 @@ async function getAdminClient() {
   return { client: insforge, userId: userData.user.id, error: null, status: 200 }
 }
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('insforge_access_token')?.value
+    if (!accessToken) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    const insforge = createInsForgeServerClient(accessToken)
+    const { data: userData } = await insforge.auth.getCurrentUser()
+    if (!userData?.user) return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 })
+    const { data, error } = await insforge.database
+      .from('animals')
+      .select('id, name, identification_code, metadata, status, weight_kg')
+      .eq('id', id)
+      .maybeSingle()
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+    if (!data) return NextResponse.json({ error: 'Animal no encontrado' }, { status: 404 })
+    return NextResponse.json(data)
+  } catch {
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
