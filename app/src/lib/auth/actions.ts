@@ -1,6 +1,6 @@
 'use server'
 
-import { createInsForgeServerClient } from '@/lib/insforge/server'
+import { createInsForgeServerClient, createInsForgeAdminClient } from '@/lib/insforge/server'
 import { setAuthCookies, clearAuthCookies, getAccessToken } from '@/lib/auth/cookies'
 import { buildWelcomeEmail } from '@/lib/email/welcome'
 import { createGmailTransporter } from '@/lib/email/transporter'
@@ -234,18 +234,24 @@ async function sendWelcomeEmail(email: string, name: string) {
 // ── Password Reset ───────────────────────────────────────────────────────────
 
 export async function requestPasswordReset(email: string) {
-  const insforge = createInsForgeServerClient()
+  const admin = createInsForgeAdminClient()
+
+  // InsForge's sendResetPasswordEmail is enumeration-safe (always returns 200).
+  // Check existence explicitly so unregistered emails get a clear error.
+  const { data: exists, error: rpcError } = await admin.database
+    .rpc('check_email_registered', { p_email: email })
+
+  if (rpcError || !exists) {
+    return { success: false, error: 'No existe una cuenta registrada con ese correo electrónico.' }
+  }
+
   try {
-    await insforge.auth.sendResetPasswordEmail({
+    await admin.auth.sendResetPasswordEmail({
       email,
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/forgot-password`,
     })
     return { success: true }
-  } catch (err: unknown) {
-    const msg = ((err as { message?: string })?.message || '').toLowerCase()
-    if (msg.includes('not found') || msg.includes('no user') || msg.includes('does not exist')) {
-      return { success: false, error: 'No existe una cuenta registrada con ese correo electrónico.' }
-    }
+  } catch {
     return { success: false, error: 'Error al enviar el correo. Intenta de nuevo.' }
   }
 }
