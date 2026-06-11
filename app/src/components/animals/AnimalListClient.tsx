@@ -624,12 +624,12 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                       <div className="md:hidden space-y-1.5">
                         <div className="flex items-center gap-3 min-w-0">
                           {animalIconSrc && (
-                            <div className="flex items-center justify-center w-7 h-7 shrink-0">
+                            <div className={`flex items-center justify-center shrink-0 ${animal.is_litter ? 'w-9 h-9' : 'w-7 h-7'}`}>
                               <Image
                                 src={animalIconSrc}
                                 alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
-                                width={28} height={28}
-                                className="w-7 h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                                width={animal.is_litter ? 36 : 28} height={animal.is_litter ? 36 : 28}
+                                className={`object-contain invert-0 [html[data-theme='dark']_&]:invert ${animal.is_litter ? 'w-9 h-9' : 'w-7 h-7'}`}
                               />
                             </div>
                           )}
@@ -661,12 +661,12 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                         <div className="min-w-0">
                           <div className="flex items-center gap-3 min-w-0">
                             {animalIconSrc && (
-                              <div className="flex items-center justify-center w-7 h-7 shrink-0">
+                              <div className={`flex items-center justify-center shrink-0 ${animal.is_litter ? 'w-9 h-9' : 'w-7 h-7'}`}>
                                 <Image
                                   src={animalIconSrc}
                                   alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
-                                  width={28} height={28}
-                                  className="w-7 h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                                  width={animal.is_litter ? 36 : 28} height={animal.is_litter ? 36 : 28}
+                                  className={`object-contain invert-0 [html[data-theme='dark']_&]:invert ${animal.is_litter ? 'w-9 h-9' : 'w-7 h-7'}`}
                                 />
                               </div>
                             )}
@@ -707,12 +707,12 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                         <div className="min-w-0">
                           <div className="flex items-center gap-3 min-w-0">
                             {animalIconSrc && (
-                              <div className="flex items-center justify-center w-7 h-7 shrink-0">
+                              <div className={`flex items-center justify-center shrink-0 ${animal.is_litter ? 'w-9 h-9' : 'w-7 h-7'}`}>
                                 <Image
                                   src={animalIconSrc}
                                   alt={animal.sex ? `Sexo: ${animal.sex}` : 'Sexo'}
-                                  width={28} height={28}
-                                  className="w-7 h-7 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                                  width={animal.is_litter ? 36 : 28} height={animal.is_litter ? 36 : 28}
+                                  className={`object-contain invert-0 [html[data-theme='dark']_&]:invert ${animal.is_litter ? 'w-9 h-9' : 'w-7 h-7'}`}
                                 />
                               </div>
                             )}
