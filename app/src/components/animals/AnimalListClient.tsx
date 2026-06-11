@@ -32,6 +32,9 @@ interface Animal {
   notes: string | null
   metadata: Record<string, unknown>
   created_at: string
+  is_litter?: boolean
+  litter_count?: number | null
+  litter_alive?: number | null
   animal_types: {
     id: string
     name: string
@@ -63,9 +66,10 @@ function formatDate(dateStr: string | null | undefined): string {
   return `${day}/${month}/${year}`
 }
 
-function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types' | 'metadata'>): string | null {
+function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types' | 'metadata' | 'is_litter'>): string | null {
   const sex = (animal.sex || '').toLowerCase()
   const typeSlug = (animal.animal_types?.slug || '').toLowerCase()
+  const isLitter = animal.is_litter === true
 
   if (typeSlug === 'bovino') {
     if (sex === 'macho') return '/toro.svg'
@@ -73,6 +77,11 @@ function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types' | 'metadata'>
   }
 
   if (typeSlug === 'porcino') {
+    if (isLitter) {
+      if (sex === 'macho') return '/cerdo.svg'
+      // Mixed litters or female litters use cerda.svg (female icon)
+      return '/cerda.svg'
+    }
     if (sex === 'macho') return '/cerdo.svg'
     if (sex === 'hembra') return '/cerda.svg'
   }
@@ -129,6 +138,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [poultryCounts, setPoultryCounts] = useState<Record<string, { loading: boolean; initial: number | null; deaths: number | null; remaining: number | null }>>({})
+  const [litterCounts, setLitterCounts] = useState<Record<string, { loading: boolean; initial: number | null; deaths: number | null; remaining: number | null }>>({})
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -161,52 +171,98 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     if (!expandedId) return
     const a = animals.find(x => x.id === expandedId)
     if (!a) return
-    if (a.animal_types?.slug !== 'aves-de-corral') return
 
-    const initial = parseInitialPoultryCount(a)
-    setPoultryCounts(prev => ({
-      ...prev,
-      [expandedId]: {
-        loading: true,
-        initial,
-        deaths: prev[expandedId]?.deaths ?? null,
-        remaining: prev[expandedId]?.remaining ?? null,
-      }
-    }))
+    if (a.animal_types?.slug === 'aves-de-corral') {
+      const initial = parseInitialPoultryCount(a)
+      setPoultryCounts(prev => ({
+        ...prev,
+        [expandedId]: {
+          loading: true,
+          initial,
+          deaths: prev[expandedId]?.deaths ?? null,
+          remaining: prev[expandedId]?.remaining ?? null,
+        }
+      }))
 
-    fetch(`/api/reproductive-events?animal_id=${encodeURIComponent(expandedId)}`)
-      .then(r => r.json())
-      .then((events: unknown) => {
-        if (!Array.isArray(events)) return
-        const typed = events as Array<{ event_type?: unknown; quantity?: unknown }>
-        const deaths = typed.reduce((sum: number, ev) => {
-          if (ev?.event_type !== 'muerte') return sum
-          const qRaw = ev?.quantity
-          const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
-          return sum + q
-        }, 0)
-        const remaining = initial == null ? null : (initial - deaths)
-        setPoultryCounts(prev => ({
-          ...prev,
-          [expandedId]: {
-            loading: false,
-            initial,
-            deaths,
-            remaining: remaining == null ? null : Math.max(remaining, 0),
-          }
-        }))
-      })
-      .catch(() => {
-        setPoultryCounts(prev => ({
-          ...prev,
-          [expandedId]: {
-            loading: false,
-            initial,
-            deaths: null,
-            remaining: null,
-          }
-        }))
-      })
+      fetch(`/api/reproductive-events?animal_id=${encodeURIComponent(expandedId)}`)
+        .then(r => r.json())
+        .then((events: unknown) => {
+          if (!Array.isArray(events)) return
+          const typed = events as Array<{ event_type?: unknown; quantity?: unknown }>
+          const deaths = typed.reduce((sum: number, ev) => {
+            if (ev?.event_type !== 'muerte') return sum
+            const qRaw = ev?.quantity
+            const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
+            return sum + q
+          }, 0)
+          const remaining = initial == null ? null : (initial - deaths)
+          setPoultryCounts(prev => ({
+            ...prev,
+            [expandedId]: {
+              loading: false,
+              initial,
+              deaths,
+              remaining: remaining == null ? null : Math.max(remaining, 0),
+            }
+          }))
+        })
+        .catch(() => {
+          setPoultryCounts(prev => ({
+            ...prev,
+            [expandedId]: {
+              loading: false,
+              initial,
+              deaths: null,
+              remaining: null,
+            }
+          }))
+        })
+    } else if (a.is_litter) {
+      const initial = a.litter_count ?? null
+      setLitterCounts(prev => ({
+        ...prev,
+        [expandedId]: {
+          loading: true,
+          initial,
+          deaths: prev[expandedId]?.deaths ?? null,
+          remaining: prev[expandedId]?.remaining ?? null,
+        }
+      }))
+
+      fetch(`/api/reproductive-events?animal_id=${encodeURIComponent(expandedId)}`)
+        .then(r => r.json())
+        .then((events: unknown) => {
+          if (!Array.isArray(events)) return
+          const typed = events as Array<{ event_type?: unknown; quantity?: unknown }>
+          const deaths = typed.reduce((sum: number, ev) => {
+            if (ev?.event_type !== 'muerte') return sum
+            const qRaw = ev?.quantity
+            const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
+            return sum + q
+          }, 0)
+          const remaining = initial == null ? null : (initial - deaths)
+          setLitterCounts(prev => ({
+            ...prev,
+            [expandedId]: {
+              loading: false,
+              initial,
+              deaths,
+              remaining: remaining == null ? null : Math.max(remaining, 0),
+            }
+          }))
+        })
+        .catch(() => {
+          setLitterCounts(prev => ({
+            ...prev,
+            [expandedId]: {
+              loading: false,
+              initial,
+              deaths: null,
+              remaining: null,
+            }
+          }))
+        })
+    }
   }, [expandedId, animals])
 
   const filteredTypes = useMemo(() => {
@@ -308,6 +364,8 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
       notes: animal.notes || '',
       identification_code: animal.identification_code || '',
       ...(isPoultryBatch && { meta_etapa: (animal.metadata?.etapa as string) || '' }),
+      meta_numero_pezones: animal.metadata?.numero_pezones != null ? String(animal.metadata.numero_pezones) : '',
+      litter_count: animal.litter_count ?? '',
     })
     setExpandedId(animal.id)
   }
@@ -355,7 +413,33 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
 
       const animalToEdit = animals.find(a => a.id === animalId)
       if (animalToEdit) {
-        payload.metadata = { ...(animalToEdit.metadata || {}), ...metadataUpdates }
+        const metaObj = { ...(animalToEdit.metadata || {}), ...metadataUpdates } as Record<string, unknown>
+        
+        // Handle teat count updates
+        if (animalToEdit.animal_types?.slug === 'porcino' && editData.sex === 'hembra' && !animalToEdit.is_litter) {
+          const teatsVal = editData.meta_numero_pezones === '' ? null : parseInt(String(editData.meta_numero_pezones), 10)
+          if (teatsVal != null && !isNaN(teatsVal)) {
+            metaObj.numero_pezones = teatsVal
+          } else {
+            metaObj.numero_pezones = 0
+          }
+        } else {
+          // If no longer a porcino hembra, cleanup the teat count metadata
+          delete metaObj.numero_pezones
+        }
+
+        payload.metadata = metaObj
+
+        // Handle litter count correction
+        if (animalToEdit.is_litter) {
+          const c = litterCounts[animalId]
+          const deaths = (c && c.deaths != null) ? c.deaths : 0
+          const newLitterCount = editData.litter_count === '' ? null : parseInt(String(editData.litter_count), 10)
+          if (newLitterCount != null && !isNaN(newLitterCount)) {
+            payload.litter_count = newLitterCount
+            payload.litter_alive = Math.max(0, newLitterCount - deaths)
+          }
+        }
       }
 
       const res = await fetch(`/api/animals/${animalId}`, {
@@ -554,7 +638,14 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                              {animal.is_litter && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300 border border-pink-200 dark:border-pink-800/30 shrink-0">
+                                  🐷 Camada
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
                           </div>
                         </div>
@@ -589,7 +680,14 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                               </div>
                             )}
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                                {animal.is_litter && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300 border border-pink-200 dark:border-pink-800/30 shrink-0">
+                                    🐷 Camada
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
                             </div>
                           </div>
@@ -633,7 +731,14 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                               </div>
                             )}
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                                {animal.is_litter && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300 border border-pink-200 dark:border-pink-800/30 shrink-0">
+                                    🐷 Camada
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
                             </div>
                           </div>
@@ -753,7 +858,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             <label className="block text-xs text-muted mb-1">Sexo</label>
                             <select value={String(editData.sex || '')} onChange={(e) => setEditData(p => ({...p, sex: e.target.value}))}
                               className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
-                              {animal.animal_types?.slug === 'aves-de-corral' ? (
+                              {animal.animal_types?.slug === 'aves-de-corral' || animal.is_litter ? (
                                 <>
                                   <option value="macho">Macho</option>
                                   <option value="hembra">Hembra</option>
@@ -822,6 +927,34 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                                 <option value="levante">Levante</option>
                                 <option value="producción/adultos">Producción / Adultos</option>
                               </select>
+                            </div>
+                          )}
+                          {animal.animal_types?.slug === 'porcino' && editData.sex === 'hembra' && !animal.is_litter && (
+                            <div>
+                              <label htmlFor="edit-teats" className="block text-xs text-muted mb-1">Número de pezones</label>
+                              <input
+                                id="edit-teats"
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={editData.meta_numero_pezones != null ? String(editData.meta_numero_pezones) : ''}
+                                onChange={(e) => setEditData(p => ({ ...p, meta_numero_pezones: e.target.value }))}
+                                className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                              />
+                            </div>
+                          )}
+                          {animal.is_litter && (
+                            <div>
+                              <label htmlFor="edit-litter-count" className="block text-xs text-muted mb-1">Lechones nacidos vivos</label>
+                              <input
+                                id="edit-litter-count"
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={editData.litter_count != null ? String(editData.litter_count) : ''}
+                                onChange={(e) => setEditData(p => ({ ...p, litter_count: e.target.value }))}
+                                className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                              />
                             </div>
                           )}
                         </div>
@@ -894,18 +1027,51 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                           <Detail label="Adquisición" value={animal.acquisition_type} />
                           <Detail label="F. Adquisición" value={formatDate(animal.acquisition_date)} />
                           <Detail label="Registrado" value={formatDate(animal.created_at)} />
+                          {animal.is_litter && (
+                            <>
+                              <Detail
+                                label="Lechones nacidos vivos"
+                                value={animal.litter_count != null ? String(animal.litter_count) : null}
+                              />
+                              <Detail
+                                label="Nacidos muertos"
+                                value={animal.metadata?.nacidos_muertos != null ? String(animal.metadata.nacidos_muertos) : '0'}
+                              />
+                              <Detail
+                                label="Bajas acumuladas"
+                                value={(() => {
+                                  const c = litterCounts[animal.id]
+                                  if (!c || c.loading) return 'Calculando...'
+                                  return c.deaths == null ? null : String(c.deaths)
+                                })()}
+                              />
+                              <Detail
+                                label="Lechones vivos"
+                                value={(() => {
+                                  const c = litterCounts[animal.id]
+                                  if (!c || c.loading) return 'Calculando...'
+                                  return c.remaining == null ? null : String(c.remaining)
+                                })()}
+                              />
+                            </>
+                          )}
                           {animal.metadata && Object.entries(animal.metadata)
                             .filter(([key]) => {
                               if (key === 'padre_id' || key === 'peso_promedio_g') return false
                               if (key === 'estado_vacunacion' || key === 'fecha_vacunacion') return false
                               if (animal.animal_types?.slug === 'aves-de-corral' && (key === 'cantidad' || key === 'mortalidad_esperada_pct')) return false
+                              if (animal.is_litter && key === 'nacidos_muertos') return false
                               return true
                             })  // hide raw UUID + legacy derived weight + poultry initial count (shown explicitly)
-                            .map(([key, value]) => (
-                              <Detail key={key}
-                                label={key === 'padre_nombre' ? 'Padre' : key.replace(/_/g, ' ')}
-                                value={String(value)} />
-                            ))}
+                            .map(([key, value]) => {
+                              let label = key === 'padre_nombre' ? 'Padre' : key.replace(/_/g, ' ')
+                              if (key === 'numero_pezones') label = 'Número de pezones'
+                              return (
+                                <Detail key={key}
+                                  label={label}
+                                  value={String(value)} />
+                              )
+                            })}
                         </div>
                         {/* Weight History Section — Only for specific types */}
                         {['bovino', 'equino', 'porcino', 'caprino', 'aves-de-corral'].includes(animal.animal_types?.slug) && (
