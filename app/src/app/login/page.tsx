@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { LogIn, Mail, Lock, Eye, EyeOff, Sun, Moon } from 'lucide-react'
 import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
+import UpdateChecker from '@/components/pwa/UpdateChecker'
 
 // Inner component that safely uses useSearchParams
 function LoginContent() {
@@ -222,8 +223,11 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense>
-      <LoginContent />
-    </Suspense>
+    <>
+      <Suspense>
+        <LoginContent />
+      </Suspense>
+      <UpdateChecker />
+    </>
   )
 }
