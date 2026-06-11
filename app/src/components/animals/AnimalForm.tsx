@@ -250,6 +250,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   const fields = typeFields[typeSlug] || typeFields['bovino']
 
   const iconSrc: string | null =
+    isLitterMode                  ? '/camada.svg' :
     typeSlug === 'bovino'         ? (sex === 'hembra' ? '/vaca.svg'    : '/toro.svg') :
     typeSlug === 'equino'         ? (sex === 'hembra' ? '/yegua.svg'   : '/caballo.svg') :
     typeSlug === 'porcino'        ? (sex === 'hembra' ? '/cerda.svg'   : '/cerdo.svg') :

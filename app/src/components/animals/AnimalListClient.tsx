@@ -77,11 +77,7 @@ function getSexIconSrc(animal: Pick<Animal, 'sex' | 'animal_types' | 'metadata' 
   }
 
   if (typeSlug === 'porcino') {
-    if (isLitter) {
-      if (sex === 'macho') return '/cerdo.svg'
-      // Mixed litters or female litters use cerda.svg (female icon)
-      return '/cerda.svg'
-    }
+    if (isLitter) return '/camada.svg'
     if (sex === 'macho') return '/cerdo.svg'
     if (sex === 'hembra') return '/cerda.svg'
   }
@@ -637,17 +633,12 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                               />
                             </div>
                           )}
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
-                              {animal.is_litter && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300 border border-pink-200 dark:border-pink-800/30 shrink-0">
-                                  🐷 Camada
-                                </span>
-                              )}
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
+                              </div>
+                              <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
                             </div>
-                            <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
-                          </div>
                         </div>
                         <div className="flex items-center gap-3 pl-1">
                           {sexOnlyIconSrc && (
@@ -682,11 +673,6 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
-                                {animal.is_litter && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300 border border-pink-200 dark:border-pink-800/30 shrink-0">
-                                    🐷 Camada
-                                  </span>
-                                )}
                               </div>
                               <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
                             </div>
@@ -733,11 +719,6 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <p className="text-sm font-semibold text-foreground truncate leading-snug">{animal.name || 'Sin nombre'}</p>
-                                {animal.is_litter && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-700 dark:bg-pink-950/30 dark:text-pink-300 border border-pink-200 dark:border-pink-800/30 shrink-0">
-                                    🐷 Camada
-                                  </span>
-                                )}
                               </div>
                               <p className="text-xs text-muted truncate">{animal.identification_code || '—'}</p>
                             </div>
@@ -1057,15 +1038,18 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                           )}
                           {animal.metadata && Object.entries(animal.metadata)
                             .filter(([key]) => {
-                              if (key === 'padre_id' || key === 'peso_promedio_g') return false
+                              if (key === 'padre_id' || key === 'madre_id') return false
+                              if (key === 'peso_promedio_g') return false
                               if (key === 'estado_vacunacion' || key === 'fecha_vacunacion') return false
                               if (animal.animal_types?.slug === 'aves-de-corral' && (key === 'cantidad' || key === 'mortalidad_esperada_pct')) return false
                               if (animal.is_litter && key === 'nacidos_muertos') return false
                               return true
-                            })  // hide raw UUID + legacy derived weight + poultry initial count (shown explicitly)
+                            })  // hide raw UUIDs + legacy derived weight + poultry initial count (shown explicitly)
                             .map(([key, value]) => {
-                              let label = key === 'padre_nombre' ? 'Padre' : key.replace(/_/g, ' ')
-                              if (key === 'numero_pezones') label = 'Número de pezones'
+                              let label = key === 'padre_nombre' ? 'Padre'
+                                        : key === 'madre_nombre' ? 'Madre'
+                                        : key === 'numero_pezones' ? 'Número de pezones'
+                                        : key.replace(/_/g, ' ')
                               return (
                                 <Detail key={key}
                                   label={label}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Image from 'next/image'
 import {
   Wrench, Plus, Save, X, Loader2, Trash2,
   PackagePlus, PackageMinus, Package, ChevronDown, ChevronUp,
@@ -64,6 +65,18 @@ const CAT_COLORS: Record<ToolCategory, { pill: string; dot: string }> = {
   'Transporte':        { pill: 'bg-violet-500/10 text-violet-700 dark:text-violet-400', dot: 'bg-violet-500' },
   'Seguridad':         { pill: 'bg-red-500/10 text-red-700 dark:text-red-400',        dot: 'bg-red-500' },
   'Otro':              { pill: 'bg-muted/10 text-muted',                               dot: 'bg-muted' },
+}
+
+// ── Category icon mapping ─────────────────────────────────────────────────────
+const CAT_ICONS: Record<ToolCategory, string> = {
+  'Maquinaria':         '/Maq.svg',
+  'Herramienta manual': '/Her.svg',
+  'Veterinaria':        '/Vet.svg',
+  'Riego':              '/Rie.svg',
+  'Eléctrico':          '/Ele.svg',
+  'Transporte':         '/Tra.svg',
+  'Seguridad':          '/Seg.svg',
+  'Otro':               '/Otr.svg',
 }
 
 // ── Stock badge helper ────────────────────────────────────────────────────────
@@ -490,7 +503,20 @@ export function ToolsManager() {
               >
                 {/* ── Card main row ──────────────────────────────────── */}
                 <div className="p-5">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start justify-between gap-3 md:gap-4">
+                    {/* Category icon — standalone, responsive size */}
+                    <div className={`shrink-0 w-10 h-10 md:w-14 md:h-14 rounded-2xl flex items-center justify-center ${catColors.pill}`}
+                         title={tool.category}>
+                      <Image
+                        src={CAT_ICONS[tool.category] || '/Otr.svg'}
+                        alt={tool.category}
+                        width={40}
+                        height={40}
+                        className="w-6 h-6 md:w-8 md:h-8 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                        aria-hidden="true"
+                      />
+                    </div>
+
                     {/* Left: info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -503,7 +529,7 @@ export function ToolsManager() {
 
                       {/* Badges row */}
                       <div className="flex flex-wrap gap-2 mt-3">
-                        {/* Category */}
+                        {/* Category pill — color dot only, no icon */}
                         <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold ${catColors.pill}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${catColors.dot}`} aria-hidden="true" />
                           {tool.category}
