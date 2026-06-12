@@ -32,8 +32,8 @@ export const metadata: Metadata = {
     title: 'Tigrillo',
   },
   icons: {
-    icon: '/faviconOficial.svg',
-    apple: '/faviconOficial.svg',
+    icon: '/TigrilloMobile.png',
+    apple: '/TigrilloMobile.png',
   },
   verification: {
     google: 'o3DzClk0eI-CVW7kn3tbyHSPy-Gx-eOL8ce0zwBm6Ps',

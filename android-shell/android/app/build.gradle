@@ -18,10 +18,27 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file(System.getenv("TIGRILLO_KEYSTORE_PATH"))
-            storePassword System.getenv("TIGRILLO_STORE_PASSWORD")
-            keyAlias System.getenv("TIGRILLO_KEY_ALIAS")
-            keyPassword System.getenv("TIGRILLO_KEY_PASSWORD")
+            def propsFile = rootProject.file("keystore.properties")
+            if (propsFile.exists()) {
+                def props = new Properties()
+                props.load(new FileInputStream(propsFile))
+                storeFile file(props["storeFile"])
+                storePassword props["storePassword"]
+                keyAlias props["keyAlias"]
+                keyPassword props["keyPassword"]
+            } else {
+                // CI/CD fallback: read from environment variables
+                def keystorePath = System.getenv("TIGRILLO_KEYSTORE_PATH")
+                if (!keystorePath) {
+                    throw new IllegalStateException(
+                        "No keystore.properties found and TIGRILLO_KEYSTORE_PATH is not set."
+                    )
+                }
+                storeFile file(keystorePath)
+                storePassword System.getenv("TIGRILLO_STORE_PASSWORD")
+                keyAlias System.getenv("TIGRILLO_KEY_ALIAS")
+                keyPassword System.getenv("TIGRILLO_KEY_PASSWORD")
+            }
         }
     }
     buildTypes {
