@@ -41,8 +41,10 @@ export function AssignVaccineModal(props: {
   defaultMode?: 'single' | 'group'
   /** Slug of the animal type (used to detect poultry batches) */
   animalTypeSlug?: string | null
+  /** Hide the Individual/Group mode toggle (e.g. when called from the vaccine catalog) */
+  hideModeToggle?: boolean
 }) {
-  const { open, onClose, defaultAnimalIds, defaultTypeId, isAdmin, title, defaultMode, animalTypeSlug } = props
+  const { open, onClose, defaultAnimalIds, defaultTypeId, isAdmin, title, defaultMode, animalTypeSlug, hideModeToggle } = props
 
   const [vaccines, setVaccines] = useState<VaccineCatalogItem[]>([])
   const [loadingVaccines, setLoadingVaccines] = useState(false)
@@ -296,9 +298,9 @@ export function AssignVaccineModal(props: {
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+      <div className="absolute inset-0 flex items-end sm:items-center justify-center sm:p-4">
+        <div className="w-full max-w-2xl bg-surface border border-border sm:rounded-2xl rounded-t-2xl shadow-xl flex flex-col max-h-[calc(100dvh-env(safe-area-inset-top,0px)-1rem)] sm:max-h-[90vh]">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <Syringe className="w-5 h-5 text-primary" aria-hidden="true" />
               <h3 className="text-base font-semibold text-foreground">{title || 'Asignar Vacuna'}</h3>
@@ -312,7 +314,7 @@ export function AssignVaccineModal(props: {
             </button>
           </div>
 
-          <div className="p-5 space-y-4">
+          <div className="p-5 space-y-4 overflow-y-auto flex-1">
             {error && (
               <div className="p-3 bg-danger/10 border border-danger/20 text-danger rounded-xl text-sm">{error}</div>
             )}
@@ -376,31 +378,33 @@ export function AssignVaccineModal(props: {
                 )}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium">Modo</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMode('single')}
-                    className={[
-                      'flex-1 px-3 py-2.5 rounded-xl border text-sm font-medium',
-                      mode === 'single' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-background border-border text-muted hover:bg-surface-hover'
-                    ].join(' ')}
-                  >
-                    Individual
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('group')}
-                    className={[
-                      'flex-1 px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5',
-                      mode === 'group' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-background border-border text-muted hover:bg-surface-hover'
-                    ].join(' ')}
-                  >
-                    <Users className="w-4 h-4" aria-hidden="true" /> Grupo
-                  </button>
+              {!hideModeToggle && (
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium">Modo</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMode('single')}
+                      className={[
+                        'flex-1 px-3 py-2.5 rounded-xl border text-sm font-medium',
+                        mode === 'single' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-background border-border text-muted hover:bg-surface-hover'
+                      ].join(' ')}
+                    >
+                      Individual
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode('group')}
+                      className={[
+                        'flex-1 px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5',
+                        mode === 'group' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-background border-border text-muted hover:bg-surface-hover'
+                      ].join(' ')}
+                    >
+                      <Users className="w-4 h-4" aria-hidden="true" /> Grupo
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -500,7 +504,7 @@ export function AssignVaccineModal(props: {
             )}
           </div>
 
-          <div className="px-5 py-4 border-t border-border flex items-center justify-end gap-2">
+          <div className="px-5 py-4 border-t border-border flex items-center justify-end gap-2 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-4">
             <button
               type="button"
               onClick={onClose}

@@ -239,6 +239,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
         isAdmin={true}
         title="Asignar vacuna por grupo"
         defaultMode="group"
+        hideModeToggle={true}
       />
 
       <div className="flex items-center justify-between">
@@ -356,7 +357,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium">Edad mínima (días)</label>
               <input
@@ -583,7 +584,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <label className="block text-sm font-medium">Edad mínima (días)</label>
                       <input
