@@ -83,15 +83,40 @@ export async function POST(request: NextRequest) {
     // (These reads are pre-flight business logic; atomicity of stock is handled by RPC.)
     const { data: vax, error: vaxError } = await client.database
       .from('vaccine_catalog')
-      .select('default_next_dose_days')
+      .select('default_next_dose_days, total_doses')
       .eq('id', vaccine_id)
       .maybeSingle()
 
     if (vaxError) return NextResponse.json({ error: vaxError.message }, { status: 400 })
     if (!vax) return NextResponse.json({ error: 'Vacuna no encontrada' }, { status: 404 })
 
-    const interval = (vax as { default_next_dose_days: number | null }).default_next_dose_days
+    const interval = (vax as { default_next_dose_days: number | null; total_doses: number | null }).default_next_dose_days
+    const totalDoses = (vax as { default_next_dose_days: number | null; total_doses: number | null }).total_doses
     const isSingleDose = interval == null || interval === 0
+
+    // --- Total dose limit guard ---
+    if (totalDoses != null && totalDoses > 0) {
+      const { data: existingDoses, error: existingDosesError } = await client.database
+        .from('animal_vaccinations')
+        .select('animal_id')
+        .eq('vaccine_id', vaccine_id)
+        .in('animal_id', animal_ids)
+
+      if (existingDosesError) return NextResponse.json({ error: existingDosesError.message }, { status: 400 })
+
+      const countMap = new Map<string, number>()
+      for (const r of (existingDoses as { animal_id: string }[] ?? [])) {
+        countMap.set(r.animal_id, (countMap.get(r.animal_id) ?? 0) + 1)
+      }
+
+      const overLimitIds = animal_ids.filter(id => (countMap.get(id) ?? 0) >= totalDoses)
+      if (overLimitIds.length > 0) {
+        return NextResponse.json(
+          { error: `Límite de dosis alcanzado (máx. ${totalDoses}). Algunos animales ya completaron el esquema de vacunación.`, over_limit_animal_ids: overLimitIds },
+          { status: 400 }
+        )
+      }
+    }
 
     // --- Single-dose duplicate guard (business rule, not stock-related) ---
     if (isSingleDose) {

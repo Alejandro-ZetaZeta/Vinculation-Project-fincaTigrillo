@@ -5,7 +5,7 @@ const SACK_KG = 40
 
 /* ─────────────────────────────────────────────────────────────────
    GET /api/cron/weekly-feed
-   Invoked every Friday 08:00 by Vercel Cron.
+   Invoked every Thursday 12:00 Ecuador time (17:00 UTC) by Vercel Cron.
    Protected by Authorization: Bearer <CRON_SECRET>.
 ───────────────────────────────────────────────────────────────── */
 async function handle(req: NextRequest) {

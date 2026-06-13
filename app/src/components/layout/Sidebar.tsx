@@ -8,7 +8,7 @@ import {
   Users, ListTodo, Calculator, FileText,
   PanelLeftClose, Syringe, CalendarDays,
   Wrench, ChevronDown, Package, Sprout,
-  ShieldCheck, GraduationCap,
+  ShieldCheck, GraduationCap, PlusCircle,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 
@@ -32,9 +32,17 @@ const inventoryItems = [
 
 // ── People sub-items ─────────────────────────────────────────────────────────
 const peopleItems = [
-  { href: '/dashboard/students',   label: 'Estudiantes',     icon: Users,    adminOnly: false, staffOnly: true,  viewerOnly: false },
-  { href: '/dashboard/activities', label: 'Actividades',     icon: ListTodo, adminOnly: false, staffOnly: true,  viewerOnly: false },
-  { href: '/dashboard/activities', label: 'Mis Actividades', icon: ListTodo, adminOnly: false, staffOnly: false, viewerOnly: true  },
+  { href: '/dashboard/students',        label: 'Estudiantes',     icon: Users,          adminOnly: false, staffOnly: true,  viewerOnly: false },
+  { href: '/dashboard/people/teachers', label: 'Docentes',        icon: GraduationCap,  adminOnly: true,  staffOnly: false, viewerOnly: false },
+  { href: '/dashboard/activities',      label: 'Actividades',     icon: ListTodo,       adminOnly: false, staffOnly: true,  viewerOnly: false },
+  { href: '/dashboard/activities',      label: 'Mis Actividades', icon: ListTodo,       adminOnly: false, staffOnly: false, viewerOnly: true  },
+]
+
+// ── Requests sub-items ───────────────────────────────────────────────────────
+const requestsItems = [
+  { href: '/dashboard/requests',     label: 'Gestionar', icon: ClipboardList, adminOnly: true,  teacherOnly: false, viewerOnly: false },
+  { href: '/dashboard/requests/new', label: 'Nueva Solicitud',        icon: PlusCircle,    adminOnly: false, teacherOnly: true,  viewerOnly: false },
+  { href: '/dashboard/requests/my',  label: 'Mis Solicitudes',        icon: ListTodo,      adminOnly: false, teacherOnly: true,  viewerOnly: false },
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -61,8 +69,18 @@ export function Sidebar({ userRole }: { userRole: string }) {
   const peopleActive = visiblePeopleItems.some(i => pathname.startsWith(i.href))
   const [peopleOpen, setPeopleOpen] = useState(peopleActive)
 
+  const visibleRequestsItems = requestsItems.filter(i => {
+    if (i.adminOnly && !isAdmin) return false
+    if (i.teacherOnly && !isTeacher) return false
+    if (i.viewerOnly && !isViewer) return false
+    return true
+  })
+  const requestsActive = visibleRequestsItems.some(i => pathname.startsWith(i.href))
+  const [requestsOpen, setRequestsOpen] = useState(requestsActive)
+
   useEffect(() => { if (inventoryActive) setInvOpen(true)  }, [inventoryActive])
   useEffect(() => { if (peopleActive)    setPeopleOpen(true) }, [peopleActive])
+  useEffect(() => { if (requestsActive)  setRequestsOpen(true) }, [requestsActive])
 
   // Listen for open event dispatched by the Header's mobile logo button
   useEffect(() => {
@@ -371,6 +389,76 @@ export function Sidebar({ userRole }: { userRole: string }) {
                   >
                     <div className="ml-3 pl-3 border-l border-white/15 space-y-0.5 py-1">
                       {visiblePeopleItems.map(sub => {
+                        const isActive = pathname === sub.href || pathname.startsWith(sub.href)
+                        const Icon = sub.icon
+                        return (
+                          <Link
+                            key={sub.href + sub.label}
+                            href={sub.href}
+                            onClick={() => setMobileOpen(false)}
+                            aria-current={isActive ? 'page' : undefined}
+                            className={[
+                              'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all duration-200',
+                              isActive ? 'nav-item-active' : 'nav-item-idle',
+                            ].join(' ')}
+                          >
+                            <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            <span className="whitespace-nowrap flex-1">{sub.label}</span>
+                            {isActive && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
+                            )}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Collapsible Solicitudes ─────────────────────────── */}
+          {visibleRequestsItems.length > 0 && (
+            <div className="pt-0.5">
+              {effectivelyCollapsed ? (
+                <Link
+                  href={isAdmin ? '/dashboard/requests' : '/dashboard/requests/my'}
+                  onClick={() => setMobileOpen(false)}
+                  className={linkCls(requestsActive, true)}
+                  title="Solicitudes"
+                  aria-label="Solicitudes"
+                >
+                  <PlusCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  {requestsActive && (
+                    <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
+                  )}
+                </Link>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setRequestsOpen(o => !o)}
+                    className={groupHeaderCls(requestsActive)}
+                    aria-expanded={requestsOpen}
+                    aria-controls="requests-submenu"
+                  >
+                    <PlusCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <span className="flex-1 text-left whitespace-nowrap">Solicitudes</span>
+                    <ChevronDown
+                      className={['w-3.5 h-3.5 transition-transform duration-200', requestsOpen ? 'rotate-180' : ''].join(' ')}
+                      aria-hidden="true"
+                    />
+                  </button>
+
+                  <div
+                    id="requests-submenu"
+                    className={[
+                      'overflow-hidden transition-all duration-200',
+                      requestsOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
+                    ].join(' ')}
+                  >
+                    <div className="ml-3 pl-3 border-l border-white/15 space-y-0.5 py-1">
+                      {visibleRequestsItems.map(sub => {
                         const isActive = pathname === sub.href || pathname.startsWith(sub.href)
                         const Icon = sub.icon
                         return (

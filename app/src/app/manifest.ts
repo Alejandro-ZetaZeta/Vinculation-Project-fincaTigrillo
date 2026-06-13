@@ -15,15 +15,15 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'es',
     icons: [
       {
-        src: '/faviconOficial.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
+        src: '/TigrilloMobile.png',
+        sizes: '1024x1024',
+        type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/faviconOficial.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
+        src: '/TigrilloMobile.png',
+        sizes: '1024x1024',
+        type: 'image/png',
         purpose: 'maskable',
       },
     ],
