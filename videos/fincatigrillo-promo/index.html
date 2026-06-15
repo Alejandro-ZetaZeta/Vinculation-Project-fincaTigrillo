@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Syne";
+        src: url("assets/fonts/Syne.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "DM Sans";
+        src: url("assets/fonts/DMSans.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      body { font-family: "DM Sans"; }
+      code, pre, .monospace {
+        font-family: "DM Sans";
+        font-variant-numeric: tabular-nums;
+      }
+      :root {
+        --emerald: #16a34a;
+        --emerald-light: #22c55e;
+        --forest: #0b2414;
+        --forest-mid: #1a2414;
+        --slate: #374151;
+        --parchment: #f6f7f2;
+        --mint: #d1fae5;
+        --danger: #fca5a5;
+        --white: #ffffff;
+      }
+
+      /* ── Root & plates ── */
+      .root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      .plate {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 100px 140px;
+        opacity: 0;
+      }
+      .plate-inner {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 20px;
+      }
+
+      /* ── Masthead ── */
+      .masthead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+      .brand-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--white);
+        font-weight: 600;
+        font-size: 18px;
+        letter-spacing: -0.3px;
+      }
+      .brand-chip img {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+      }
+
+      /* ── Display type ── */
+      .display { font-family: "Syne"; letter-spacing: -1.2px; }
+
+      /* ── Scene 1: Hero ── */
+      .hero-title {
+        font-size: 88px;
+        line-height: 1.04;
+        font-weight: 900;
+        color: var(--white);
+      }
+      .hero-accent { color: var(--danger); }
+      .hero-sub {
+        margin-top: 16px;
+        font-size: 28px;
+        line-height: 1.25;
+        color: rgba(255,255,255,0.85);
+        max-width: 900px;
+      }
+      .pain-pills {
+        display: flex;
+        gap: 14px;
+        margin-top: 28px;
+        flex-wrap: wrap;
+      }
+      .pain-pill {
+        padding: 10px 20px;
+        border-radius: 999px;
+        border: 1px solid rgba(252, 165, 165, 0.35);
+        background: rgba(252, 165, 165, 0.1);
+        color: var(--danger);
+        font-weight: 700;
+        font-size: 17px;
+        opacity: 0;
+      }
+
+      /* ── Scene 2: Brand reveal ── */
+      .brand-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
+      }
+      .brand-logo {
+        width: 200px;
+        height: 200px;
+        border-radius: 999px;
+        background: rgba(22, 163, 74, 0.08);
+        border: 2px solid rgba(22, 163, 74, 0.2);
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+      .brand-logo img {
+        width: 160px;
+        height: 160px;
+        border-radius: 999px;
+      }
+      .brand-logo .glow {
+        position: absolute;
+        inset: -20px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(22,163,74,0.15) 0%, transparent 70%);
+        opacity: 0;
+      }
+      .brand-name {
+        margin-top: 28px;
+        font-size: 100px;
+        font-weight: 900;
+        color: var(--emerald);
+        letter-spacing: -2px;
+      }
+      .brand-sub {
+        margin-top: 10px;
+        font-size: 26px;
+        color: #1f2937;
+        font-weight: 600;
+        max-width: 700px;
+      }
+
+      /* ── Scene 3: KPIs ── */
+      .kpi-section {
+        align-self: center;
+      }
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+      .kpi {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(209, 250, 229, 0.2);
+        border-radius: 20px;
+        padding: 28px 24px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .kpi-label {
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+        font-size: 17px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+      .kpi-value {
+        margin-top: 12px;
+        font-family: "Syne";
+        font-weight: 900;
+        font-size: 80px;
+        letter-spacing: -3px;
+        color: var(--white);
+        font-variant-numeric: tabular-nums;
+      }
+      .kpi-ring {
+        margin-top: 16px;
+        display: flex;
+        justify-content: center;
+      }
+      .kpi-ring svg {
+        width: 80px;
+        height: 80px;
+        transform: rotate(-90deg);
+      }
+      .kpi-ring circle {
+        fill: none;
+        stroke-width: 6;
+        stroke-linecap: round;
+      }
+      .kpi-ring .bg { stroke: rgba(255,255,255,0.1); }
+      .kpi-ring .fill {
+        stroke: var(--emerald-light);
+        stroke-dasharray: 226;
+        stroke-dashoffset: 226;
+      }
+
+      /* ── Scene 4: IA ── */
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        height: 100%;
+        align-self: center;
+      }
+      .panel {
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.25);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+      }
+      .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .panel-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: rgba(22, 163, 74, 0.15);
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+      }
+      .panel-title {
+        font-weight: 800;
+        font-size: 19px;
+        color: var(--white);
+      }
+      .vax-list {
+        display: grid;
+        gap: 10px;
+        flex: 1;
+      }
+      .vax-row {
+        display: grid;
+        grid-template-columns: 38px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(209, 250, 229, 0.15);
+        background: rgba(255, 255, 255, 0.05);
+        opacity: 0;
+      }
+      .vax-badge {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        background: rgba(22, 163, 74, 0.15);
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        color: var(--emerald-light);
+        font-weight: 900;
+        font-size: 15px;
+      }
+      .vax-name {
+        font-weight: 700;
+        color: var(--white);
+        font-size: 16px;
+      }
+      .vax-meta {
+        color: rgba(255,255,255,0.6);
+        font-size: 13px;
+        margin-top: 2px;
+      }
+      .vax-date {
+        font-variant-numeric: tabular-nums;
+        font-size: 13px;
+        color: rgba(255,255,255,0.5);
+      }
+      .ai-box {
+        margin-top: auto;
+        padding: 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        background: rgba(22, 163, 74, 0.08);
+      }
+      .ai-label {
+        font-weight: 700;
+        color: rgba(255,255,255,0.7);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .ai-date {
+        margin-top: 8px;
+        font-family: "Syne";
+        font-weight: 900;
+        font-size: 42px;
+        color: var(--white);
+        letter-spacing: -1px;
+      }
+      .ai-cursor {
+        display: inline-block;
+        width: 3px;
+        height: 42px;
+        background: var(--emerald-light);
+        margin-left: 4px;
+        vertical-align: middle;
+        animation: blink 0.6s step-end infinite;
+      }
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+      .ai-bar {
+        margin-top: 12px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .ai-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--emerald), var(--emerald-light));
+        border-radius: 999px;
+      }
+      .ai-note {
+        margin-top: 8px;
+        color: rgba(255,255,255,0.6);
+        font-size: 13px;
+      }
+
+      /* ── Scene 5: Kanban ── */
+      .kanban {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        height: 100%;
+        align-self: center;
+      }
+      .kanban-col {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(22, 163, 74, 0.2);
+        border-radius: 16px;
+        padding: 16px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 12px;
+      }
+      .kanban-col h3 {
+        font-family: "Syne";
+        font-weight: 800;
+        color: var(--forest);
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .kanban-col h3 .count {
+        background: var(--emerald);
+        color: var(--white);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+      }
+      .kanban-cards {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+      .kanban-card {
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid rgba(22, 163, 74, 0.2);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        padding: 12px 14px;
+        opacity: 0;
+      }
+      .kanban-card .who {
+        font-weight: 700;
+        color: var(--forest);
+        font-size: 14px;
+      }
+      .kanban-card .what {
+        margin-top: 4px;
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.3;
+      }
+      .kanban-card .tag {
+        display: inline-block;
+        margin-top: 6px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(22, 163, 74, 0.1);
+        color: var(--emerald);
+      }
+
+      /* ── Scene 6: Finale ── */
+      .finale-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
+      }
+      .finale-logo {
+        width: 180px;
+        height: 180px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        border: 2px solid rgba(255,255,255,0.25);
+        display: grid;
+        place-items: center;
+      }
+      .finale-logo img {
+        width: 140px;
+        height: 140px;
+        border-radius: 999px;
+      }
+      .finale-name {
+        margin-top: 24px;
+        font-size: 96px;
+        font-weight: 900;
+        color: var(--white);
+        letter-spacing: -2px;
+      }
+      .finale-rule {
+        width: 120px;
+        height: 4px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 2px;
+        margin: 16px auto;
+        opacity: 0;
+      }
+      .finale-tagline {
+        font-size: 24px;
+        color: rgba(255,255,255,0.85);
+        max-width: 800px;
+        line-height: 1.4;
+      }
+
+      /* ── Transition overlay ── */
+      .transition-overlay {
+        position: absolute;
+        inset: 0;
+        background: #000;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-root" id="root" data-composition-id="main" data-start="0" data-duration="30.122" data-width="1920" data-height="1080" class="root">
+      <!-- Transition overlay -->
+      <div data-hf-id="hf-pvdu" class="transition-overlay" id="transOverlay"></div>
+
+      <!-- Audio tracks -->
+      <audio data-hf-id="hf-a1" id="audio-s1" class="clip" data-start="0" data-duration="6.14" data-track-index="0" src="assets/voice/scene_1.mp3"></audio>
+      <audio data-hf-id="hf-a2" id="audio-s2" class="clip" data-start="6.15" data-duration="5.22" data-track-index="0" src="assets/voice/scene_2.mp3"></audio>
+      <audio data-hf-id="hf-a3" id="audio-s3" class="clip" data-start="11.38" data-duration="4.43" data-track-index="0" src="assets/voice/scene_3.mp3"></audio>
+      <audio data-hf-id="hf-a4" id="audio-s4" class="clip" data-start="15.82" data-duration="5.30" data-track-index="0" src="assets/voice/scene_4.mp3"></audio>
+      <audio data-hf-id="hf-a5" id="audio-s5" class="clip" data-start="21.13" data-duration="4.49" data-track-index="0" src="assets/voice/scene_5.mp3"></audio>
+      <audio data-hf-id="hf-a6" id="audio-s6" class="clip" data-start="25.63" data-duration="4.49" data-track-index="0" src="assets/voice/scene_6.mp3"></audio>
+
+      <!-- ═══════════ Scene 1: El Reto (0 → 6.144) ═══════════ -->
+      <section data-hf-id="hf-s1" id="s1" class="clip plate" data-start="0" data-duration="6.14" data-track-index="1" style="background: #0b2414">
+        <div data-hf-id="hf-rpnj" class="plate-inner">
+          <div data-hf-id="hf-ukjd" class="masthead">
+            <div data-hf-id="hf-kjxv" class="brand-chip" id="s1-chip">
+              <img data-hf-id="hf-logo1" id="logo-s1" class="clip" data-start="0" data-duration="6.14" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+              <span data-hf-id="hf-ul88">Finca Tigrillo</span>
+            </div>
+            <div data-hf-id="hf-4zsw" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 16px; letter-spacing: 0.5px" id="s1-tag">GESTIÓN GANADERA + EDUCACIÓN</div>
+          </div>
+          <div data-hf-id="hf-88jy" style="align-self: center">
+            <div data-hf-id="hf-ufkq" class="hero-title" id="s1-title">
+              Gestionar una finca y las prácticas estudiantiles
+              <span data-hf-id="hf-xtcq" class="hero-accent" id="s1-accent">sin herramientas digitales</span>
+              es un desafío enorme.
+            </div>
+            <div data-hf-id="hf-sl9c" class="hero-sub" id="s1-sub">Registros manuales, seguimiento limitado, decisiones tardías.</div>
+            <div data-hf-id="hf-tve6" class="pain-pills" id="s1-pills">
+              <div data-hf-id="hf-08r5" class="pain-pill">📋 Sin control de inventario</div>
+              <div data-hf-id="hf-yxg2" class="pain-pill">📅 Sin recordatorios</div>
+              <div data-hf-id="hf-njs0" class="pain-pill">📊 Sin reportes automáticos</div>
+              <div data-hf-id="hf-2npf" class="pain-pill">🤝 Sin colaboración digital</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ Scene 2: Presentación (6.144 → 11.371) ═══════════ -->
+      <section data-hf-id="hf-s2" id="s2" class="clip plate" data-start="6.15" data-duration="5.22" data-track-index="1" style="background: #ffffff">
+        <div data-hf-id="hf-ig3n" class="brand-center">
+          <div data-hf-id="hf-1lyl" class="brand-logo" id="s2-logo-wrap">
+            <div data-hf-id="hf-c6p0" class="glow" id="s2-glow"></div>
+            <img data-hf-id="hf-logo2" id="logo-s2" class="clip" data-start="6.15" data-duration="5.22" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+          </div>
+          <div data-hf-id="hf-tbkf" class="brand-name display" id="s2-name">FINCA TIGRILLO</div>
+          <div data-hf-id="hf-wt93" class="brand-sub" id="s2-sub">Una sola plataforma para gestión ganadera y formación educativa.</div>
+          <div data-hf-id="hf-fwlr" style="display: flex; gap: 32px; margin-top: 32px" id="s2-features">
+            <div data-hf-id="hf-dko1" style="display: flex; align-items: center; gap: 8px; color: #374151; font-weight: 600; font-size: 16px; opacity: 0">
+              <span data-hf-id="hf-g34c" style="color: var(--emerald); font-size: 20px">✓</span> Registro ganadero
+            </div>
+            <div data-hf-id="hf-9row" style="display: flex; align-items: center; gap: 8px; color: #374151; font-weight: 600; font-size: 16px; opacity: 0">
+              <span data-hf-id="hf-rrvo" style="color: var(--emerald); font-size: 20px">✓</span> Salud con IA
+            </div>
+            <div data-hf-id="hf-qubm" style="display: flex; align-items: center; gap: 8px; color: #374151; font-weight: 600; font-size: 16px; opacity: 0">
+              <span data-hf-id="hf-qkyl" style="color: var(--emerald); font-size: 20px">✓</span> Kanban educativo
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ Scene 3: Gestión Ganadera (11.371 → 15.808) ═══════════ -->
+      <section data-hf-id="hf-s3" id="s3" class="clip plate" data-start="11.38" data-duration="4.43" data-track-index="1" style="background: #0b2414">
+        <div data-hf-id="hf-u59b" class="plate-inner">
+          <div data-hf-id="hf-4thp" class="masthead">
+            <div data-hf-id="hf-y3hh" class="display" style="font-size: 52px; font-weight: 900; color: var(--white)" id="s3-title">Gestión ganadera en tiempo real</div>
+            <div data-hf-id="hf-sowh" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 16px" id="s3-sub">Registro · Reproducción · Salud</div>
+          </div>
+          <div data-hf-id="hf-altk" class="kpi-section">
+            <div data-hf-id="hf-gobt" class="kpi-grid" id="s3-kpis">
+              <div data-hf-id="hf-rwnr" class="kpi" id="kpi1">
+                <div data-hf-id="hf-pv0r" class="kpi-label">Bovinos</div>
+                <div data-hf-id="hf-rtq7" class="kpi-value" data-target="48">0</div>
+                <div data-hf-id="hf-ux6l" class="kpi-ring"><svg data-hf-id="hf-3io1" viewBox="0 0 80 80"><circle data-hf-id="hf-cvph" class="bg" cx="40" cy="40" r="36" /><circle data-hf-id="hf-k13a" class="fill" cx="40" cy="40" r="36" data-pct="0.80" /></svg></div>
+              </div>
+              <div data-hf-id="hf-h164" class="kpi" id="kpi2">
+                <div data-hf-id="hf-7hph" class="kpi-label">Equinos</div>
+                <div data-hf-id="hf-o5lw" class="kpi-value" data-target="12">0</div>
+                <div data-hf-id="hf-m5qp" class="kpi-ring"><svg data-hf-id="hf-gwut" viewBox="0 0 80 80"><circle data-hf-id="hf-x4gp" class="bg" cx="40" cy="40" r="36" /><circle data-hf-id="hf-frq9" class="fill" cx="40" cy="40" r="36" data-pct="0.45" /></svg></div>
+              </div>
+              <div data-hf-id="hf-hstx" class="kpi" id="kpi3">
+                <div data-hf-id="hf-mrmk" class="kpi-label">Porcinos</div>
+                <div data-hf-id="hf-uv9w" class="kpi-value" data-target="7">0</div>
+                <div data-hf-id="hf-ncns" class="kpi-ring"><svg data-hf-id="hf-i3rw" viewBox="0 0 80 80"><circle data-hf-id="hf-ybds" class="bg" cx="40" cy="40" r="36" /><circle data-hf-id="hf-9od3" class="fill" cx="40" cy="40" r="36" data-pct="0.25" /></svg></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ Scene 4: IA (15.808 → 21.120) ═══════════ -->
+      <section data-hf-id="hf-s4" id="s4" class="clip plate" data-start="15.82" data-duration="5.30" data-track-index="1" style="background: #374151">
+        <div data-hf-id="hf-tqya" class="plate-inner">
+          <div data-hf-id="hf-60es" class="masthead">
+            <div data-hf-id="hf-52i6" class="display" style="font-size: 52px; font-weight: 900; color: var(--white)" id="s4-title">Salud y vacunas con IA</div>
+            <div data-hf-id="hf-8qyu" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 16px" id="s4-sub">Automatización + predicción</div>
+          </div>
+          <div data-hf-id="hf-be80" class="split" id="s4-split">
+            <div data-hf-id="hf-wgbg" class="panel" id="vacPanel">
+              <div data-hf-id="hf-pi5w" class="panel-header">
+                <div data-hf-id="hf-5ph2" class="panel-icon">💉</div>
+                <div data-hf-id="hf-awsf" class="panel-title">Catálogo de vacunas</div>
+              </div>
+              <div data-hf-id="hf-844a" class="vax-list">
+                <div data-hf-id="hf-a507" class="vax-row" id="vac1">
+                  <div data-hf-id="hf-tze7" class="vax-badge">V</div>
+                  <div data-hf-id="hf-yeow">
+                    <div data-hf-id="hf-e3na" class="vax-name">Fiebre aftosa</div>
+                    <div data-hf-id="hf-lv64" class="vax-meta">Lote bovinos · 48 animales</div>
+                  </div>
+                  <div data-hf-id="hf-n7rq" class="vax-date">2026-06-20</div>
+                </div>
+                <div data-hf-id="hf-1h4c" class="vax-row" id="vac2">
+                  <div data-hf-id="hf-3zwv" class="vax-badge">V</div>
+                  <div data-hf-id="hf-y7yw">
+                    <div data-hf-id="hf-ttg4" class="vax-name">Brucelosis</div>
+                    <div data-hf-id="hf-oy87" class="vax-meta">Terneras · seguimiento</div>
+                  </div>
+                  <div data-hf-id="hf-8ra2" class="vax-date">2026-07-05</div>
+                </div>
+                <div data-hf-id="hf-28s5" class="vax-row" id="vac3">
+                  <div data-hf-id="hf-3llu" class="vax-badge">V</div>
+                  <div data-hf-id="hf-x11t">
+                    <div data-hf-id="hf-pi6m" class="vax-name">Clostridiosis</div>
+                    <div data-hf-id="hf-f1p0" class="vax-meta">Recordatorio automático</div>
+                  </div>
+                  <div data-hf-id="hf-r874" class="vax-date">2026-07-18</div>
+                </div>
+              </div>
+            </div>
+            <div data-hf-id="hf-djjw" class="panel" id="aiPanel">
+              <div data-hf-id="hf-4gng" class="panel-header">
+                <div data-hf-id="hf-3abs" class="panel-icon">🤖</div>
+                <div data-hf-id="hf-ynha" class="panel-title">Predicción reproductiva (IA)</div>
+              </div>
+              <div data-hf-id="hf-cpwp" class="ai-box" id="aiBox">
+                <div data-hf-id="hf-4e5b" class="ai-label">Fecha estimada de parto</div>
+                <div data-hf-id="hf-ti5k" class="ai-date" id="aiDate">14 SEP 2026<span data-hf-id="hf-x7yk" class="ai-cursor" id="aiCursor"></span></div>
+                <div data-hf-id="hf-5n36" class="ai-bar"><div data-hf-id="hf-st7v" class="ai-bar-fill" id="aiBar"></div></div>
+                <div data-hf-id="hf-abeu" class="ai-note">Progreso de gestación calculado</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ Scene 5: Kanban (21.120 → 25.621) ═══════════ -->
+      <section data-hf-id="hf-s5" id="s5" class="clip plate" data-start="21.13" data-duration="4.49" data-track-index="1" style="background: #f6f7f2">
+        <div data-hf-id="hf-tcn9" class="plate-inner">
+          <div data-hf-id="hf-5m3r" class="masthead">
+            <div data-hf-id="hf-1uo7" class="display" style="font-size: 52px; font-weight: 900; color: var(--forest)" id="s5-title">Formación educativa en un solo flujo</div>
+            <div data-hf-id="hf-fadz" style="color: rgba(26,36,20,0.6); font-weight: 600; font-size: 16px" id="s5-sub">Kanban para estudiantes y docentes</div>
+          </div>
+          <div data-hf-id="hf-4ex9" class="kanban" id="s5-kanban">
+            <div data-hf-id="hf-cpka" class="kanban-col" id="col-pend">
+              <h3 data-hf-id="hf-4ka0">Pendiente <span data-hf-id="hf-o4rk" class="count">2</span></h3>
+              <div data-hf-id="hf-q4af" class="kanban-cards">
+                <div data-hf-id="hf-wpbp" class="kanban-card" id="card1">
+                  <div data-hf-id="hf-oa58" class="who">Mariana G.</div>
+                  <div data-hf-id="hf-r9as" class="what">Registro de pesos semanales (bovinos)</div>
+                  <div data-hf-id="hf-qsqi" class="tag">Prioridad alta</div>
+                </div>
+                <div data-hf-id="hf-0nfq" class="kanban-card" id="card2">
+                  <div data-hf-id="hf-ba24" class="who">Juan P.</div>
+                  <div data-hf-id="hf-fxqr" class="what">Checklist de vacunación por lote</div>
+                  <div data-hf-id="hf-lhbs" class="tag">Urgente</div>
+                </div>
+              </div>
+            </div>
+            <div data-hf-id="hf-ld25" class="kanban-col" id="col-prog">
+              <h3 data-hf-id="hf-a8vu">En Progreso <span data-hf-id="hf-mxuh" class="count">1</span></h3>
+              <div data-hf-id="hf-2p13" class="kanban-cards">
+                <div data-hf-id="hf-6t5j" class="kanban-card" id="card3">
+                  <div data-hf-id="hf-misx" class="who">Andrea R.</div>
+                  <div data-hf-id="hf-qgjj" class="what">Actualización de historial de salud</div>
+                  <div data-hf-id="hf-t6ww" class="tag">En revisión</div>
+                </div>
+              </div>
+            </div>
+            <div data-hf-id="hf-mm91" class="kanban-col" id="col-done">
+              <h3 data-hf-id="hf-odyq">Completado <span data-hf-id="hf-mjl9" class="count">1</span></h3>
+              <div data-hf-id="hf-2aq2" class="kanban-cards">
+                <div data-hf-id="hf-ar9k" class="kanban-card" id="card4">
+                  <div data-hf-id="hf-bhox" class="who">Equipo</div>
+                  <div data-hf-id="hf-20v3" class="what">Inventario inicial del hato</div>
+                  <div data-hf-id="hf-zqla" class="tag" style="background: rgba(22,163,74,0.15); color: var(--emerald)">✓ Listo</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ Scene 6: Cierre (25.621 → 30.122) ═══════════ -->
+      <section data-hf-id="hf-s6" id="s6" class="clip plate" data-start="25.63" data-duration="4.49" data-track-index="1" style="background: #16a34a">
+        <div data-hf-id="hf-tscp" class="finale-center">
+          <div data-hf-id="hf-7lvm" class="finale-logo" id="s6-logo">
+            <img data-hf-id="hf-logo6" id="logo-s6" class="clip" data-start="25.63" data-duration="4.49" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+          </div>
+          <div data-hf-id="hf-ark5" class="finale-name display" id="s6-name">FINCA TIGRILLO</div>
+          <div data-hf-id="hf-6ops" class="finale-rule" id="s6-rule"></div>
+          <div data-hf-id="hf-i6b3" class="finale-tagline" id="s6-tagline">La tecnología al servicio del agro educativo ecuatoriano.</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* ── Helpers ── */
+      const CIRC = 2 * Math.PI * 36; // ring circumference (r=36)
+
+      /* ════════════════════════════════════════════════════════
+         SCENE 1 — El Reto (0 → 6.144)
+         ════════════════════════════════════════════════════════ */
+      // Plate fade in
+      tl.to("#s1", { opacity: 1, duration: 0.4, ease: "power2.out" }, 0);
+      // Brand chip slides in
+      tl.fromTo("#s1-chip", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.1);
+      // Tag
+      tl.fromTo("#s1-tag", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.2);
+      // Title — kinetic slam
+      tl.fromTo("#s1-title", { opacity: 0, y: 30, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "power4.out" }, 0.15);
+      // Accent word — red pulse
+      tl.fromTo("#s1-accent", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2)" }, 0.5);
+      // Sub
+      tl.fromTo("#s1-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.6);
+      // Pain pills — staggered slam
+      tl.fromTo("#s1-pills .pain-pill", { opacity: 0, y: 16, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power3.out", stagger: 0.12 }, 0.85);
+
+      // Exit: fade out before transition
+      tl.to("#s1", { opacity: 0, duration: 0.3, ease: "power2.in" }, 5.7);
+
+      /* ════════════════════════════════════════════════════════
+         SCENE 2 — Presentación (6.15 → 11.37)
+         ════════════════════════════════════════════════════════ */
+      const s2 = 6.15;
+      // Plate
+      tl.to("#s2", { opacity: 1, duration: 0.4, ease: "power2.out" }, s2);
+      // Logo glow pulse
+      tl.fromTo("#s2-glow", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1.1, duration: 0.8, ease: "power2.out" }, s2 + 0.05);
+      tl.to("#s2-glow", { scale: 1, duration: 1.2, ease: "sine.inOut", yoyo: true, repeat: 2 }, s2 + 0.8);
+      // Logo
+      tl.fromTo("#logo-s2", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.5)" }, s2 + 0.1);
+      // Name — letter-by-letter via clip
+      tl.fromTo("#s2-name", { opacity: 0, y: 24, letterSpacing: "8px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.8, ease: "power3.out" }, s2 + 0.35);
+      // Sub
+      tl.fromTo("#s2-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, s2 + 0.6);
+      // Feature checks — stagger
+      tl.fromTo("#s2-features div", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, s2 + 0.9);
+
+      // Exit
+      tl.to("#s2", { opacity: 0, duration: 0.3, ease: "power2.in" }, s2 + 4.8);
+
+      /* ════════════════════════════════════════════════════════
+         SCENE 3 — Gestión Ganadera (11.38 → 15.81)
+         ════════════════════════════════════════════════════════ */
+      const s3 = 11.38;
+      // Plate
+      tl.to("#s3", { opacity: 1, duration: 0.4, ease: "power2.out" }, s3);
+      // Title
+      tl.fromTo("#s3-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s3 + 0.05);
+      tl.fromTo("#s3-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s3 + 0.15);
+      // KPI cards — scale in
+      tl.fromTo(".kpi", { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.3)", stagger: 0.12 }, s3 + 0.3);
+
+      // Counting numbers + ring fills
+      document.querySelectorAll(".kpi-value").forEach((el) => {
+        const target = parseInt(el.dataset.target, 10);
+        const obj = { v: 0 };
+        tl.to(obj, {
+          v: target,
+          duration: 1.8,
+          ease: "power3.out",
+          onUpdate: () => { el.textContent = Math.round(obj.v); },
+        }, s3 + 0.5);
+      });
+      document.querySelectorAll(".kpi-ring .fill").forEach((el) => {
+        const pct = parseFloat(el.dataset.pct);
+        tl.to(el, {
+          strokeDashoffset: CIRC * (1 - pct),
+          duration: 1.8,
+          ease: "power3.out",
+        }, s3 + 0.5);
+      });
+
+      // Exit
+      tl.to("#s3", { opacity: 0, duration: 0.3, ease: "power2.in" }, s3 + 4.0);
+
+      /* ════════════════════════════════════════════════════════
+         SCENE 4 — IA (15.82 → 21.12)
+         ════════════════════════════════════════════════════════ */
+      const s4 = 15.82;
+      // Plate
+      tl.to("#s4", { opacity: 1, duration: 0.4, ease: "power2.out" }, s4);
+      // Title
+      tl.fromTo("#s4-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s4 + 0.05);
+      tl.fromTo("#s4-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s4 + 0.15);
+      // Panels — slide from sides
+      tl.fromTo("#vacPanel", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, s4 + 0.25);
+      tl.fromTo("#aiPanel", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, s4 + 0.25);
+      // Vaccine rows — stagger
+      tl.fromTo(".vax-row", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, s4 + 0.5);
+      // AI bar fill
+      tl.to("#aiBar", { width: "78%", duration: 1.4, ease: "power2.out" }, s4 + 0.8);
+      // AI cursor blinks (continuous)
+      tl.to("#aiCursor", { opacity: 0, duration: 0.3, ease: "steps(1)", yoyo: true, repeat: 12 }, s4 + 0.8);
+
+      // Exit
+      tl.to("#s4", { opacity: 0, duration: 0.3, ease: "power2.in" }, s4 + 4.9);
+
+      /* ════════════════════════════════════════════════════════
+         SCENE 5 — Kanban (21.13 → 25.62)
+         ════════════════════════════════════════════════════════ */
+      const s5 = 21.13;
+      // Plate
+      tl.to("#s5", { opacity: 1, duration: 0.4, ease: "power2.out" }, s5);
+      // Title
+      tl.fromTo("#s5-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s5 + 0.05);
+      tl.fromTo("#s5-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s5 + 0.15);
+      // Columns — stagger
+      tl.fromTo(".kanban-col", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1 }, s5 + 0.25);
+      // Cards — stagger
+      tl.fromTo(".kanban-card", { opacity: 0, y: 12, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "power2.out", stagger: 0.08 }, s5 + 0.45);
+      // Card drag: move card1 from Pendiente → En Progreso
+      tl.to("#card1", { x: 560, y: 8, rotation: -1.5, duration: 0.7, ease: "power2.inOut" }, s5 + 1.8);
+      tl.to("#card1", { x: 560, y: 20, rotation: 0, duration: 0.3, ease: "power2.out" }, s5 + 2.5);
+
+      // Exit
+      tl.to("#s5", { opacity: 0, duration: 0.3, ease: "power2.in" }, s5 + 4.1);
+
+      /* ════════════════════════════════════════════════════════
+         SCENE 6 — Cierre (25.63 → 30.12)
+         ════════════════════════════════════════════════════════ */
+      const s6 = 25.63;
+      // Plate
+      tl.to("#s6", { opacity: 1, duration: 0.5, ease: "power2.out" }, s6);
+      // Logo — dramatic scale
+      tl.fromTo("#s6-logo", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.4)" }, s6 + 0.1);
+      // Name
+      tl.fromTo("#s6-name", { opacity: 0, y: 20, letterSpacing: "6px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.7, ease: "power3.out" }, s6 + 0.35);
+      // Rule
+      tl.to("#s6-rule", { opacity: 1, width: 120, duration: 0.5, ease: "power2.out" }, s6 + 0.6);
+      // Tagline
+      tl.fromTo("#s6-tagline", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, s6 + 0.75);
+      // Subtle pulse on logo
+      tl.to("#s6-logo", { scale: 1.03, duration: 1.0, ease: "sine.inOut", yoyo: true, repeat: 2 }, s6 + 1.2);
+
+      /* ── Register timeline ── */
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

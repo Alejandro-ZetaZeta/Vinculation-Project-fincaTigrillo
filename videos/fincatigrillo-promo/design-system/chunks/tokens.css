@@ -1,0 +1,51 @@
+:root {
+  --brand-primary:   #16A34A;
+  --brand-secondary: #4B5563;
+  --brand-tertiary:  #1A2414;
+  --brand-accent:    #149D45;
+  --brand-costume:   #FFFFFF;
+  --ink:             #000000;
+  --canvas:          #FFFFFF;
+  --brand-gradient:  linear-gradient(135deg, #16A34A 0%, #4B5563 50%, #149D45 100%);
+  --deco-1:          #1A2414;
+  --deco-2:          #99E885;
+  --deco-3:          #C0F7FE;
+  --deco-4:          #FE90E8;
+  --font-display:    'Playfair Display', Georgia, serif;
+  --font-body:       'DM Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono:       'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ee-rule-weight: 4px;
+  --ee-rule-weight-cover: 5px; /* cover ornament rules; slightly heavier */
+  --ee-rule-color: var(--ink);
+  --ee-rule: var(--ee-rule-weight) solid var(--ee-rule-color);
+  --ee-ornament-height: 18px;
+  --ee-ornament-rule-gap: 3px;
+  --ee-ornament-rule-thickness: 4px;
+  --ee-ornament-side-bracket-width: 64px; /* vertical-rule side bracket */
+  --ee-ornament-side-bracket-gap: 8px;
+  --ee-radius: 0; /* strict rectangle commitment */
+  --ee-tile-border: var(--ee-rule);
+  --ee-paper: var(--brand-accent);
+  --ee-inverse-bg: var(--ink);
+  --ee-inverse-fg: var(--canvas);
+  --ee-pad-default: 110px;
+  --ee-pad-default-y-bottom: 70px;
+  --ee-pad-cover: 56px;
+  --ee-pad-tile: 36px;
+  --ee-pad-tile-tight: 32px;
+  --ee-pad-pill-y: 10px;
+  --ee-pad-pill-x: 22px;
+  --ee-masthead-inset-top: 56px;
+  --ee-masthead-inset-x: 80px;
+  --ee-gap-default: 30px;
+  --ee-gap-loose: 50px;
+  --ee-gap-row: 26px;
+  --ee-display-tracking: -0.015em;
+  --ee-display-tracking-tight: -0.03em;
+  --ee-display-leading: 0.95;
+  --ee-display-leading-tight: 0.9;
+  --ee-chrome-tracking: 0.1em;
+  --ee-chrome-tracking-wide: 0.18em;
+  --ee-chrome-tracking-tight: 0.05em;
+  --ee-chart-grid: color-mix(in srgb, var(--canvas) 22%, transparent);
+}

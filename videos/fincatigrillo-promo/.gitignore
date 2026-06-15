@@ -1,0 +1,21 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Generated media (regeneratable)
+assets/voice/
+assets/voice_old/
+assets/bgm.wav
+renders/
+.thumbnails/
+
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# HyperFrames temp
+.hyperframes/

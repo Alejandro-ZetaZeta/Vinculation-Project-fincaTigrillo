@@ -1,0 +1,289 @@
+{
+  "mode": "forced",
+  "selected": {
+    "name": "emerald-editorial",
+    "label": "Emerald Editorial"
+  },
+  "confidence": "forced",
+  "brand": {
+    "primary": "#16A34A",
+    "secondary": "#4B5563",
+    "accent": "#149D45",
+    "source": "agent-override",
+    "confidence": "agent-override",
+    "needs_review": false,
+    "screenshot": "capture\\screenshots\\scroll-000.png",
+    "candidates": []
+  },
+  "baseline_winner": {
+    "name": "8-bit-orbit",
+    "combined": 0.493
+  },
+  "top_candidates": [
+    {
+      "name": "8-bit-orbit",
+      "label": "8-Bit Orbit",
+      "raw": 0.4,
+      "normalized": 0.533,
+      "combined": 0.493,
+      "combined_pre_capability": 0.493,
+      "matched_signals": [
+        "high_sat_accent"
+      ],
+      "capabilities_missing": [],
+      "fingerprint": {
+        "shadow": "stacked-pixel-offset",
+        "border": "none",
+        "motion": "pixel-snap-twinkle",
+        "density": "atmospherically-loaded",
+        "contrast": "dark-neon",
+        "palette-mode": "closed"
+      },
+      "best_for": [
+        "gaming",
+        "cyberpunk",
+        "web3",
+        "indie tools",
+        "high-saturation brands",
+        "retro tech",
+        "arcade"
+      ],
+      "avoid_for": [
+        "light-canvas brands",
+        "minimalist pastel",
+        "low-saturation editorial"
+      ],
+      "sectionA_excerpt": "CRT cabinet meets editorial discipline. Tektur display sits on a strict 4px grid; Chakra Petch body reads at HUD distance; Space Mono labels feel like console readouts.\n\nDepth is **stacked hard offset shadows** in 4px increments — never blur. Hero text gets a two-layer shadow (brand-secondary at +4/+4, navy at +8/+8). Buttons get a six-piece stack (three navy steps + three brand-color halo steps).\n\n**Brand DNA drives color, preset drives structure.** Three site colors (`--brand-primary` / `--brand-secondary` / `--brand-accent`) ignite headlines, stat numerals, accent rules, and label fills. They **never** appear as body text. The dark base (`--canvas-void` / `--canvas-navy`) is mandatory — scanline and CRT vignette overlays are invisible without a blackpoint.\n\n**Color role contract**: one ",
+      "delta_from_winner": 0
+    },
+    {
+      "name": "pin-and-paper",
+      "label": "Pin & Paper",
+      "raw": 0.3,
+      "normalized": 0.462,
+      "combined": 0.413,
+      "combined_pre_capability": 0.413,
+      "matched_signals": [
+        "hairline_border"
+      ],
+      "capabilities_missing": [],
+      "fingerprint": {
+        "surface": "yellow-paper-with-grain",
+        "shadow": "hard-offset-ink-zero-blur",
+        "border": "hairline-ink",
+        "voice": "field-notebook-handwritten",
+        "motion": "quiet-considered",
+        "density": "populated-card-grid"
+      },
+      "best_for": [
+        "qualitative research",
+        "founder reflections",
+        "longform brand stories",
+        "hand-crafted decks",
+        "literary brands"
+      ],
+      "avoid_for": [
+        "digital-native polished",
+        "rigorously data-driven",
+        "corporate fintech",
+        "high-energy launches"
+      ],
+      "sectionA_excerpt": "Field notebook pinned to a corkboard, not a polished deck. Every surface is **yellow legal-pad paper** with a non-optional fractal-noise grain — without the texture the system collapses into flat cartoon-yellow. Cards are **cream paper pinned to the page** with a 1.5px hairline ink border, 4px micro-radius, and a hard ink-blue offset shadow (5–8px, zero blur). The shadow is the only depth language.\n\nThree editorial voices, each in its own face: **Space Grotesk 700** carries every printed headline (negative letter-spacing, mixed case); **Caveat** carries every handwritten moment — marginal notes, step numerals, \"me\" voice annotations; **DM Mono uppercase** carries every archival tag — top-chrome lockup, footer meta, date strips. Switching a voice's face collapses the register.\n\n**Brand DNA ",
+      "delta_from_winner": 0.08
+    },
+    {
+      "name": "editorial",
+      "label": "Editorial / Swiss",
+      "raw": 0.4,
+      "normalized": 0.4,
+      "combined": 0.4,
+      "combined_pre_capability": 0.4,
+      "matched_signals": [
+        "hairline_border",
+        "minimal_decoration"
+      ],
+      "capabilities_missing": [],
+      "fingerprint": {
+        "shadow": "none-or-hairline",
+        "border": "hairline",
+        "motion": "refined-glide",
+        "density": "low",
+        "contrast": "medium"
+      },
+      "best_for": [
+        "longform essays",
+        "research recaps",
+        "restrained editorial",
+        "swiss-style brand decks",
+        "academic / advisory"
+      ],
+      "avoid_for": [
+        "sales-driven punch",
+        "expressive maximalism",
+        "decoration-heavy briefs",
+        "high-energy promo"
+      ],
+      "sectionA_excerpt": "Restraint. Hierarchy through size and space, not color or weight.\nLong-form sentences. Generous whitespace. Subtle motion.\nThe page should feel like a printed essay set in lead type.\n\n**Asymmetry over symmetry.** Composition follows a modular grid (Müller-Brockmann).\nPrefer 1/3 + 2/3 splits over 1/2 + 1/2. Anchor strong elements to grid intersections;\nlet the negative space carry equal weight. Center alignment is forbidden; ragged-right\nleft alignment is the default.",
+      "delta_from_winner": 0.093
+    },
+    {
+      "name": "emerald-editorial",
+      "label": "Emerald Editorial",
+      "raw": 0.3,
+      "normalized": 0.357,
+      "combined": 0.34,
+      "combined_pre_capability": 0.34,
+      "matched_signals": [
+        "minimal_decoration",
+        "high_sat_accent"
+      ],
+      "capabilities_missing": [],
+      "fingerprint": {
+        "edges": "strict-rectangle",
+        "shadow": "none",
+        "rules": "4px-ink-solid",
+        "ornament": "double-rule-playbill",
+        "type": "bodoni-900-extreme-scale",
+        "voice": "fashion-masthead",
+        "register": "literary-authoritative"
+      },
+      "best_for": [
+        "literary brands",
+        "strategy",
+        "planning",
+        "leadership decks",
+        "longform research",
+        "authoritative editorial"
+      ],
+      "avoid_for": [
+        "quiet institutional brands",
+        "restrained corporate decks",
+        "calm minimalist registers"
+      ],
+      "sectionA_excerpt": "A fashion-masthead / 19th-century theatrical-playbill register: one display serif at extreme scale (heavy Bodoni-style, weight 900, 92-460px), with negative tracking and tight leading, set against a saturated brand canvas with deep ink and a warm alt-tile surface. The signature is the **double-rule ornament** — a centered serif word framed by two stacked 4px horizontal rules on each side (3px between them), bracketing a connector (\"of\", \"and\", \"for\") between two display words like a printed playbill.\n\nDepth is flat printed ink. **Zero shadows, zero gradients, zero border-radius, zero blur.** Elevation is communicated through color-block inversion (an `--ink` tile on the canvas reads as \"elevated\") and 4px solid ink rules that separate every section, list row, and tile divider.\n\nClass prefi",
+      "delta_from_winner": 0.153
+    },
+    {
+      "name": "peoples-platform",
+      "label": "People's Platform",
+      "raw": 0.25,
+      "normalized": 0.313,
+      "combined": 0.294,
+      "combined_pre_capability": 0.294,
+      "matched_signals": [
+        "high_sat_accent",
+        "minimal_decoration"
+      ],
+      "capabilities_missing": [],
+      "fingerprint": {
+        "shadow": "triple-stamp",
+        "border": "cream-inset-frame",
+        "motion": "stamp-slam",
+        "density": "medium",
+        "voice": "manifesto"
+      },
+      "best_for": [
+        "manifesto launches",
+        "indie SaaS poster",
+        "editorial-stamp brands",
+        "people-first storytelling",
+        "campaign-style narratives"
+      ],
+      "avoid_for": [
+        "minimalist enterprise",
+        "quiet authority",
+        "fintech compliance pages",
+        "data-heavy dashboards",
+        "luxury / glass aesthetics"
+      ],
+      "sectionA_excerpt": "Stamped-poster atlas. Every focal headline carries the same **triple-offset shadow**: accent word in front, a mid-warm drop at 6-10px, a deep-warm drop at 12-20px — always lower-right. The shadow IS the system; nothing else needs to shout.\n\nOne **Caveat-script handwritten accent** threads through each plate, rotated −3°, in the deep-warm drop colour. Two voices alternate — Alfa Slab for declarations, Caveat Brush for the human aside — never a third. Cream frames isolate authority surfaces. Pill chrome marks volume.\n\n**Stance** (write into every scene; this is the brand's identity, not optional decoration):\n\n- _character_ — triple-stamped poster system. Every focal word casts the same drop.\n- _signal_ — single triple-stamp per plate. Reserve it for one phrase; never split focus.\n- _cadence_",
+      "delta_from_winner": 0.2
+    }
+  ],
+  "capability_gated_presets": [
+    {
+      "name": "liquid-glass",
+      "label": "Liquid Glass",
+      "raw": 0.35,
+      "normalized": 0.778,
+      "combined": 0,
+      "combined_pre_capability": 0.649,
+      "matched_signals": [
+        "hairline_border",
+        "minimal_decoration"
+      ],
+      "capabilities_missing": [
+        {
+          "kind": "block_installed",
+          "block": "liquid-glass-widgets",
+          "missing_files": [
+            "hyperframes/compositions/liquid-glass-widgets.html",
+            "hyperframes/compositions/lib/liquid-glass.iife.js"
+          ],
+          "auto_install": "npx hyperframes add liquid-glass-widgets",
+          "alternates": [
+            "liquid-glass-notification",
+            "liquid-glass-context-menu",
+            "liquid-glass-media-controls",
+            "ios26-liquid-glass",
+            "macos-tahoe-liquid-glass",
+            "vfx-liquid-glass"
+          ]
+        },
+        {
+          "kind": "env_var_set",
+          "var": "PRODUCER_HEADLESS_SHELL_PATH",
+          "reason": "WebGPU-capable browser (Brave / Chrome Canary). Cannot auto-install — varies by OS / user environment.",
+          "auto_install": null
+        }
+      ],
+      "fingerprint": {
+        "shadow": "inset-highlight",
+        "border": "hairline-translucent",
+        "motion": "rise-and-settle",
+        "density": "low",
+        "contrast": "high-on-aurora"
+      },
+      "best_for": [
+        "premium SaaS",
+        "AI products",
+        "hardware launches",
+        "futuristic tech",
+        "consumer apps with depth"
+      ],
+      "avoid_for": [
+        "print-feel brands",
+        "low-power render targets",
+        "warm hand-crafted registers"
+      ],
+      "sectionA_excerpt": "Frosted glass over moving color. Surfaces are weightless — light passes\n**through** them, not off them. Type sits on glass; glass sits on aurora;\naurora carries the brand. No element is the canvas; depth is the canvas.\n\n**One reading layer at a time.** A scene has glass surfaces (panels, pills,\ncards) floating over an animated color field. The eye reads what's on the\nglass, not the glass itself. Decoration is reserved for the aurora — the\nsurfaces stay neutral, just specular highlight + edge-light + chromatic\nfringe at the rim.\n\n**Entry motion**: soft upward translate + scale 0.86→1.0 with `back.out(1.04)` — overshoot tiny on purpose. Hard cuts and bouncy springs break the wetness."
+    }
+  ],
+  "site_features": {
+    "shadow_zero_blur": false,
+    "thick_solid_border": false,
+    "medium_solid_border": false,
+    "hairline_border": true,
+    "condensed_display": false,
+    "serif_display": false,
+    "high_sat_accent": true,
+    "low_saturation": false,
+    "rotated_transform": false,
+    "bouncy_easing": false,
+    "generous_padding": false,
+    "minimal_decoration": true
+  },
+  "site_dna": {
+    "source": "https://fincatigrillo.vercel.app",
+    "brand_name": "Fincatigrillo",
+    "material": "flat",
+    "imagery": "flat-illustration",
+    "background_patterns": [],
+    "page_intent": "landing",
+    "section_role_counts": {},
+    "voice_tone": "neutral",
+    "voice_heading_style": "Sentence case",
+    "voice_heading_length": "tight"
+  },
+  "generated_at": "2026-06-14T23:34:46.568Z"
+}
