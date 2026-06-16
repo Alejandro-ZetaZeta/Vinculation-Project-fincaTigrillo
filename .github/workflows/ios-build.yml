@@ -66,17 +66,19 @@ jobs:
             echo "ios/ already present -> skipping scaffold (idempotent)"
           fi
 
-      - name: cap sync ios
+      - name: Sync Capacitor Project
         working-directory: ios-shell
         run: npx cap sync ios
 
-
+      - name: Force CocoaPods Resolution
+        # Forzamos a CocoaPods a crear el archivo .xcworkspace que xcodebuild necesita.
+        # Nos posicionamos en la carpeta nativa real generada en la nube.
+        working-directory: ios-shell/ios/App
+        run: |
+          pod repo update
+          pod install
 
       - name: xcodebuild smoke test (Debug, iphonesimulator, unsigned)
-        # Generic destination = any iOS Simulator runtime on the runner.
-        # No code signing: iphonesimulator SDK does not require it.
-        # CODE_SIGNING_ALLOWED=NO is belt-and-suspenders to prevent any
-        # accidental cert lookup. This is a pure structural smoke test.
         working-directory: ios-shell
         run: |
           set -o pipefail
