@@ -22,10 +22,10 @@ on:
       - 'ios-shell/**'
       - '.github/workflows/ios-build.yml'
 
-# Strict: GITHUB_TOKEN is read-only. Prevents any accidental push/release.
 permissions:
-  contents: read
-
+  contents: read     
+  packages: read     
+  actions: write     
 concurrency:
   group: ios-build-${{ github.ref }}
   cancel-in-progress: true
