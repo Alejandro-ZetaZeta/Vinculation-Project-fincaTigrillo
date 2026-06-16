@@ -1,0 +1,128 @@
+name: iOS Shell Build (Debug Verification)
+
+# Verification-only: confirms the iOS shell scaffolds, CocoaPods resolve,
+# and xcodebuild compiles against iphonesimulator. NO signing, NO archive,
+# NO TestFlight upload — the ULEAM IT Matrix Team handles that on their
+# institutional Mac with their own Apple Developer account.
+#
+# This workflow is intentionally read-only against the Apple ecosystem.
+# No .p12, no .p8, no .mobileprovision, no App Store Connect secrets.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'mobile-v*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'ios-shell/**'
+      - '.github/workflows/ios-build.yml'
+
+# Strict: GITHUB_TOKEN is read-only. Prevents any accidental push/release.
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios-shell:
+    name: Scaffold + xcodebuild (iphonesimulator, Debug)
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    env:
+      # Override per-environment via GitHub Actions Variables
+      # (repo or org level: Settings -> Secrets and variables -> Actions -> Variables).
+      # Falls back to the public Vercel deployment for open-source / student use.
+      FINCA_TIGRILLO_PROD_URL: ${{ vars.FINCA_TIGRILLO_PROD_URL || 'https://fincatigrillo.vercel.app' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ios-shell/package-lock.json
+
+      - name: Install dependencies (npm ci)
+        working-directory: ios-shell
+        run: npm ci
+
+      - name: Scaffold ios/ from scratch if missing
+        # Clean scaffolding flow: on the first run (or after a wipe),
+        # `ios/` does not exist. The `macos-latest` runner IS a Mac,
+        # so `cap add ios` works here. Subsequent runs skip this step.
+        # The `ios/` folder is gitignored — it is regenerated on every
+        # fresh clone, locally and in CI.
+        working-directory: ios-shell
+        run: |
+          if [ ! -d "ios" ]; then
+            echo "ios/ missing -> running npx cap add ios on CI runner"
+            npx cap add ios
+          else
+            echo "ios/ already present -> skipping scaffold (idempotent)"
+          fi
+
+      - name: cap sync ios
+        working-directory: ios-shell
+        run: npx cap sync ios
+
+      - name: Install CocoaPods
+        # xcodebuild triggers pod install automatically, but explicit is
+        # faster to fail loudly if the Podfile is broken.
+        working-directory: ios-shell/ios/App
+        run: |
+          if command -v pod >/dev/null 2>&1; then
+            pod install --repo-update
+          else
+            echo "::warning::cocoapods not found on runner; xcodebuild will attempt embedded install"
+          fi
+
+      - name: xcodebuild smoke test (Debug, iphonesimulator, unsigned)
+        # Generic destination = any iOS Simulator runtime on the runner.
+        # No code signing: iphonesimulator SDK does not require it.
+        # CODE_SIGNING_ALLOWED=NO is belt-and-suspenders to prevent any
+        # accidental cert lookup. This is a pure structural smoke test.
+        working-directory: ios-shell
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-shell-build-${{ github.run_id }}
+          path: |
+            ios-shell/build/Build/Products/Debug-iphonesimulator/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### iOS Shell Verification" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Runner: macos-latest" >> $GITHUB_STEP_SUMMARY
+          echo "- SDK: iphonesimulator (Debug, unsigned)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Signing, archiving, and App Store Connect upload are performed by ULEAM IT Matrix Team on an institutional Mac." >> $GITHUB_STEP_SUMMARY
