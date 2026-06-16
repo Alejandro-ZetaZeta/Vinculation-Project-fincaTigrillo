@@ -58,20 +58,34 @@ jobs:
           mkdir -p www
           echo '<!DOCTYPE html><html><head><title>Finca Tigrillo</title></head><body></body></html>' > www/index.html
 
-      - name: Scaffold ios/ from scratch
-        # Al estar www/index.html presente, Capacitor creará la estructura nativa COMPLETA
+      - name: Scaffold ios/ from scratch (clean + verify)
+        # Force a clean scaffold every run:
+        # 1. Remove any partial/corrupt ios/ left from a prior failed run.
+        # 2. `cap add ios --confirm` skips any interactive prompt in non-TTY.
+        # 3. Verify the workspace actually exists; fail with tree dump if not.
         working-directory: ios-shell
         run: |
-          if [ ! -d "ios" ]; then
-            echo "ios/ missing -> running npx cap add ios"
-            npx cap add ios
+          set -e
+          echo "=== Removing any existing ios/ for clean scaffold ==="
+          rm -rf ios
+          echo "=== Running npx cap add ios --confirm ==="
+          npx cap add ios --confirm
+          echo "=== Verifying ios/App/App.xcworkspace exists ==="
+          if [ ! -d "ios/App/App.xcworkspace" ]; then
+            echo "::error::cap add ios did not create ios/App/App.xcworkspace"
+            echo "=== ios/ tree (maxdepth 4) ==="
+            find ios -maxdepth 4 -print 2>/dev/null || true
+            echo "=== ios-shell/ listing ==="
+            ls -la
+            exit 1
           fi
+          echo "OK: ios/App/App.xcworkspace present"
 
       - name: Sync & Build CocoaPods natively via Capacitor
-        # 'cap sync' corre automáticamente 'pod install' internamente en la ruta correcta.
-        # Ya NO necesitamos un paso manual de 'pod install' ni movernos de directorio.
+        # `cap sync` copies the latest config + plugins into the Xcode project
+        # AND runs `pod install` internally. No manual `pod install` step needed.
         working-directory: ios-shell
-        run: npx cap sync ios
+        run: npx cap sync
 
       - name: xcodebuild smoke test (Debug, iphonesimulator, unsigned)
         working-directory: ios-shell
