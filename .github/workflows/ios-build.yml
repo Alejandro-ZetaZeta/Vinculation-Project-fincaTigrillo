@@ -46,7 +46,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: ios-shell/package-lock.json
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install dependencies (npm ci)
         working-directory: ios-shell
@@ -107,7 +107,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-shell-build-${{ github.run_id }}
-          path: ios-shell/build/**/*.app 
+          path: ios-shell/build/Build/Products/Debug-iphonesimulator/
           if-no-files-found: error 
           retention-days: 7
 
