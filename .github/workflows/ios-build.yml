@@ -70,16 +70,7 @@ jobs:
         working-directory: ios-shell
         run: npx cap sync ios
 
-      - name: Install CocoaPods
-        # xcodebuild triggers pod install automatically, but explicit is
-        # faster to fail loudly if the Podfile is broken.
-        working-directory: ios-shell/ios/App
-        run: |
-          if command -v pod >/dev/null 2>&1; then
-            pod install --repo-update
-          else
-            echo "::warning::cocoapods not found on runner; xcodebuild will attempt embedded install"
-          fi
+
 
       - name: xcodebuild smoke test (Debug, iphonesimulator, unsigned)
         # Generic destination = any iOS Simulator runtime on the runner.
