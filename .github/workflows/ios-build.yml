@@ -51,32 +51,27 @@ jobs:
         working-directory: ios-shell
         run: npm ci
 
-      - name: Scaffold ios/ from scratch if missing
-        # Clean scaffolding flow: on the first run (or after a wipe),
-        # `ios/` does not exist. The `macos-latest` runner IS a Mac,
-        # so `cap add ios` works here. Subsequent runs skip this step.
-        # The `ios/` folder is gitignored — it is regenerated on every
-        # fresh clone, locally and in CI.
+      - name: Create Web Placeholder (Crucial for Capacitor)
+        # Forzamos la existencia de la carpeta web para que Capacitor no falle al andamiar
+        working-directory: ios-shell
+        run: |
+          mkdir -p www
+          echo '<!DOCTYPE html><html><head><title>Finca Tigrillo</title></head><body></body></html>' > www/index.html
+
+      - name: Scaffold ios/ from scratch
+        # Al estar www/index.html presente, Capacitor creará la estructura nativa COMPLETA
         working-directory: ios-shell
         run: |
           if [ ! -d "ios" ]; then
-            echo "ios/ missing -> running npx cap add ios on CI runner"
+            echo "ios/ missing -> running npx cap add ios"
             npx cap add ios
-          else
-            echo "ios/ already present -> skipping scaffold (idempotent)"
           fi
 
-      - name: Sync Capacitor Project
+      - name: Sync & Build CocoaPods natively via Capacitor
+        # 'cap sync' corre automáticamente 'pod install' internamente en la ruta correcta.
+        # Ya NO necesitamos un paso manual de 'pod install' ni movernos de directorio.
         working-directory: ios-shell
         run: npx cap sync ios
-
-      - name: Force CocoaPods Resolution
-        # Forzamos a CocoaPods a crear el archivo .xcworkspace que xcodebuild necesita.
-        # Nos posicionamos en la carpeta nativa real generada en la nube.
-        working-directory: ios-shell/ios/App
-        run: |
-          pod repo update
-          pod install
 
       - name: xcodebuild smoke test (Debug, iphonesimulator, unsigned)
         working-directory: ios-shell
