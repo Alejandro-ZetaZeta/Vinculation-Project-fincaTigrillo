@@ -15,12 +15,7 @@ on:
       - 'mobile-v*'
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'ios-shell/**'
-      - '.github/workflows/ios-build.yml'
+
 
 permissions:
   contents: read     
@@ -108,13 +103,12 @@ jobs:
             build
 
       - name: Upload build artifacts
-        if: always()
+        if: success() 
         uses: actions/upload-artifact@v4
         with:
           name: ios-shell-build-${{ github.run_id }}
-          path: |
-            ios-shell/build/Build/Products/Debug-iphonesimulator/
-          if-no-files-found: warn
+          path: ios-shell/build/**/*.app 
+          if-no-files-found: error 
           retention-days: 7
 
       - name: Summary
