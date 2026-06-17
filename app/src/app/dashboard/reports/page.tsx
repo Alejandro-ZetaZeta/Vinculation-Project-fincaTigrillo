@@ -8,7 +8,7 @@ import autoTable from 'jspdf-autotable'
 import {
   Printer, FileText, Calendar, Loader2, Info, TreePine,
   ShieldCheck, Zap, TrendingUp, Gauge, LineChart as LineChartIcon,
-  Bot, Send, Sparkles, AlertTriangle, CheckCircle, Filter,
+  Bot, Sparkles, AlertTriangle, CheckCircle, Filter,
   Microscope, BarChart3,
 } from 'lucide-react'
 
@@ -79,13 +79,7 @@ export default function ReportsPage() {
   const [reportError, setReportError] = useState<string | null>(null)
   const [reportMeta, setReportMeta] = useState<AIMeta | null>(null)
 
-  // ── AI states — Q&A ─────────────────────────────
-  const [qaStatus, setQaStatus] = useState<AIStatus>('idle')
-  const [qaStartTime, setQaStartTime] = useState<number | null>(null)
-  const [qaAnalysis, setQaAnalysis] = useState<AIAnalysis | null>(null)
-  const [qaError, setQaError] = useState<string | null>(null)
-  const [qaMeta, setQaMeta] = useState<AIMeta | null>(null)
-  const [userQuestion, setUserQuestion] = useState('')
+
 
   const [showAiPanel, setShowAiPanel] = useState(false)
   const [pdfMsg, setPdfMsg] = useState('')
@@ -177,49 +171,6 @@ export default function ReportsPage() {
     }
   }
 
-  // ── AI Q&A ───────────────────────────────────────
-  async function requestQA(question?: string) {
-    const q = question || userQuestion
-    if (!q.trim()) return
-    setQaStatus('loading')
-    setQaStartTime(Date.now())
-    setQaError(null)
-    setQaAnalysis(null)
-    try {
-      const res = await fetch('/api/reports/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reportType: filterModule === 'todos' ? 'general' : 'specific',
-          focusModule: filterModule,
-          userQuestion: q,
-          period: filterPeriod,
-        }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        setQaError(json.error || 'Error de análisis')
-        setQaStatus('error')
-        return
-      }
-      setQaAnalysis(json.analysis)
-      setQaMeta(json.meta)
-      setQaStatus('success')
-    } catch (e: unknown) {
-      setQaError(e instanceof Error ? e.message : 'Error al procesar la solicitud')
-      setQaStatus('error')
-    } finally {
-      setQaStartTime(null)
-    }
-  }
-
-  // ── Quick questions ─────────────────────────────
-  const quickQuestions = [
-    '¿Cuál es el estado general del hato?',
-    '¿Qué animales necesitan atención urgente?',
-    '¿Cuál es la tendencia de la población animal?',
-    'Analiza la eficiencia operativa de la finca',
-  ]
 
   // ── PDF Generation ──────────────────────────────
   async function generateAndDownloadPDF() {
@@ -423,7 +374,7 @@ export default function ReportsPage() {
             className="flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-violet-500 dark:to-indigo-400 text-white px-5 py-3 rounded-xl shadow-md hover:shadow-lg transition-all text-sm font-bold"
           >
             <Bot className="w-4 h-4" />
-            Analizar con IA
+            Reporte con IA
           </button>
           <button
             onClick={() => {
@@ -542,66 +493,7 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* ── Q&A Panel (always visible) ─────────────── */}
-      <div className="bg-surface border border-indigo-200 dark:border-indigo-800/30 rounded-2xl overflow-hidden shadow-sm no-print">
-        <div className="bg-gradient-to-r from-indigo-600/10 to-sky-500/10 p-5 border-b border-border flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm">Preguntas a los Datos</h3>
-            {qaMeta && (
-              <p className="text-xs text-muted">
-                Modelo: {qaMeta.model ?? '—'} · {qaMeta.generated_at ? new Date(qaMeta.generated_at).toLocaleString('es-CO') : '—'}
-              </p>
-            )}
-          </div>
-        </div>
 
-        {/* Quick questions */}
-        <div className="p-5 border-b border-border">
-          <p className="text-xs font-bold text-muted uppercase mb-3">Preguntas rápidas</p>
-          <div className="flex flex-wrap gap-2">
-            {quickQuestions.map(q => (
-              <button key={q} onClick={() => { setUserQuestion(q); requestQA(q) }}
-                className="text-xs px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-colors border border-indigo-500/20">
-                {q}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Custom question */}
-        <div className="p-4 sm:p-5 border-b border-border">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              value={userQuestion}
-              onChange={e => setUserQuestion(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && requestQA()}
-              placeholder="Haz una pregunta sobre los datos..."
-              className="flex-1 min-w-0 px-4 py-2.5 bg-background border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
-            />
-            <button onClick={() => requestQA()}
-              disabled={qaStatus === 'loading' || !userQuestion.trim()}
-              className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 text-sm shrink-0 w-full sm:w-auto">
-              {qaStatus === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Preguntar
-            </button>
-          </div>
-        </div>
-
-        {/* Q&A Results */}
-        <div className="p-5">
-          <AIStatusIndicator status={qaStatus} error={qaError} startTime={qaStartTime} loadingText="Generando respuesta..." />
-          {qaStatus === 'idle' && !qaAnalysis && (
-            <p className="text-sm text-muted italic text-center py-4">Selecciona una pregunta rápida o escribe tu propia consulta.</p>
-          )}
-          {qaAnalysis && qaStatus === 'success' && (
-            <AIResultDisplay analysis={qaAnalysis} />
-          )}
-        </div>
-      </div>
 
 
       {/* ── Print Header ───────────────────────────── */}
