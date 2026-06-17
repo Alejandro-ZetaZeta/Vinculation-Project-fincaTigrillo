@@ -96,10 +96,6 @@ jobs:
         # `-resolvePackageDependencies` forces SPM to fetch packages before build.
         # `-clonedSourcePackagesDirPath` keeps the SPM cache inside our build dir.
         # No code signing: iphonesimulator SDK does not require it.
-        #
-        # Build products land at the standard SPM + -derivedDataPath location:
-        #   build/Build/Products/Debug-iphonesimulator/App.app
-        # (this is what the upload step expects).
         working-directory: ios-shell
         run: |
           set -o pipefail
@@ -117,26 +113,32 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             clean build
 
-      - name: Inspect build output (debug visibility)
-        # Lists exactly where the .app landed. If this is empty, the build
-        # did not produce a bundle (likely a SPM / scheme / destination issue).
-        if: always()
-        working-directory: ios-shell
-        run: |
-          echo "=== build/Build/Products/ contents ==="
-          ls -la build/Build/Products/ 2>/dev/null || echo "(build/Build/Products/ does not exist)"
-          echo ""
-          echo "=== build/Build/Products/ tree (maxdepth 4) ==="
-          find build/Build/Products -maxdepth 4 2>/dev/null || echo "(empty)"
+          # Locate the App.app wherever xcodebuild put it and copy to a
+          # known location. xcodebuild's output path under SPM +
+          # -derivedDataPath is not always predictable, so we hunt for it
+          # rather than guessing.
+          echo "=== Locating App.app ==="
+          mkdir -p final_output
+          APP_PATH=$(find build -name "App.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::App.app not found anywhere under build/"
+            echo "=== build/ tree (maxdepth 3) ==="
+            find build -maxdepth 3 2>/dev/null || true
+            exit 1
+          fi
+          echo "Found App.app at: $APP_PATH"
+          cp -R "$APP_PATH" final_output/App.app
+          echo "=== final_output/ contents ==="
+          ls -la final_output/
 
       - name: Upload build artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ios-shell-build-${{ github.run_id }}
-          # This is the exact and actual path that Xcode generates when you
-          # use `-derivedDataPath build` under SPM.
-          path: ios-shell/build/Build/Products/Debug-iphonesimulator/App.app
+          # Path is known and stable because we copied the .app there ourselves
+          # in the previous step. No more guessing xcodebuild's output path.
+          path: ios-shell/final_output/App.app
           if-no-files-found: error
           retention-days: 7
 
