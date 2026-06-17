@@ -22,6 +22,9 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fincatigrillo.vercel.
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
+  alternates: {
+    canonical: '/',
+  },
   title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
   description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
   manifest: '/manifest.webmanifest',

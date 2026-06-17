@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     let query = client.database
       .from('sembrios')
-      .select('*')
+      .select('*, potreros(nombre, area_total_m2, tipo_suelo)')
       .order('fecha_siembra', { ascending: false })
 
     if (potreroId) {

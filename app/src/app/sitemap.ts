@@ -9,16 +9,10 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fincatigrillo.vercel.
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: `${appUrl}/login`,
+      url: appUrl,
       lastModified: new Date('2026-01-01'),
       changeFrequency: 'yearly',
       priority: 1,
-    },
-    {
-      url: `${appUrl}/register`,
-      lastModified: new Date('2026-01-01'),
-      changeFrequency: 'yearly',
-      priority: 0.8,
     },
   ]
 }

@@ -1,0 +1,132 @@
+name: iOS Shell Build (Debug Verification)
+
+# Verification-only: confirms the iOS shell scaffolds, SPM packages resolve,
+# and the Xcode project is structurally valid. NO actual compile, NO signing,
+# NO archive, NO TestFlight upload — the ULEAM IT Matrix Team handles that on
+# their institutional Mac with their own Apple Developer account.
+#
+# xcodebuild runs with `-dry-run` only: validates the project + resolves the
+# SPM package graph WITHOUT downloading or compiling anything. This avoids
+# the macOS runner "stuck in Resolve Package Graph" issue that occurs when
+# attempting a full build from a fresh CI environment.
+#
+# This workflow is intentionally read-only against the Apple ecosystem.
+# No .p12, no .p8, no .mobileprovision, no App Store Connect secrets.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "mobile-v*"
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: read
+  actions: write
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios-shell:
+    name: Scaffold + xcodebuild -dry-run (iphonesimulator, Debug)
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    env:
+      # Override per-environment via GitHub Actions Variables
+      # (repo or org level: Settings -> Secrets and variables -> Actions -> Variables).
+      # Falls back to the public Vercel deployment for open-source / student use.
+      FINCA_TIGRILLO_PROD_URL: ${{ vars.FINCA_TIGRILLO_PROD_URL || 'https://fincatigrillo.vercel.app' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Install dependencies (npm ci)
+        working-directory: ios-shell
+        run: npm ci
+
+      - name: Create Web Placeholder (Crucial for Capacitor)
+        # Forzamos la existencia de la carpeta web para que Capacitor no falle al andamiar
+        working-directory: ios-shell
+        run: |
+          mkdir -p www
+          echo '<!DOCTYPE html><html><head><title>Finca Tigrillo</title></head><body></body></html>' > www/index.html
+
+      - name: Scaffold ios/ from scratch (clean + verify)
+        # Force a clean scaffold every run:
+        # 1. Remove any partial/corrupt ios/ left from a prior failed run.
+        # 2. `cap add ios` is non-interactive for new platforms (no prompt to skip).
+        # 3. Verify the Xcode project was actually created; fail with tree dump if not.
+        #
+        # NOTE: Capacitor 8 uses Swift Package Manager (SPM) by default for
+        # plugin management — the scaffold does NOT generate App.xcworkspace.
+        # The build target is ios/App/App.xcodeproj (project, not workspace).
+        working-directory: ios-shell
+        run: |
+          set -e
+          echo "=== Removing any existing ios/ for clean scaffold ==="
+          rm -rf ios
+          echo "=== Running npx cap add ios ==="
+          npx cap add ios
+          echo "=== Verifying ios/App/App.xcodeproj exists ==="
+          if [ ! -d "ios/App/App.xcodeproj" ]; then
+            echo "::error::cap add ios did not create ios/App/App.xcodeproj"
+            echo "=== ios/ tree (maxdepth 4) ==="
+            find ios -maxdepth 4 -print 2>/dev/null || true
+            echo "=== ios-shell/ listing ==="
+            ls -la
+            exit 1
+          fi
+          echo "OK: ios/App/App.xcodeproj present"
+
+      - name: Sync (copies config + plugins, SPM resolves packages)
+        # `cap sync` copies the latest config + plugins into the Xcode project.
+        # SPM packages (Package.swift) are auto-resolved by xcodebuild on build.
+        working-directory: ios-shell
+        run: npx cap sync
+
+      - name: xcodebuild Dependency Verification (SPM)
+        # SPM-native invocation: target the .xcodeproj (NOT a workspace).
+        # `-dry-run` validates the project + resolves the SPM package graph
+        # WITHOUT downloading or compiling anything. Avoids the macOS runner
+        # "stuck in Resolve Package Graph" issue that occurs when attempting
+        # a full build from a fresh CI environment.
+        #
+        # No code signing: iphonesimulator SDK does not require it.
+        working-directory: ios-shell
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            -clonedSourcePackagesDirPath build/SourcePackages \
+            -resolvePackageDependencies \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            -dry-run
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### iOS Shell Verification" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Runner: macos-latest" >> $GITHUB_STEP_SUMMARY
+          echo "- Structure: Validated via Capacitor 8 & SPM Package Graph" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Signing, archiving, and App Store Connect upload are performed by ULEAM IT Matrix Team on an institutional Mac." >> $GITHUB_STEP_SUMMARY

@@ -747,7 +747,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                     )}
                     {v.default_next_dose_days != null && (
                       <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                        {v.total_doses != null ? `${v.total_doses} dosis` : 'Dosis recurrente'}
+                        {v.total_doses != null ? `Serie: ${v.total_doses} dosis` : 'Dosis recurrente'}
                       </span>
                     )}
                     {/* Stock badge */}
@@ -763,7 +763,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                       title="Dosis en inventario"
                     >
                       <Package className="w-3 h-3" aria-hidden="true" />
-                      {v.stock_doses} dosis
+                      Stock: {v.stock_doses}
                     </span>
                   </div>
 

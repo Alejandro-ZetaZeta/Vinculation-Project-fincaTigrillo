@@ -1,0 +1,53 @@
+{
+  "tts_provider": "kokoro",
+  "voice_id": "ef_dora",
+  "bgm_provider": null,
+  "bgm_enabled": false,
+  "bgm_path": null,
+  "bgm_pending": false,
+  "bgm_log": null,
+  "bgm_pid": null,
+  "bgm_mode": null,
+  "bgm_target_duration_s": null,
+  "bgm_seed_duration_s": null,
+  "bgm_loop_count": null,
+  "total_duration_s": 30.122,
+  "scenes": {
+    "1": {
+      "status": "ok",
+      "path": "assets/voice/scene_1.mp3",
+      "duration_s": 6.144,
+      "text": "Gestionar una finca ganadera y las prácticas estudiantiles sin herramientas digitales es un desafío enorme."
+    },
+    "2": {
+      "status": "ok",
+      "path": "assets/voice/scene_2.mp3",
+      "duration_s": 5.227,
+      "text": "Finca Tigrillo: una sola plataforma para toda la gestión ganadera y formación educativa."
+    },
+    "3": {
+      "status": "ok",
+      "path": "assets/voice/scene_3.mp3",
+      "duration_s": 4.437,
+      "text": "Registra animales, eventos reproductivos e historial de salud en tiempo real."
+    },
+    "4": {
+      "status": "ok",
+      "path": "assets/voice/scene_4.mp3",
+      "duration_s": 5.312,
+      "text": "Vacunas automatizadas, recordatorios inteligentes y predicciones reproductivas con IA."
+    },
+    "5": {
+      "status": "ok",
+      "path": "assets/voice/scene_5.mp3",
+      "duration_s": 4.501,
+      "text": "Actividades Kanban para estudiantes y solicitudes de docentes en un solo flujo."
+    },
+    "6": {
+      "status": "ok",
+      "path": "assets/voice/scene_6.mp3",
+      "duration_s": 4.501,
+      "text": "Finca Tigrillo: la tecnología al servicio del agro educativo ecuatoriano."
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "project": "Finca Tigrillo — Video Promocional",
+  "narrativeArchetype": "Transformation Reveal",
+  "emotionalArc": "Tensión → Reconocimiento → Descubrimiento → Confianza → Orgullo institucional",
+  "scenes": [
+    {
+      "sceneNumber": 1,
+      "sceneName": "El Reto",
+      "script": "Gestionar una finca ganadera y las prácticas estudiantiles sin herramientas digitales es un desafío enorme.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "pain_point",
+        "narrativeRole": "Establecer el problema central: caos, registros manuales, prácticas sin seguimiento.",
+        "keyMessage": "La gestión ganadera y educativa sin digitalización es ineficiente y caótica.",
+        "persuasion": "Empatía con la audiencia — coordinadores y docentes reconocen el dolor inmediatamente.",
+        "emotionalBeat": "Tensión, gravedad, urgencia"
+      },
+      "visualDirective": "Fondo de lienzo verde esmeralda oscuro (#16A34A deepened to near-black). Tipografía display en blanco, peso extremo, alineada a la izquierda. Palabras clave como 'SIN CONTROL' aparecen en rojo tenue para enfatizar el problema. Sin decoración — solo texto y color de bloque.",
+      "assetCandidates": [],
+      "transition": {
+        "continuity": "break",
+        "intent": "dissolve"
+      }
+    },
+    {
+      "sceneNumber": 2,
+      "sceneName": "Presentación de la Plataforma",
+      "script": "Finca Tigrillo: una sola plataforma para toda la gestión ganadera y formación educativa.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "product_intro",
+        "narrativeRole": "Revelar la marca como solución definitiva al problema planteado.",
+        "keyMessage": "Finca Tigrillo es la plataforma integral que lo unifica todo.",
+        "persuasion": "La revelación de marca genera confianza inmediata — identidad institucional sólida.",
+        "emotionalBeat": "Alivio, impacto, reconocimiento de autoridad"
+      },
+      "visualDirective": "Reveal centrado en el emblema circular del mascot tigrillo sobre fondo blanco limpio. El logotipo aparece con una animación de escala suave desde el centro. Nombre 'FINCA TIGRILLO' en tipografía display verde esmeralda (#16A34A) debajo del emblema. Composición institucional, premium, sin ornamentos excesivos.",
+      "assetCandidates": [
+        {
+          "path": "public/favicon.png",
+          "description": "Emblema circular con mascota tigrillo — cara partida mitad humana, mitad leopardo.",
+          "use": "Elemento focal central del reveal de marca; escalar desde 0 hasta tamaño pleno con fade-in suave."
+        }
+      ],
+      "transition": {
+        "continuity": "break",
+        "intent": "dissolve"
+      }
+    },
+    {
+      "sceneNumber": 3,
+      "sceneName": "Gestión Ganadera",
+      "script": "Registra animales, eventos reproductivos e historial de salud en tiempo real.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "feature_showcase",
+        "narrativeRole": "Demostrar las capacidades core de gestión de inventario ganadero.",
+        "keyMessage": "Control total del hato ganadero: registro, reproducción y salud centralizados.",
+        "persuasion": "Evidencia concreta de funcionalidad — los coordinadores ven valor operativo inmediato.",
+        "emotionalBeat": "Confianza, orden, control"
+      },
+      "visualDirective": "Composición tipo dashboard con tarjetas KPI sobre fondo verde esmeralda oscuro. Tiles con números grandes en blanco mostrando conteos: 'Bovinos: 48', 'Equinos: 12', 'Porcinos: 7'. Diseño flat, bordes hairline en verde claro, tipografía monoespaciada para cifras. Las tarjetas aparecen en cascada de izquierda a derecha.",
+      "assetCandidates": [],
+      "transition": {
+        "continuity": "break",
+        "intent": "slide"
+      }
+    },
+    {
+      "sceneNumber": 4,
+      "sceneName": "Salud y Vacunas con IA",
+      "script": "Vacunas automatizadas, recordatorios inteligentes y predicciones reproductivas con IA.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "feature_showcase",
+        "narrativeRole": "Mostrar las capacidades avanzadas de salud animal y la diferenciación por IA.",
+        "keyMessage": "La IA predice, recuerda y automatiza la salud del hato.",
+        "persuasion": "La IA posiciona la plataforma como tecnología de vanguardia — ventaja competitiva clara.",
+        "emotionalBeat": "Asombro, seguridad tecnológica, modernidad"
+      },
+      "visualDirective": "Panel dividido: izquierda muestra catálogo de vacunas con íconos de jeringa y fechas programadas en verde; derecha muestra interfaz de predicción IA con una barra de progreso y fecha estimada de parto. Fondo oscuro (#4B5563), acentos en verde esmeralda (#16A34A). Animación secuencial — primero el catálogo, luego la predicción IA aparece con efecto de tipeo.",
+      "assetCandidates": [],
+      "transition": {
+        "continuity": "break",
+        "intent": "slide"
+      }
+    },
+    {
+      "sceneNumber": 5,
+      "sceneName": "Formación Educativa",
+      "script": "Actividades Kanban para estudiantes y solicitudes de docentes en un solo flujo.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "benefit_highlight",
+        "narrativeRole": "Mostrar el diferenciador educativo — integración de prácticas estudiantiles en la plataforma.",
+        "keyMessage": "Docentes y estudiantes colaboran digitalmente en las prácticas agropecuarias.",
+        "persuasion": "Relevancia directa para docentes agropecuarios — ven su propio flujo de trabajo digitalizado.",
+        "emotionalBeat": "Reconocimiento, pertenencia, entusiasmo pedagógico"
+      },
+      "visualDirective": "Tablero Kanban horizontal con tres columnas: 'Pendiente', 'En Progreso', 'Completado'. Tarjetas de actividad en blanco con bordes hairline verde esmeralda, cada una con nombre del estudiante y tarea asignada. Fondo lienzo blanco limpio. Una tarjeta se arrastra animadamente de 'Pendiente' a 'En Progreso' para ilustrar el flujo de trabajo.",
+      "assetCandidates": [],
+      "transition": {
+        "continuity": "break",
+        "intent": "dissolve"
+      }
+    },
+    {
+      "sceneNumber": 6,
+      "sceneName": "Cierre Institucional",
+      "script": "Finca Tigrillo: la tecnología al servicio del agro educativo ecuatoriano.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "branding",
+        "narrativeRole": "Consolidar el orgullo institucional y dejar la marca grabada en la memoria.",
+        "keyMessage": "Finca Tigrillo es la plataforma que dignifica la educación agropecuaria universitaria con tecnología.",
+        "persuasion": "El orgullo institucional motiva la adopción — la audiencia quiere ser parte de esta transformación.",
+        "emotionalBeat": "Orgullo, inspiración, llamada a la acción institucional"
+      },
+      "visualDirective": "Frame de cierre sobre fondo verde esmeralda puro (#16A34A). Emblema tigrillo centrado en grande, en blanco. Debajo, tipografía display blanca: 'FINCA TIGRILLO' en peso 900. Línea inferior con la tagline institucional en gris claro. Dos reglas horizontales de 4px enmarcan el nombre — estilo emerald-editorial. Composición estática, premium, sin movimiento excesivo.",
+      "assetCandidates": [
+        {
+          "path": "public/favicon.png",
+          "description": "Emblema circular con mascota tigrillo — cara partida mitad humana, mitad leopardo.",
+          "use": "Elemento principal de cierre; mostrar en tamaño grande centrado, con fondo esmeralda para máximo impacto de marca."
+        }
+      ],
+      "transition": {
+        "continuity": "break",
+        "intent": "dissolve"
+      }
+    }
+  ]
+}
