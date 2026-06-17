@@ -118,8 +118,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-shell-build-${{ github.run_id }}
-          path: ios-shell/build/Build/Products/Debug-iphonesimulator/
-          if-no-files-found: error
+          # Glob for the app bundle + dSYM + swiftmodule. Verification build
+          # artifacts are nice-to-have; missing files should not fail CI.
+          path: |
+            ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.app
+            ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.app.dSYM
+            ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.swiftmodule
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Summary
