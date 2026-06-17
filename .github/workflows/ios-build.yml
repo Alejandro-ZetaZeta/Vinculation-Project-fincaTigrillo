@@ -62,7 +62,11 @@ jobs:
         # Force a clean scaffold every run:
         # 1. Remove any partial/corrupt ios/ left from a prior failed run.
         # 2. `cap add ios` is non-interactive for new platforms (no prompt to skip).
-        # 3. Verify the workspace actually exists; fail with tree dump if not.
+        # 3. Verify the Xcode project was actually created; fail with tree dump if not.
+        #
+        # NOTE: Capacitor 8 uses Swift Package Manager (SPM) by default for
+        # plugin management — the scaffold does NOT generate App.xcworkspace.
+        # The build target is ios/App/App.xcodeproj (project, not workspace).
         working-directory: ios-shell
         run: |
           set -e
@@ -70,34 +74,40 @@ jobs:
           rm -rf ios
           echo "=== Running npx cap add ios ==="
           npx cap add ios
-          echo "=== Verifying ios/App/App.xcworkspace exists ==="
-          if [ ! -d "ios/App/App.xcworkspace" ]; then
-            echo "::error::cap add ios did not create ios/App/App.xcworkspace"
+          echo "=== Verifying ios/App/App.xcodeproj exists ==="
+          if [ ! -d "ios/App/App.xcodeproj" ]; then
+            echo "::error::cap add ios did not create ios/App/App.xcodeproj"
             echo "=== ios/ tree (maxdepth 4) ==="
             find ios -maxdepth 4 -print 2>/dev/null || true
             echo "=== ios-shell/ listing ==="
             ls -la
             exit 1
           fi
-          echo "OK: ios/App/App.xcworkspace present"
+          echo "OK: ios/App/App.xcodeproj present"
 
-      - name: Sync & Build CocoaPods natively via Capacitor
-        # `cap sync` copies the latest config + plugins into the Xcode project
-        # AND runs `pod install` internally. No manual `pod install` step needed.
+      - name: Sync (copies config + plugins, SPM resolves packages)
+        # `cap sync` copies the latest config + plugins into the Xcode project.
+        # SPM packages (Package.swift) are auto-resolved by xcodebuild on build.
         working-directory: ios-shell
         run: npx cap sync
 
-      - name: xcodebuild smoke test (Debug, iphonesimulator, unsigned)
+      - name: xcodebuild smoke test (Debug, iphonesimulator, unsigned, SPM)
+        # SPM-native invocation: target the .xcodeproj (NOT a workspace).
+        # `-resolvePackageDependencies` forces SPM to fetch packages before build.
+        # `-clonedSourcePackagesDirPath` keeps the SPM cache inside our build dir.
+        # No code signing: iphonesimulator SDK does not require it.
         working-directory: ios-shell
         run: |
           set -o pipefail
           xcodebuild \
-            -workspace ios/App/App.xcworkspace \
+            -project ios/App/App.xcodeproj \
             -scheme App \
             -configuration Debug \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build \
+            -clonedSourcePackagesDirPath build/SourcePackages \
+            -resolvePackageDependencies \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \

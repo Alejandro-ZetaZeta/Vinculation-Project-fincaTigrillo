@@ -67,8 +67,8 @@ cd ../..
    ```bash
    npx cap open ios
    ```
-   This launches Xcode with `App.xcworkspace` — always use the **workspace**,
-   not the `.xcodeproj`.
+   This launches Xcode with `App.xcodeproj` (Capacitor 8 uses Swift Package
+   Manager for plugin management — there is **no** `App.xcworkspace`).
 
 2. **Select the `App` target → Signing & Capabilities:**
    - Check **Automatically manage signing**
@@ -128,13 +128,15 @@ only — it does **not** sign or archive. To replicate locally:
 cd ios-shell
 npm ci
 npx cap add ios        # if ios/ does not exist
-npx cap sync ios
+npx cap sync
 xcodebuild \
-  -workspace ios/App/App.xcworkspace \
+  -project ios/App/App.xcodeproj \
   -scheme App \
   -configuration Debug \
   -sdk iphonesimulator \
   -destination 'generic/platform=iOS Simulator' \
+  -clonedSourcePackagesDirPath build/SourcePackages \
+  -resolvePackageDependencies \
   CODE_SIGNING_ALLOWED=NO \
   build
 ```
