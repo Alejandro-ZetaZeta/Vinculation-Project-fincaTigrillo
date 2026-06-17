@@ -97,10 +97,9 @@ jobs:
         # `-clonedSourcePackagesDirPath` keeps the SPM cache inside our build dir.
         # No code signing: iphonesimulator SDK does not require it.
         #
-        # CONFIGURATION_BUILD_DIR is resolved relative to SRCROOT (the project
-        # file's directory = ios-shell/ios/App/) by default, NOT the working
-        # directory. We use ${PWD} to force an absolute path so the .app lands
-        # at ios-shell/build_output/App.app/ (matching the upload glob below).
+        # Build products land at the standard SPM + -derivedDataPath location:
+        #   build/Build/Products/Debug-iphonesimulator/App.app
+        # (this is what the upload step expects).
         working-directory: ios-shell
         run: |
           set -o pipefail
@@ -113,7 +112,6 @@ jobs:
             -derivedDataPath build \
             -clonedSourcePackagesDirPath build/SourcePackages \
             -resolvePackageDependencies \
-            CONFIGURATION_BUILD_DIR=${PWD}/build_output \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -122,31 +120,23 @@ jobs:
       - name: Inspect build output (debug visibility)
         # Lists exactly where the .app landed. If this is empty, the build
         # did not produce a bundle (likely a SPM / scheme / destination issue).
-        # If it shows a path we did not expect, update the upload glob to match.
         if: always()
         working-directory: ios-shell
         run: |
-          echo "=== build_output/ contents ==="
-          ls -la build_output/ 2>/dev/null || echo "(build_output/ does not exist)"
-          echo ""
-          echo "=== build_output/ tree (maxdepth 3) ==="
-          find build_output -maxdepth 3 2>/dev/null || echo "(empty)"
-          echo ""
-          echo "=== build/Build/Products contents (fallback path) ==="
+          echo "=== build/Build/Products/ contents ==="
           ls -la build/Build/Products/ 2>/dev/null || echo "(build/Build/Products/ does not exist)"
           echo ""
-          echo "=== build/Build/Products tree (maxdepth 3) ==="
-          find build/Build/Products -maxdepth 3 2>/dev/null || echo "(empty)"
+          echo "=== build/Build/Products/ tree (maxdepth 4) ==="
+          find build/Build/Products -maxdepth 4 2>/dev/null || echo "(empty)"
 
       - name: Upload build artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ios-shell-build-${{ github.run_id }}
-          # .app is placed at build_output/ via CONFIGURATION_BUILD_DIR=${PWD}/build_output.
-          # Upload must fail if the artifact is missing — that is the whole
-          # point of the verification build.
-          path: ios-shell/build_output/App.app
+          # This is the exact and actual path that Xcode generates when you
+          # use `-derivedDataPath build` under SPM.
+          path: ios-shell/build/Build/Products/Debug-iphonesimulator/App.app
           if-no-files-found: error
           retention-days: 7
 
