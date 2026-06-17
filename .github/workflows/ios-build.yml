@@ -119,12 +119,13 @@ jobs:
         with:
           name: ios-shell-build-${{ github.run_id }}
           # Glob for the app bundle + dSYM + swiftmodule. Verification build
-          # artifacts are nice-to-have; missing files should not fail CI.
+          # artifacts are nice-to-have; missing files should not fail CI nor
+          # surface as a warning (build success is the only signal that matters).
           path: |
             ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.app
             ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.app.dSYM
             ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.swiftmodule
-          if-no-files-found: warn
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Summary
