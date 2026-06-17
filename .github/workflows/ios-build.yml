@@ -108,6 +108,7 @@ jobs:
             -derivedDataPath build \
             -clonedSourcePackagesDirPath build/SourcePackages \
             -resolvePackageDependencies \
+            CONFIGURATION_BUILD_DIR=build_output \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -121,11 +122,8 @@ jobs:
           # Glob for the app bundle + dSYM + swiftmodule. Verification build
           # artifacts are nice-to-have; missing files should not fail CI nor
           # surface as a warning (build success is the only signal that matters).
-          path: |
-            ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.app
-            ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.app.dSYM
-            ios-shell/build/Build/Products/Debug-iphonesimulator/**/*.swiftmodule
-          if-no-files-found: ignore
+          path: ios-shell/build_output/App.app
+          if-no-files-found: error
           retention-days: 7
 
       - name: Summary
