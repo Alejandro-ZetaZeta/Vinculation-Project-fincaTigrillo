@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Capacitor } from '@capacitor/core'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import {
@@ -111,7 +112,11 @@ interface Invoice {
    COMPONENTE PRINCIPAL
    ════════════════════════════════════════ */
 export default function EventsClient({ isAdmin }: { isAdmin: boolean }) {
-  const [activeTab, setActiveTab] = useState<EventTab>('reproductivos')
+  const searchParams = useSearchParams()
+  const initialTab = (searchParams.get('tab') as EventTab) || 'reproductivos'
+  const [activeTab, setActiveTab] = useState<EventTab>(
+    ['reproductivos', 'mortalidad', 'produccion', 'facturas'].includes(initialTab) ? initialTab : 'reproductivos'
+  )
   const [animals, setAnimals] = useState<AnimalOption[]>([])
   const [loadingAnimals, setLoadingAnimals] = useState(true)
 

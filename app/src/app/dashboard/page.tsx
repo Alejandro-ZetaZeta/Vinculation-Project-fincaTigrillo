@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getCurrentUser } from '@/lib/auth/actions'
 import { getAccessToken } from '@/lib/auth/cookies'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
-import { PawPrint, ShoppingCart, CheckCircle, BarChart2, ArrowRight, TrendingUp } from 'lucide-react'
+import { PawPrint, ShoppingCart, CheckCircle, BarChart2, ArrowRight, TrendingUp, Receipt, Sprout } from 'lucide-react'
 import { StudentKanban } from '@/components/activities/StudentKanban'
 import { LocalDate } from '@/components/layout/LocalDate'
 
@@ -56,7 +56,7 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
 
   const recentAnimals = [...animals]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5)
+    .slice(0, 4)
 
   const maxCount = Math.max(...countByCategory.map(c => c.count), 1)
 
@@ -161,52 +161,91 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
       {/* ── Bottom panels ──────────────────────────────────────────── */}
       <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-2' : ''} gap-6 items-start`}>
 
-        {/* Category breakdown with progress bars */}
-        <div className="card-elevated p-6 animate-fade-up stagger-2">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-display text-base font-semibold text-[--foreground] tracking-tight">
-              Animales por Categoría
-            </h2>
-            <span className="text-xs font-semibold text-[--primary] bg-[--primary]/8 px-2.5 py-1 rounded-full border border-[--primary]/15">
-              {totalAnimals} total
-            </span>
-          </div>
+        <div className="space-y-4">
+          {/* Category breakdown with progress bars */}
+          <div className="card-elevated p-6 animate-fade-up stagger-2">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-display text-base font-semibold text-[--foreground] tracking-tight">
+                Animales por Categoría
+              </h2>
+              <span className="text-xs font-semibold text-[--primary] bg-[--primary]/8 px-2.5 py-1 rounded-full border border-[--primary]/15">
+                {totalAnimals} total
+              </span>
+            </div>
 
-          {countByCategory.length > 0 ? (
-            <div className="space-y-4">
-              {countByCategory.map((cat, i) => {
-                const pct = totalAnimals > 0 ? Math.round((cat.count / totalAnimals) * 100) : 0
-                const barPct = maxCount > 0 ? (cat.count / maxCount) * 100 : 0
-                return (
-                  <div key={cat.slug} className={`animate-fade-up`} style={{ animationDelay: `${0.05 + i * 0.06}s` }}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-[--foreground]">{cat.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-[--muted]">{pct}%</span>
-                        <span className="text-sm font-bold text-[--primary] tabular-nums w-8 text-right">{cat.count}</span>
+            {countByCategory.length > 0 ? (
+              <div className="space-y-4">
+                {countByCategory.map((cat, i) => {
+                  const pct = totalAnimals > 0 ? Math.round((cat.count / totalAnimals) * 100) : 0
+                  const barPct = maxCount > 0 ? (cat.count / maxCount) * 100 : 0
+                  return (
+                    <div key={cat.slug} className={`animate-fade-up`} style={{ animationDelay: `${0.05 + i * 0.06}s` }}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-medium text-[--foreground]">{cat.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[--muted]">{pct}%</span>
+                          <span className="text-sm font-bold text-[--primary] tabular-nums w-8 text-right">{cat.count}</span>
+                        </div>
+                      </div>
+                      <div className="h-2 rounded-full bg-[--surface-hover] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[--primary-dark] to-[--primary-light] transition-all duration-700"
+                          style={{ width: `${barPct}%` }}
+                          role="progressbar"
+                          aria-valuenow={cat.count}
+                          aria-valuemin={0}
+                          aria-valuemax={maxCount}
+                          aria-label={`${cat.name}: ${cat.count} animales`}
+                        />
                       </div>
                     </div>
-                    <div className="h-2 rounded-full bg-[--surface-hover] overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-[--primary-dark] to-[--primary-light] transition-all duration-700"
-                        style={{ width: `${barPct}%` }}
-                        role="progressbar"
-                        aria-valuenow={cat.count}
-                        aria-valuemin={0}
-                        aria-valuemax={maxCount}
-                        aria-label={`${cat.name}: ${cat.count} animales`}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-[--surface-hover] flex items-center justify-center mb-3">
-                <PawPrint className="w-6 h-6 text-[--muted]" aria-hidden="true" />
+                  )
+                })}
               </div>
-              <p className="text-sm text-[--muted]">No hay categorías configuradas</p>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-[--surface-hover] flex items-center justify-center mb-3">
+                  <PawPrint className="w-6 h-6 text-[--muted]" aria-hidden="true" />
+                </div>
+                <p className="text-sm text-[--muted]">No hay categorías configuradas</p>
+              </div>
+            )}
+          </div>
+
+          {/* Quick action buttons */}
+          {isAdmin && (
+            <div className="grid grid-cols-2 gap-3 animate-fade-up stagger-3">
+              <Link
+                href="/dashboard/events?tab=facturas"
+                className="group flex items-center gap-2.5 px-4 py-3 rounded-xl
+                           bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/40
+                           hover:border-amber-400 hover:shadow-sm transition-all duration-200"
+              >
+                <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+                  <Receipt className="w-4.5 h-4.5 text-amber-600" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[--foreground] truncate">Agregar Factura</p>
+                  <p className="text-xs text-[--muted] truncate">Registrar nueva factura</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-amber-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true" />
+              </Link>
+
+              <Link
+                href="/dashboard/sembrios"
+                className="group flex items-center gap-2.5 px-4 py-3 rounded-xl
+                           bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/40
+                           hover:border-emerald-400 hover:shadow-sm transition-all duration-200"
+              >
+                <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+                  <Sprout className="w-4.5 h-4.5 text-emerald-600" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[--foreground] truncate">Registrar Sembrío</p>
+                  <p className="text-xs text-[--muted] truncate">Nuevo cultivo o plantación</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-emerald-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true" />
+              </Link>
             </div>
           )}
         </div>
