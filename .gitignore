@@ -73,6 +73,7 @@ app/.vercel
 
 # typescript
 app/next-env.d.ts
+app/tsconfig.tsbuildinfo
 
 # InsForge & AI agent skills
 app/.insforge

@@ -296,8 +296,23 @@ body {
 }
 
 /* ─────────────────────────────────────────────
+   GLOBAL SELECT — custom chevron
+   ───────────────────────────────────────────── */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem !important;
+}
+[data-theme="dark"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+/* ─────────────────────────────────────────────
    CALCULATOR INPUT
-───────────────────────────────────────────── */
+   ───────────────────────────────────────────── */
 .input-calc {
   width: 100%;
   padding: 0.5rem 0.75rem;
@@ -318,8 +333,8 @@ body {
 select.input-calc {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 0.625rem center;
-  padding-right: 2rem;
+  background-position: right 1rem center;
+  padding-right: 2.75rem !important;
   cursor: pointer;
 }
 [data-theme="dark"] select.input-calc {
@@ -420,6 +435,94 @@ select.input-calc {
 }
 .pulse-dot {
   animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────────
+   CHART CARD — glassmorphic chart wrapper
+───────────────────────────────────────────── */
+.chart-card {
+  position: relative;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.chart-card:hover {
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.06),
+    0 8px 28px rgba(22,163,74,0.08);
+  transform: translateY(-2px);
+}
+[data-theme="dark"] .chart-card:hover {
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.4),
+    0 8px 28px rgba(52,211,153,0.1);
+}
+
+/* ─────────────────────────────────────────────
+   CHART CONTENT TRANSITION
+───────────────────────────────────────────── */
+.chart-content-transition {
+  animation: chart-fade 0.4s ease both;
+}
+
+@keyframes chart-fade {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+/* ─────────────────────────────────────────────
+   GAUGE ARC ANIMATION
+───────────────────────────────────────────── */
+.gauge-arc-animate {
+  animation: gauge-sweep 1.2s ease-out both;
+}
+
+@keyframes gauge-sweep {
+  from { stroke-dasharray: 0 1000; }
+  to   { stroke-dasharray: 1000 0; }
+}
+
+/* ─────────────────────────────────────────────
+   AI ICON PULSE
+───────────────────────────────────────────── */
+.ai-icon-pulse {
+  animation: ai-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ai-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.7; transform: scale(1.08); }
+}
+
+/* ─────────────────────────────────────────────
+   KPI CARD
+───────────────────────────────────────────── */
+.kpi-card {
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.kpi-card:hover::after {
+  opacity: 0.5;
+}
+
+/* ─────────────────────────────────────────────
+   FADE IN
+───────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease both;
 }
 
 /* ─────────────────────────────────────────────

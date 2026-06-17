@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
-  title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
+  title: 'Finca Tigrillo',
   description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
   manifest: '/manifest.webmanifest',
   applicationName: 'Finca Tigrillo',
@@ -44,13 +44,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Finca Tigrillo',
-    title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
+    title: 'Finca Tigrillo',
     description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
     locale: 'es_EC',
   },
   twitter: {
     card: 'summary',
-    title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
+    title: 'Finca Tigrillo',
     description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
   },
 }

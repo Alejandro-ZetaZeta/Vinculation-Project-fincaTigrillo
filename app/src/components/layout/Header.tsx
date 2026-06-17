@@ -226,7 +226,7 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
                                      rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                         >
                           <Camera className="w-3.5 h-3.5" aria-hidden="true" />
-                          Cambiar foto de perfil
+                          Cambiar la foto de perfil
                         </button>
                       ) : cooldown ? (
                         <p className="text-[11px] text-muted text-center py-1.5 px-2 bg-surface-hover rounded-xl border border-border">

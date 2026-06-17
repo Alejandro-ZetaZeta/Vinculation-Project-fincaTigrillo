@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sprout, Plus, MapPin, Ruler, Trash2, X, ChevronRight, Leaf, TreePine, Calendar, Edit, Check, AlertTriangle, Clock, Settings } from 'lucide-react'
+import { Sprout, Plus, MapPin, Ruler, Trash2, X, ChevronRight, Leaf, TreePine, Calendar, Edit, Check, AlertTriangle, Clock, Settings, FileText } from 'lucide-react'
 import Image from 'next/image'
 import { shouldSuggestStage, buildTimeline, getStageByKey, DEFAULT_STAGES } from '@/lib/sembrios/stages'
 import type { StageDefinition, StageSuggestion, SembrioStageConfig, SembrioStageLog } from '@/lib/sembrios/types'
@@ -281,6 +281,30 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
 
   return (
     <div style={{ fontFamily: 'var(--font-sans, system-ui)', color: 'var(--foreground)', paddingBottom: '3rem' }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .semb-header-btns { flex-direction: column !important; width: 100% !important; }
+          .semb-header-btns button { width: 100% !important; justify-content: center !important; }
+          .semb-stats { grid-template-columns: 1fr !important; }
+          .semb-tabs { width: 100% !important; overflow-x: auto !important; }
+          .semb-tabs button { padding: 0.5rem 0.75rem !important; font-size: 0.8rem !important; white-space: nowrap !important; }
+          .semb-card { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+          .semb-card-row { flex-direction: column !important; align-items: flex-start !important; gap: 0.5rem !important; }
+          .semb-detail-actions { flex-direction: column !important; }
+          .semb-detail-actions button { width: 100% !important; justify-content: center !important; }
+          .semb-detail-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .semb-suggestion-btns { flex-direction: column !important; }
+          .semb-suggestion-btns button { min-width: 0 !important; width: 100% !important; justify-content: center !important; }
+          .semb-timeline { flex-direction: column !important; align-items: stretch !important; gap: 1rem !important; }
+          .semb-timeline > div { flex: 0 0 100% !important; min-width: 0 !important; }
+          .semb-timeline-connector { display: none !important; }
+          .semb-potrero-grid { grid-template-columns: 1fr !important; }
+          .semb-form-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 400px) {
+          .semb-detail-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem', background: 'color-mix(in srgb, var(--primary) 5%, transparent)', padding: '1.5rem', borderRadius: '16px', border: '1px solid color-mix(in srgb, var(--border-color) 60%, transparent)', boxShadow: '0 8px 32px rgba(0,0,0,0.03)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -293,7 +317,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
           </div>
         </div>
         {isAdmin && (
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div className="semb-header-btns" style={{ display: 'flex', gap: '0.75rem' }}>
             <button onClick={() => setShowPotreroForm(true)} style={btnStyle('var(--primary)')}><Plus size={16} /> Nuevo Potrero</button>
             <button onClick={() => setShowSembrioForm(true)} disabled={potreros.length === 0} style={btnStyle('#a78bfa')}><Leaf size={16} /> Registrar Sembrío</button>
           </div>
@@ -301,12 +325,12 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="semb-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         {[
           { label: 'Total Potreros',   value: potreros.length,                                           icon: <MapPin size={20} />,  color: '#38bdf8',         bg: 'rgba(56,189,248,0.1)' },
           { label: 'Área Total',        value: `${fmt(totalArea)} m²`,                                   icon: <Ruler size={20} />,   color: 'var(--primary)',  bg: 'color-mix(in srgb, var(--primary) 10%, transparent)' },
           { label: 'Área Ocupada',      value: `${fmt(totalOcupado)} m²`,                                icon: <Sprout size={20} />,  color: 'var(--warning)',  bg: 'color-mix(in srgb, var(--warning) 10%, transparent)' },
-          { label: 'Sembríos Activos',  value: sembrios.filter(s => s.estado === 'en_crecimiento').length, icon: <Leaf size={20} />,    color: '#a78bfa',         bg: 'rgba(167,139,250,0.1)' },
+          { label: 'Sembríos Activos',  value: sembrios.filter(s => s.estado === 'en_crecimiento' || s.estado === 'en_preparacion').length, icon: <Leaf size={20} />,    color: '#a78bfa',         bg: 'rgba(167,139,250,0.1)' },
         ].map(s => (
           <div key={s.label} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: s.bg, color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -321,7 +345,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'color-mix(in srgb, currentColor 4%, transparent)', borderRadius: 12, padding: '0.35rem', width: 'fit-content', border: '1px solid color-mix(in srgb, currentColor 5%, transparent)', boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.02)' }}>
+      <div className="semb-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'color-mix(in srgb, currentColor 4%, transparent)', borderRadius: 12, padding: '0.35rem', width: 'fit-content', border: '1px solid color-mix(in srgb, currentColor 5%, transparent)', boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.02)' }}>
         {(['mapa', 'potreros', 'sembrios', 'detalle'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{ padding: '0.5rem 1.25rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: tab === t ? 700 : 500, background: tab === t ? 'var(--surface)' : 'transparent', color: tab === t ? 'var(--foreground)' : 'var(--muted)', textTransform: 'capitalize', fontSize: '0.9rem', boxShadow: tab === t ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
             {t === 'mapa' ? 'Mapa' : t === 'potreros' ? 'Potreros' : t === 'sembrios' ? 'Sembríos' : 'Detalle'}
@@ -360,7 +384,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
             </div>
           </div>
           {potreros.length > 0 && (
-            <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem' }}>
+            <div className="semb-potrero-grid" style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem' }}>
               {potreros.map(p => (
                 <div key={p.id} style={{ ...cardStyle, cursor: 'pointer', borderLeft: '4px solid var(--primary)', padding: '1rem', transition: 'transform 0.2s, box-shadow 0.2s' }} onClick={() => { setSelectedPotrero(p); setTab('potreros') }} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)' }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{p.nombre}</div>
@@ -380,7 +404,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
       {!loading && tab === 'potreros' && (
         <div>
           {potreros.length === 0 && <div style={{ textAlign: 'center', padding: '4rem', opacity: 0.5 }}>{isAdmin ? 'No hay potreros. Crea el primero.' : 'No hay potreros registrados actualmente.'}</div>}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+          <div className="semb-potrero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
             {potreros.map(p => {
               const pct = Math.min(100, (p.area_ocupada_m2 / p.area_total_m2) * 100)
               const isSelected = selectedPotrero?.id === p.id
@@ -419,13 +443,17 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                         ? <div style={{ fontSize: '0.8rem', opacity: 0.5, textAlign: 'center', padding: '1rem' }}>Sin sembríos registrados en este potrero</div>
                         : sembrios.filter(s => s.potrero_id === p.id).map(s => {
                             const es = ESTADO_STYLE[s.estado] ?? ESTADO_STYLE.en_crecimiento
+                            const stageLabel = s.current_stage ? (getStageByKey(DEFAULT_STAGES, s.current_stage)?.label || s.current_stage) : null
                             return (
-                              <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', margin: '0 -0.5rem', borderRadius: '8px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, currentColor 3%, transparent)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                              <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', margin: '0 -0.5rem', borderRadius: '8px', transition: 'background 0.2s', flexWrap: 'wrap', gap: '0.5rem' }} onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, currentColor 3%, transparent)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                 <div>
                                   <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{s.tipo_cultivo}{s.variedad ? <span style={{ opacity: 0.6, fontWeight: 500 }}> ({s.variedad})</span> : ''}</div>
                                   <div style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.1rem' }}>{fmt(s.area_sembrada_m2)} m² · {new Date(s.fecha_siembra).toLocaleDateString('es-EC')}</div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  {stageLabel && (
+                                    <span style={{ fontSize: '0.6rem', padding: '2px 6px', borderRadius: 99, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)', border: '1px solid color-mix(in srgb, var(--primary) 25%, transparent)', fontWeight: 700, letterSpacing: '0.02em' }}>{stageLabel}</span>
+                                  )}
                                   <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 99, background: es.bg, color: es.color, border: `1px solid ${es.border}`, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>{ESTADO_LABEL[s.estado]}</span>
                                   {isAdmin && (
                                     <button onClick={() => deleteSembrio(s.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '0.2rem', opacity: 0.5, transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0.5'} title="Eliminar Sembrío"><X size={16} /></button>
@@ -451,22 +479,35 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {sembrios.map(s => {
               const es = ESTADO_STYLE[s.estado] ?? ESTADO_STYLE.en_crecimiento
+              const stageLabel = s.current_stage ? (getStageByKey(DEFAULT_STAGES, s.current_stage)?.label || s.current_stage) : null
               return (
-                <div key={s.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap', padding: '1.25rem', transition: 'transform 0.2s, box-shadow 0.2s' }} onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)' }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div key={s.id} className="semb-card" style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap', padding: '1.25rem', transition: 'transform 0.2s, box-shadow 0.2s' }} onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)' }} onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)' }}>
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: es.color, flexShrink: 0, boxShadow: `0 0 8px ${es.glow}` }} />
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>{s.tipo_cultivo}{s.variedad ? <span style={{ opacity: 0.6, fontWeight: 500 }}> · {s.variedad}</span> : ''}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <MapPin size={12} /> {s.potreros?.nombre || '—'} <span style={{ opacity: 0.3 }}>|</span> <Ruler size={12} /> {fmt(s.area_sembrada_m2)} m²
                     </div>
+                    {s.observaciones && (
+                      <div style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.35rem', display: 'flex', alignItems: 'flex-start', gap: '0.3rem', lineHeight: 1.4 }}>
+                        <FileText size={11} style={{ flexShrink: 0, marginTop: 2 }} /> {s.observaciones}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 500, background: 'color-mix(in srgb, currentColor 4%, transparent)', padding: '0.4rem 0.75rem', borderRadius: '6px' }}>
-                    {new Date(s.fecha_siembra).toLocaleDateString('es-EC')}
+                  <div className="semb-card-row" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 500, background: 'color-mix(in srgb, currentColor 4%, transparent)', padding: '0.4rem 0.75rem', borderRadius: '6px' }}>
+                      {new Date(s.fecha_siembra).toLocaleDateString('es-EC')}
+                    </div>
+                    {stageLabel && (
+                      <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 99, background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)', border: '1px solid color-mix(in srgb, var(--primary) 25%, transparent)', fontWeight: 700, letterSpacing: '0.02em' }}>
+                        {stageLabel}
+                      </span>
+                    )}
+                    <span style={{ fontSize: '0.75rem', padding: '4px 12px', borderRadius: 99, background: es.bg, color: es.color, border: `1px solid ${es.border}`, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase' }}>{ESTADO_LABEL[s.estado]}</span>
+                    {isAdmin && (
+                      <button onClick={() => deleteSembrio(s.id)} style={{ background: 'color-mix(in srgb, var(--danger) 10%, transparent)', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '0.5rem', borderRadius: '8px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--danger) 20%, transparent)'} onMouseLeave={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--danger) 10%, transparent)'} title="Eliminar Sembrío"><Trash2 size={16} /></button>
+                    )}
                   </div>
-                  <span style={{ fontSize: '0.75rem', padding: '4px 12px', borderRadius: 99, background: es.bg, color: es.color, border: `1px solid ${es.border}`, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase' }}>{ESTADO_LABEL[s.estado]}</span>
-                  {isAdmin && (
-                    <button onClick={() => deleteSembrio(s.id)} style={{ background: 'color-mix(in srgb, var(--danger) 10%, transparent)', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '0.5rem', borderRadius: '8px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--danger) 20%, transparent)'} onMouseLeave={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--danger) 10%, transparent)'} title="Eliminar Sembrío"><Trash2 size={16} /></button>
-                  )}
                 </div>
               )
             })}
@@ -482,7 +523,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
             <>
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={labelStyle}>Seleccionar Sembrío</label>
-                <select style={inputStyle} value={selectedSembrioId} onChange={e => { setSelectedSembrioId(e.target.value); setPendingSuggestion(null); setStageConfig(null); setStageLogs([]) }}>
+                <select style={selectStyle} value={selectedSembrioId} onChange={e => { setSelectedSembrioId(e.target.value); setPendingSuggestion(null); setStageConfig(null); setStageLogs([]) }}>
                   <option value="">Seleccionar un sembrío...</option>
                   {sembrios.map(s => (
                     <option key={s.id} value={s.id}>{s.tipo_cultivo} - {s.potreros?.nombre || 'Sin potrero'} ({fmt(s.area_sembrada_m2)} m²)</option>
@@ -510,7 +551,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                         <TimelineView stages={stageConfig.stages} currentStage={pendingSuggestion.suggested_stage} logs={stageLogs} highlightStage={pendingSuggestion.suggested_stage} />
                       )}
                       {isAdmin && (
-                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                        <div className="semb-suggestion-btns" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
                           <button onClick={acceptSuggestion} disabled={saving} style={{ ...btnStyle('#10b981'), flex: 1, minWidth: 200 }}>
                             <Check size={16} /> {saving ? 'Procesando...' : `Aceptar Cambio a ${getStageByKey(stageConfig?.stages || DEFAULT_STAGES, pendingSuggestion.suggested_stage)?.label || pendingSuggestion.suggested_stage}`}
                           </button>
@@ -533,15 +574,15 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                   )}
 
                   <div style={{ ...cardStyle, padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div className="semb-detail-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                       <div>
                         <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>{selectedSembrio.tipo_cultivo}{selectedSembrio.variedad ? ` - ${selectedSembrio.variedad}` : ''}</h2>
-                        <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                           <MapPin size={14} /> {selectedSembrio.potreros?.nombre || 'Sin potrero'} <span style={{ opacity: 0.4 }}>|</span> <Ruler size={14} /> {fmt(selectedSembrio.area_sembrada_m2)} m²
                         </div>
                       </div>
                       {isAdmin && (
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div className="semb-detail-actions" style={{ display: 'flex', gap: '0.5rem' }}>
                           <button onClick={() => setShowManualStageChange(true)} style={btnStyle('#6366f1')} title="Cambiar etapa manualmente">
                             <Edit size={16} /> Cambiar Etapa
                           </button>
@@ -552,19 +593,24 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                       )}
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: 'color-mix(in srgb, currentColor 3%, transparent)', borderRadius: 12 }}>
+                    <div className="semb-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: 'color-mix(in srgb, currentColor 3%, transparent)', borderRadius: 12 }}>
                       <div>
                         <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Fecha Siembra</div>
                         <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem' }}>{new Date(selectedSembrio.fecha_siembra).toLocaleDateString('es-EC')}</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Estado</div>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem', color: ESTADO_STYLE[selectedSembrio.estado]?.color || 'inherit' }}>{ESTADO_LABEL[selectedSembrio.estado] || selectedSembrio.estado}</div>
-                      </div>
-                      <div>
                         <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Etapa Actual</div>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem' }}>{getStageByKey(stageConfig?.stages || DEFAULT_STAGES, selectedSembrio.current_stage || 'siembra')?.label || selectedSembrio.current_stage || 'Sin configurar'}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{getStageByKey(stageConfig?.stages || DEFAULT_STAGES, selectedSembrio.current_stage || 'en_preparacion')?.label || selectedSembrio.current_stage || 'Sin configurar'}</span>
+                          <span style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 99, background: ESTADO_STYLE[selectedSembrio.estado]?.bg || 'transparent', color: ESTADO_STYLE[selectedSembrio.estado]?.color || 'inherit', border: `1px solid ${ESTADO_STYLE[selectedSembrio.estado]?.border || 'transparent'}`, fontWeight: 700, textTransform: 'uppercase' }}>{ESTADO_LABEL[selectedSembrio.estado] || selectedSembrio.estado}</span>
+                        </div>
                       </div>
+                      {selectedSembrio.fecha_cosecha_estimada && (
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Cosecha Estimada</div>
+                          <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem' }}>{new Date(selectedSembrio.fecha_cosecha_estimada).toLocaleDateString('es-EC')}</div>
+                        </div>
+                      )}
                       {selectedSembrio.potreros?.tipo_suelo && (
                         <div>
                           <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Tipo de Suelo</div>
@@ -572,6 +618,15 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                         </div>
                       )}
                     </div>
+
+                    {selectedSembrio.observaciones && (
+                      <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'color-mix(in srgb, currentColor 3%, transparent)', borderRadius: 12, borderLeft: '3px solid var(--primary)' }}>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <FileText size={12} /> Observaciones
+                        </div>
+                        <div style={{ fontSize: '0.9rem', lineHeight: 1.6, opacity: 0.85 }}>{selectedSembrio.observaciones}</div>
+                      </div>
+                    )}
 
                     {stageConfig ? (
                       <>
@@ -582,7 +637,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                           <TimelineView stages={stageConfig.stages} currentStage={selectedSembrio.current_stage || null} logs={stageLogs} />
                         </div>
 
-                        {!pendingSuggestion && isAdmin && selectedSembrio.estado === 'en_crecimiento' && (
+                        {!pendingSuggestion && isAdmin && (selectedSembrio.estado === 'en_crecimiento' || selectedSembrio.estado === 'en_preparacion') && (
                           <div style={{ marginTop: '1rem', padding: '1rem', background: 'color-mix(in srgb, var(--primary) 5%, transparent)', borderRadius: 12, border: '1px dashed color-mix(in srgb, var(--primary) 30%, transparent)' }}>
                             <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>Verificar Sugerencia de Etapa</div>
                             <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0 0 0.75rem 0' }}>
@@ -650,7 +705,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
           <label style={labelStyle}>Área Total (m²) *</label>
           <input style={inputStyle} type="number" min="1" placeholder="Ej: 15000" value={potreroForm.area_total_m2} onChange={e => setPotreroForm(f => ({ ...f, area_total_m2: e.target.value }))} />
           <label style={labelStyle}>Tipo de Suelo</label>
-          <select style={inputStyle} value={potreroForm.tipo_suelo} onChange={e => setPotreroForm(f => ({ ...f, tipo_suelo: e.target.value }))}>
+          <select style={selectStyle} value={potreroForm.tipo_suelo} onChange={e => setPotreroForm(f => ({ ...f, tipo_suelo: e.target.value }))}>
             <option value="">Seleccionar...</option>
             {['Arcilloso', 'Arenoso', 'Franco', 'Limoso', 'Franco-arcilloso', 'Franco-arenoso'].map(v => <option key={v} value={v}>{v}</option>)}
           </select>
@@ -669,7 +724,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
         <Modal title="Registrar Sembrío" onClose={() => setShowSembrioForm(false)}>
           {error && <div style={errStyle}>{error}</div>}
           <label style={labelStyle}>Potrero Destino *</label>
-          <select style={inputStyle} value={sembrioForm.potrero_id} onChange={e => setSembrioForm(f => ({ ...f, potrero_id: e.target.value }))}>
+          <select style={selectStyle} value={sembrioForm.potrero_id} onChange={e => setSembrioForm(f => ({ ...f, potrero_id: e.target.value }))}>
             <option value="">Seleccionar potrero...</option>
             {potreros.map(p => <option key={p.id} value={p.id}>{p.nombre} — {fmt(p.area_disponible_m2)} m² disponibles</option>)}
           </select>
@@ -679,7 +734,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
           <input style={inputStyle} placeholder="Ej: Híbrido H-551" value={sembrioForm.variedad} onChange={e => setSembrioForm(f => ({ ...f, variedad: e.target.value }))} />
           <label style={labelStyle}>Área Sembrada (m²) *</label>
           <input style={inputStyle} type="number" min="1" placeholder="Ej: 5000" value={sembrioForm.area_sembrada_m2} onChange={e => setSembrioForm(f => ({ ...f, area_sembrada_m2: e.target.value }))} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="semb-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
               <label style={labelStyle}>Fecha de Siembra *</label>
               <input style={inputStyle} type="date" value={sembrioForm.fecha_siembra} onChange={e => setSembrioForm(f => ({ ...f, fecha_siembra: e.target.value }))} />
@@ -690,7 +745,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
             </div>
           </div>
           <label style={labelStyle}>Estado Actual</label>
-          <select style={inputStyle} value={sembrioForm.estado} onChange={e => setSembrioForm(f => ({ ...f, estado: e.target.value }))}>
+          <select style={selectStyle} value={sembrioForm.estado} onChange={e => setSembrioForm(f => ({ ...f, estado: e.target.value }))}>
             {Object.entries(ESTADO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
           <label style={labelStyle}>Observaciones</label>
@@ -742,7 +797,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
             Cambie la etapa actual del sembrío. Esta acción quedará registrada en el historial.
           </p>
           <label style={labelStyle}>Etapa Destino *</label>
-          <select style={inputStyle} value={manualStageTarget} onChange={e => setManualStageTarget(e.target.value)}>
+          <select style={selectStyle} value={manualStageTarget} onChange={e => setManualStageTarget(e.target.value)}>
             <option value="">Seleccionar etapa...</option>
             {stageConfig.stages.filter(s => s.key !== selectedSembrio?.current_stage).map(s => (
               <option key={s.key} value={s.key}>{s.label}</option>
@@ -778,7 +833,7 @@ function TimelineView({ stages, currentStage, logs, highlightStage }: { stages: 
   const timeline = buildTimeline(stages, currentStage, logs)
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', overflowX: 'auto', padding: '1rem 0' }}>
+    <div className="semb-timeline" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', overflowX: 'auto', padding: '1rem 0' }}>
       {timeline.map((entry, idx) => {
         const isHighlighted = highlightStage === entry.key
         const isCurrent = entry.status === 'current'
@@ -825,7 +880,7 @@ function TimelineView({ stages, currentStage, logs, highlightStage }: { stages: 
               )}
             </div>
             {idx < timeline.length - 1 && (
-              <div style={{ width: 20, height: 2, background: isCompleted ? 'rgba(16, 185, 129, 0.4)' : 'color-mix(in srgb, currentColor 15%, transparent)', flexShrink: 0 }} />
+              <div className="semb-timeline-connector" style={{ width: 20, height: 2, background: isCompleted ? 'rgba(16, 185, 129, 0.4)' : 'color-mix(in srgb, currentColor 15%, transparent)', flexShrink: 0 }} />
             )}
           </div>
         )
@@ -836,6 +891,7 @@ function TimelineView({ stages, currentStage, logs, highlightStage }: { stages: 
 
 const cardStyle: React.CSSProperties = { background: 'var(--surface)', border: '1px solid color-mix(in srgb, currentColor 8%, transparent)', borderRadius: 16, padding: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }
 const inputStyle: React.CSSProperties = { width: '100%', padding: '0.75rem 1rem', borderRadius: 12, border: '1px solid color-mix(in srgb, currentColor 15%, transparent)', background: 'color-mix(in srgb, currentColor 3%, transparent)', color: 'inherit', fontSize: '0.9rem', boxSizing: 'border-box', outline: 'none', transition: 'all 0.2s', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)' }
+const selectStyle: React.CSSProperties = { ...inputStyle, appearance: 'none', WebkitAppearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', paddingRight: '2.5rem' }
 const labelStyle: React.CSSProperties = { fontSize: '0.8rem', fontWeight: 700, opacity: 0.8, marginBottom: '-0.5rem', color: 'inherit' }
 const errStyle: React.CSSProperties = { background: 'color-mix(in srgb, var(--danger) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--danger) 33%, transparent)', borderRadius: 12, padding: '0.75rem 1rem', fontSize: '0.85rem', color: 'var(--danger)', fontWeight: 500 }
 
