@@ -110,22 +110,30 @@ export interface ChatMessage {
   content: string
 }
 
-export async function aiChat(messages: ChatMessage[]): Promise<{
+export interface AiChatOptions {
+  /** When true (default), forces JSON response format on cloud providers. Set false for conversational text responses. */
+  jsonMode?: boolean
+}
+
+export async function aiChat(messages: ChatMessage[], options: AiChatOptions = {}): Promise<{
   content: string
   providerName: string
   model: string
 }> {
+  const { jsonMode = true } = options
   const { client, model, providerName } = createAIClient()
   const isLocal = providerName === 'local'
+  const useJsonFormat = jsonMode && !isLocal
+
   const completion = await client.chat.completions.create({
     model,
     messages,
-    temperature: 0.3,   // baja temperatura = respuestas más deterministas
+    temperature: jsonMode ? 0.3 : 0.5,   // slightly warmer for conversational mode
     max_tokens: isLocal ? 2000 : 4096,
-    ...(isLocal ? {} : {response_format: {type: 'json_object'}}),
+    ...(useJsonFormat ? { response_format: { type: 'json_object' as const } } : {}),
   })
 
-  const content = completion.choices[0]?.message?.content ?? '{}'
+  const content = completion.choices[0]?.message?.content ?? (jsonMode ? '{}' : '')
   return { content, providerName, model }
 }
 

@@ -12,6 +12,7 @@ import { EntryAnimation } from '@/components/layout/EntryAnimation'
 import { SessionKeepAlive } from '@/components/layout/SessionKeepAlive'
 import { NotificationsProvider } from '@/contexts/NotificationsContext'
 import { Day45Checker } from '@/components/layout/Day45Checker'
+import { AIChatbot } from '@/components/ai/AIChatbot'
 
 /*
   DashboardShell reads cookies via getCurrentUser — this makes it dynamic.
@@ -48,6 +49,7 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+      <AIChatbot />
     </div>
     </NotificationsProvider>
   )
