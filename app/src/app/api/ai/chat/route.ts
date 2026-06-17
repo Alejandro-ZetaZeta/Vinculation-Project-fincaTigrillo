@@ -22,11 +22,12 @@ REGLAS:
 4. Si te dan datos de vacunación de un animal, responde con precisión: qué vacunas tiene, cuántas dosis lleva, cuándo fue la última aplicación, cuándo es la próxima dosis, y si está al día o no.
 5. Si te dan datos reproductivos, analiza el historial del animal: montas, partos, abortos, estado actual.
 6. Si NO hay datos del animal en el contexto, dilo claramente: "No encontré información registrada sobre ese animal en la base de datos."
-7. Si la pregunta es general (no sobre un animal específico), responde con información práctica basada en buenas prácticas ganaderas colombianas.
-8. Sé conciso pero completo. Usa listas cuando sea útil.
-9. NUNCA respondas con JSON. Responde en texto plano conversacional, usando markdown ligero (negritas, listas) para estructura.
-10. Si el animal tiene vacunas pendientes o atrasadas, alerta al usuario con urgencia.
-11. Puedes sugerir acciones concretas basadas en los datos reales del animal.`
+7. Si te dan estadísticas de la finca (conteos por especie), úsalas EXACTAMENTE para responder. NUNCA inventes ni estimes cantidades.
+8. Si la pregunta es general (no sobre un animal específico ni estadísticas), responde con información práctica basada en buenas prácticas ganaderas colombianas.
+9. Sé conciso pero completo. Usa listas cuando sea útil.
+10. NUNCA respondas con JSON. Responde en texto plano conversacional, usando markdown ligero (negritas, listas) para estructura.
+11. Si el animal tiene vacunas pendientes o atrasadas, alerta al usuario con urgencia.
+12. Puedes sugerir acciones concretas basadas en los datos reales del animal.`
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -39,23 +40,108 @@ interface ChatRequestBody {
   messages: ChatMessage[]
 }
 
-// ─── Buscar animal por nombre/código en la pregunta ────────────────────────
+// ─── Detección de intención ──────────────────────────────────────────────────
+
+type Intent = 'stats' | 'animal' | 'general'
+
+const STATS_KEYWORDS = [
+  'cuántos', 'cuántas', 'cuantos', 'cuantas',
+  'total', 'hay en la finca', 'tenemos', 'tienen',
+  'cantidad', 'número de', 'numero de',
+  'todos los', 'todas las',
+  'resumen', 'inventario', 'hato',
+]
+
+const SPECIES_KEYWORDS = [
+  'vaca', 'vacas', 'toro', 'toros', 'ternero', 'terneros', 'bovino', 'bovinos',
+  'cerdo', 'cerdos', 'puerco', 'puercos', 'lechón', 'porcino', 'porcinos',
+  'cabra', 'cabras', 'caprino', 'caprinos',
+  'caballo', 'caballos', 'yegua', 'yeguas', 'equino', 'equinos',
+  'gallina', 'gallinas', 'pollo', 'pollos', 'pato', 'patos', 'aves',
+  'animal', 'animales',
+]
+
+function detectIntent(question: string): Intent {
+  const q = question.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  const hasStatsKeyword = STATS_KEYWORDS.some(k => q.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+  const hasSpeciesKeyword = SPECIES_KEYWORDS.some(k => q.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+
+  if (hasStatsKeyword && hasSpeciesKeyword) return 'stats'
+  if (hasStatsKeyword) return 'stats'
+  return 'animal' // will fall back to 'general' if no match found in DB
+}
+
+// ─── Estadísticas generales de la finca ─────────────────────────────────────
+
+async function findFarmStats(
+  insforge: ReturnType<typeof createInsForgeServerClient>
+): Promise<string | null> {
+  // Contar animales agrupados por tipo/especie
+  const { data: animals, error } = await insforge.database
+    .from('animals')
+    .select('id, status, animal_types(name, slug)')
+
+  if (error || !animals || animals.length === 0) return null
+
+  type AnimalRow = {
+    id: string
+    status: string | null
+    animal_types: { name: string; slug: string } | { name: string; slug: string }[] | null
+  }
+
+  const rows = animals as AnimalRow[]
+
+  // Agrupar por especie y estado
+  const bySpecies: Record<string, { total: number; activos: number }> = {}
+  let totalAnimals = 0
+  let totalActivos = 0
+
+  for (const a of rows) {
+    const typeObj = Array.isArray(a.animal_types) ? a.animal_types[0] : a.animal_types
+    const speciesName = typeObj?.name ?? 'Sin clasificar'
+    const isActive = a.status === 'active' || a.status === 'activo'
+
+    if (!bySpecies[speciesName]) bySpecies[speciesName] = { total: 0, activos: 0 }
+    bySpecies[speciesName].total++
+    if (isActive) bySpecies[speciesName].activos++
+
+    totalAnimals++
+    if (isActive) totalActivos++
+  }
+
+  const speciesLines = Object.entries(bySpecies)
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(([name, counts]) =>
+      `  - ${name}: ${counts.total} en total (${counts.activos} activos)`
+    )
+    .join('\n')
+
+  const context = {
+    resumen_finca: {
+      total_animales: totalAnimals,
+      animales_activos: totalActivos,
+      por_especie: bySpecies,
+    },
+    fecha_consulta: new Date(new Date().getTime() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  }
+
+  return `\n\n--- ESTADÍSTICAS ACTUALES DE LA FINCA (datos reales de la base de datos) ---\nTotal animales registrados: ${totalAnimals} (${totalActivos} activos)\nDesglose por especie:\n${speciesLines}\n\nDatos completos:\n${JSON.stringify(context, null, 2)}\n--- FIN DE ESTADÍSTICAS ---`
+}
+
+// ─── Buscar animal por nombre/código ────────────────────────────────────────
+// Ahora busca en el historial completo para mantener contexto entre mensajes
 
 async function findAnimalContext(
   insforge: ReturnType<typeof createInsForgeServerClient>,
-  question: string
+  messages: ChatMessage[]
 ): Promise<string | null> {
-  // Obtener todos los animales para buscar coincidencias en el nombre
+  // Obtener todos los animales para buscar coincidencias
   const { data: animals, error: animalsError } = await insforge.database
     .from('animals')
     .select('id, name, identification_code, breed, sex, birth_date, weight_kg, status, notes, acquisition_type, acquisition_date, metadata, animal_types(name, slug)')
 
   if (animalsError || !animals || animals.length === 0) return null
 
-  // Normalizar la pregunta para búsqueda
-  const questionLower = question.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-
-  // Buscar coincidencia por nombre o código
   type AnimalRow = {
     id: string
     name: string | null
@@ -72,12 +158,33 @@ async function findAnimalContext(
     animal_types: { name: string; slug: string } | { name: string; slug: string }[] | null
   }
 
-  const matchedAnimal = (animals as AnimalRow[]).find(a => {
-    const nameNorm = (a.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    const codeNorm = (a.identification_code || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    return (nameNorm && questionLower.includes(nameNorm)) ||
-           (codeNorm && questionLower.includes(codeNorm))
-  })
+  const allAnimals = animals as AnimalRow[]
+
+  // Buscar en los mensajes recientes (del más reciente al más antiguo) para mantener contexto
+  // Tomamos los últimos 6 mensajes para que el contexto no se extienda demasiado atrás
+  const recentMessages = messages.slice(-6)
+
+  let matchedAnimal: AnimalRow | null = null
+
+  // Primero intentar con el mensaje más reciente del usuario, luego buscar en el historial
+  for (let i = recentMessages.length - 1; i >= 0; i--) {
+    const msg = recentMessages[i]
+    if (msg.role !== 'user') continue
+
+    const questionLower = msg.content.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+    const found = allAnimals.find(a => {
+      const nameNorm = (a.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      const codeNorm = (a.identification_code || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      return (nameNorm && questionLower.includes(nameNorm)) ||
+             (codeNorm && questionLower.includes(codeNorm))
+    })
+
+    if (found) {
+      matchedAnimal = found
+      break // Usar el animal más recientemente mencionado
+    }
+  }
 
   if (!matchedAnimal) return null
 
@@ -188,10 +295,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El último mensaje debe ser del usuario' }, { status: 400 })
     }
 
-    // Buscar contexto de animal específico en la pregunta
-    const animalContext = await findAnimalContext(insforge, lastUserMessage.content)
+    // ── Detectar intención y buscar contexto apropiado ──────────────────────
+    const intent = detectIntent(lastUserMessage.content)
 
-    // Construir mensajes para la IA
+    let contextBlock: string | null = null
+    let hasAnimalContext = false
+    let hasStatsContext = false
+
+    if (intent === 'stats') {
+      // Preguntas de conteo/estadísticas → consultar totales por especie
+      contextBlock = await findFarmStats(insforge)
+      hasStatsContext = !!contextBlock
+    } else {
+      // Preguntas sobre animal específico → buscar en historial completo
+      contextBlock = await findAnimalContext(insforge, messages)
+      hasAnimalContext = !!contextBlock
+
+      // Si no encontró animal pero parece una pregunta de seguimiento, intentar stats como fallback
+      if (!contextBlock && intent === 'general') {
+        // no extra context — IA responde con conocimiento ganadero
+      }
+    }
+
+    // ── Construir mensajes para la IA ───────────────────────────────────────
     const aiMessages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
       { role: 'system', content: CHAT_SYSTEM_PROMPT },
     ]
@@ -200,11 +326,11 @@ export async function POST(request: NextRequest) {
     const recentMessages = messages.slice(-10)
     for (const msg of recentMessages) {
       if (msg === lastUserMessage) {
-        // Enriquecer el último mensaje del usuario con contexto del animal
+        // Enriquecer el último mensaje del usuario con contexto de BD
         aiMessages.push({
           role: 'user',
-          content: animalContext
-            ? `${msg.content}\n${animalContext}`
+          content: contextBlock
+            ? `${msg.content}\n${contextBlock}`
             : msg.content,
         })
       } else {
@@ -223,7 +349,9 @@ export async function POST(request: NextRequest) {
       meta: {
         provider: providerName,
         model,
-        has_animal_context: !!animalContext,
+        has_animal_context: hasAnimalContext,
+        has_stats_context: hasStatsContext,
+        intent,
       },
     })
 
