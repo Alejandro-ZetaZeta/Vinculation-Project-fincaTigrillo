@@ -61,15 +61,15 @@ jobs:
       - name: Scaffold ios/ from scratch (clean + verify)
         # Force a clean scaffold every run:
         # 1. Remove any partial/corrupt ios/ left from a prior failed run.
-        # 2. `cap add ios --confirm` skips any interactive prompt in non-TTY.
+        # 2. `cap add ios` is non-interactive for new platforms (no prompt to skip).
         # 3. Verify the workspace actually exists; fail with tree dump if not.
         working-directory: ios-shell
         run: |
           set -e
           echo "=== Removing any existing ios/ for clean scaffold ==="
           rm -rf ios
-          echo "=== Running npx cap add ios --confirm ==="
-          npx cap add ios --confirm
+          echo "=== Running npx cap add ios ==="
+          npx cap add ios
           echo "=== Verifying ios/App/App.xcworkspace exists ==="
           if [ ! -d "ios/App/App.xcworkspace" ]; then
             echo "::error::cap add ios did not create ios/App/App.xcworkspace"
