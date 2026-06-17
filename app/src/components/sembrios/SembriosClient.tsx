@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sprout, Plus, MapPin, Ruler, Trash2, X, ChevronRight, Leaf, TreePine } from 'lucide-react'
+import { Sprout, Plus, MapPin, Ruler, Trash2, X, ChevronRight, Leaf, TreePine, Calendar, Edit, Check, AlertTriangle, Clock, Settings } from 'lucide-react'
 import Image from 'next/image'
+import { shouldSuggestStage, buildTimeline, getStageByKey, DEFAULT_STAGES } from '@/lib/sembrios/stages'
+import type { StageDefinition, StageSuggestion, SembrioStageConfig, SembrioStageLog } from '@/lib/sembrios/types'
 
 /* ─── Types ─────────────────────────────────────────── */
 interface Potrero {
@@ -28,8 +30,10 @@ interface Sembrio {
   fecha_siembra: string
   fecha_cosecha_estimada?: string
   estado: string
+  current_stage?: string | null
+  stage_updated_at?: string | null
   observaciones?: string
-  potreros?: { nombre: string; area_total_m2: number }
+  potreros?: { nombre: string; area_total_m2: number; tipo_suelo?: string }
 }
 
 interface SembriosClientProps {
@@ -86,7 +90,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
   const [potreros, setPotreros] = useState<Potrero[]>([])
   const [sembrios, setSembrios] = useState<Sembrio[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'mapa' | 'potreros' | 'sembrios'>('mapa')
+  const [tab, setTab] = useState<'mapa' | 'potreros' | 'sembrios' | 'detalle'>('mapa')
   const [selectedPotrero, setSelectedPotrero] = useState<Potrero | null>(null)
   const [showPotreroForm, setShowPotreroForm] = useState(false)
   const [showSembrioForm, setShowSembrioForm] = useState(false)
@@ -96,6 +100,18 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
 
   const [potreroForm, setPotreroForm] = useState({ nombre: '', descripcion: '', area_total_m2: '', tipo_suelo: '', ubicacion_referencia: '' })
   const [sembrioForm, setSembrioForm] = useState({ potrero_id: '', tipo_cultivo: '', variedad: '', area_sembrada_m2: '', fecha_siembra: '', fecha_cosecha_estimada: '', estado: 'en_crecimiento', observaciones: '' })
+
+  const [selectedSembrioId, setSelectedSembrioId] = useState<string>('')
+  const [stageConfig, setStageConfig] = useState<SembrioStageConfig | null>(null)
+  const [stageLogs, setStageLogs] = useState<SembrioStageLog[]>([])
+  const [pendingSuggestion, setPendingSuggestion] = useState<StageSuggestion | null>(null)
+  const [showStageConfig, setShowStageConfig] = useState(false)
+  const [showManualStageChange, setShowManualStageChange] = useState(false)
+  const [showRejectForm, setShowRejectForm] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [stageConfigForm, setStageConfigForm] = useState<StageDefinition[]>(DEFAULT_STAGES)
+  const [manualStageTarget, setManualStageTarget] = useState('')
+  const [manualStageNotes, setManualStageNotes] = useState('')
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -107,6 +123,120 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
+
+  const selectedSembrio = sembrios.find(s => s.id === selectedSembrioId) || null
+
+  const loadDetalleData = useCallback(async (sembrioId: string) => {
+    if (!sembrioId) return
+    const [configRes, logsRes, suggestionsRes] = await Promise.all([
+      fetch(`/api/sembrios/${sembrioId}/stage-config`),
+      fetch(`/api/sembrios/${sembrioId}/stages`),
+      fetch(`/api/sembrios/${sembrioId}/suggestions?status=pending`),
+    ])
+    const configData = await configRes.json()
+    const logsData = await logsRes.json()
+    const suggestionsData = await suggestionsRes.json()
+    setStageConfig(configData.data || null)
+    setStageLogs(logsData.data || [])
+    const pending = suggestionsData.data?.[0] || null
+    setPendingSuggestion(pending)
+  }, [])
+
+  useEffect(() => {
+    if (tab === 'detalle' && selectedSembrioId) {
+      loadDetalleData(selectedSembrioId)
+    }
+  }, [tab, selectedSembrioId, loadDetalleData])
+
+  async function saveStageConfig() {
+    if (!isAdmin || !selectedSembrioId) return
+    setSaving(true); setError(null)
+    const res = await fetch(`/api/sembrios/${selectedSembrioId}/stage-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stages: stageConfigForm }),
+    })
+    const data = await res.json()
+    if (!res.ok) { setError(data.error); setSaving(false); return }
+    setStageConfig(data.data)
+    setShowStageConfig(false)
+    setSaving(false)
+  }
+
+  async function acceptSuggestion() {
+    if (!isAdmin || !pendingSuggestion || !selectedSembrioId) return
+    setSaving(true); setError(null)
+    const res = await fetch(`/api/sembrios/${selectedSembrioId}/suggestions/${pendingSuggestion.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'accept' }),
+    })
+    if (!res.ok) { const data = await res.json(); setError(data.error) }
+    setPendingSuggestion(null)
+    await loadDetalleData(selectedSembrioId)
+    await loadData()
+    setSaving(false)
+  }
+
+  async function rejectSuggestion() {
+    if (!isAdmin || !pendingSuggestion || !selectedSembrioId) return
+    setSaving(true); setError(null)
+    const res = await fetch(`/api/sembrios/${selectedSembrioId}/suggestions/${pendingSuggestion.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reject', rejection_reason: rejectionReason }),
+    })
+    if (!res.ok) { const data = await res.json(); setError(data.error) }
+    setPendingSuggestion(null)
+    setShowRejectForm(false)
+    setRejectionReason('')
+    await loadDetalleData(selectedSembrioId)
+    setSaving(false)
+  }
+
+  async function manualStageChange() {
+    if (!isAdmin || !selectedSembrioId || !manualStageTarget) return
+    setSaving(true); setError(null)
+    const res = await fetch(`/api/sembrios/${selectedSembrioId}/stages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to_stage: manualStageTarget, notes: manualStageNotes }),
+    })
+    if (!res.ok) { const data = await res.json(); setError(data.error) }
+    setShowManualStageChange(false)
+    setManualStageTarget('')
+    setManualStageNotes('')
+    await loadDetalleData(selectedSembrioId)
+    await loadData()
+    setSaving(false)
+  }
+
+  async function createSuggestionFromClient() {
+    if (!isAdmin || !selectedSembrioId || !selectedSembrio || !stageConfig) return
+    const stages = stageConfig.stages as StageDefinition[]
+    const result = shouldSuggestStage(
+      selectedSembrio.current_stage || null,
+      selectedSembrio.stage_updated_at || null,
+      stages
+    )
+    if (!result.shouldSuggest || !result.suggestedStage) return
+    setSaving(true); setError(null)
+    const res = await fetch(`/api/sembrios/${selectedSembrioId}/suggestions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        current_stage: selectedSembrio.current_stage,
+        suggested_stage: result.suggestedStage,
+        days_in_current: result.daysInCurrent,
+        theoretical_days: result.theoreticalDays,
+        message: result.message,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok && !data.duplicate) { setError(data.error) }
+    await loadDetalleData(selectedSembrioId)
+    setSaving(false)
+  }
 
   async function savePotrero() {
     if (!isAdmin) return
@@ -192,9 +322,9 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: 'color-mix(in srgb, currentColor 4%, transparent)', borderRadius: 12, padding: '0.35rem', width: 'fit-content', border: '1px solid color-mix(in srgb, currentColor 5%, transparent)', boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.02)' }}>
-        {(['mapa', 'potreros', 'sembrios'] as const).map(t => (
+        {(['mapa', 'potreros', 'sembrios', 'detalle'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{ padding: '0.5rem 1.25rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: tab === t ? 700 : 500, background: tab === t ? 'var(--surface)' : 'transparent', color: tab === t ? 'var(--foreground)' : 'var(--muted)', textTransform: 'capitalize', fontSize: '0.9rem', boxShadow: tab === t ? '0 2px 8px rgba(0,0,0,0.05)' : 'none', transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-            {t === 'mapa' ? 'Mapa' : t === 'potreros' ? 'Potreros' : 'Sembríos'}
+            {t === 'mapa' ? 'Mapa' : t === 'potreros' ? 'Potreros' : t === 'sembrios' ? 'Sembríos' : 'Detalle'}
           </button>
         ))}
       </div>
@@ -344,6 +474,148 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
         </div>
       )}
 
+      {/* TAB: DETALLE */}
+      {!loading && tab === 'detalle' && (
+        <div>
+          {sembrios.length === 0 && <div style={{ textAlign: 'center', padding: '4rem', opacity: 0.5 }}>No hay sembríos registrados.</div>}
+          {sembrios.length > 0 && (
+            <>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={labelStyle}>Seleccionar Sembrío</label>
+                <select style={inputStyle} value={selectedSembrioId} onChange={e => { setSelectedSembrioId(e.target.value); setPendingSuggestion(null); setStageConfig(null); setStageLogs([]) }}>
+                  <option value="">Seleccionar un sembrío...</option>
+                  {sembrios.map(s => (
+                    <option key={s.id} value={s.id}>{s.tipo_cultivo} - {s.potreros?.nombre || 'Sin potrero'} ({fmt(s.area_sembrada_m2)} m²)</option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedSembrio && (
+                <>
+                  {pendingSuggestion && (
+                    <div style={{ ...cardStyle, padding: '1.5rem', marginBottom: '1.5rem', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(245, 158, 11, 0.05))', border: '2px solid rgba(251, 191, 36, 0.4)', boxShadow: '0 4px 20px rgba(251, 191, 36, 0.15)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(251, 191, 36, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <AlertTriangle size={20} color="#f59e0b" />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#92400e' }}>Sugerencia del Sistema: Actualización de Etapa</div>
+                          <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.1rem' }}>Basado en el tiempo transcurrido desde la última actualización</div>
+                        </div>
+                      </div>
+                      <p style={{ fontSize: '0.9rem', lineHeight: 1.6, margin: '0 0 1rem 0', color: '#78350f' }}>
+                        {pendingSuggestion.message || `Basado en ${pendingSuggestion.days_in_current} días desde la última actualización, el ${selectedSembrio.tipo_cultivo} (${selectedSembrio.potreros?.nombre}) ha completado teóricamente '${getStageByKey(stageConfig?.stages || DEFAULT_STAGES, pendingSuggestion.current_stage)?.label || pendingSuggestion.current_stage}' (${pendingSuggestion.theoretical_days} días) y debería pasar a '${getStageByKey(stageConfig?.stages || DEFAULT_STAGES, pendingSuggestion.suggested_stage)?.label || pendingSuggestion.suggested_stage}'. Por favor confirme las condiciones reales en campo.`}
+                      </p>
+                      {stageConfig && (
+                        <TimelineView stages={stageConfig.stages} currentStage={pendingSuggestion.suggested_stage} logs={stageLogs} highlightStage={pendingSuggestion.suggested_stage} />
+                      )}
+                      {isAdmin && (
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                          <button onClick={acceptSuggestion} disabled={saving} style={{ ...btnStyle('#10b981'), flex: 1, minWidth: 200 }}>
+                            <Check size={16} /> {saving ? 'Procesando...' : `Aceptar Cambio a ${getStageByKey(stageConfig?.stages || DEFAULT_STAGES, pendingSuggestion.suggested_stage)?.label || pendingSuggestion.suggested_stage}`}
+                          </button>
+                          {!showRejectForm ? (
+                            <button onClick={() => setShowRejectForm(true)} style={{ ...btnStyle('#f59e0b'), flex: 1, minWidth: 200 }}>
+                              <Clock size={16} /> Mantener Etapa Actual (Posponer)
+                            </button>
+                          ) : (
+                            <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              <input style={inputStyle} placeholder="Motivo del rechazo (opcional)..." value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} />
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button onClick={rejectSuggestion} disabled={saving} style={btnStyle('#ef4444')}>{saving ? 'Confirmando...' : 'Confirmar Rechazo'}</button>
+                                <button onClick={() => { setShowRejectForm(false); setRejectionReason('') }} style={{ ...btnStyle('#6b7280'), background: 'color-mix(in srgb, currentColor 10%, transparent)', color: 'inherit' }}>Cancelar</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div style={{ ...cardStyle, padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                      <div>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>{selectedSembrio.tipo_cultivo}{selectedSembrio.variedad ? ` - ${selectedSembrio.variedad}` : ''}</h2>
+                        <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <MapPin size={14} /> {selectedSembrio.potreros?.nombre || 'Sin potrero'} <span style={{ opacity: 0.4 }}>|</span> <Ruler size={14} /> {fmt(selectedSembrio.area_sembrada_m2)} m²
+                        </div>
+                      </div>
+                      {isAdmin && (
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button onClick={() => setShowManualStageChange(true)} style={btnStyle('#6366f1')} title="Cambiar etapa manualmente">
+                            <Edit size={16} /> Cambiar Etapa
+                          </button>
+                          <button onClick={() => { setShowStageConfig(true); setStageConfigForm(stageConfig?.stages || DEFAULT_STAGES) }} style={{ ...btnStyle('#8b5cf6'), background: 'color-mix(in srgb, #8b5cf6 15%, transparent)', color: '#8b5cf6', border: '1px solid rgba(139, 92, 246, 0.3)' }} title="Configurar etapas">
+                            <Settings size={16} /> Configurar Etapas
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: 'color-mix(in srgb, currentColor 3%, transparent)', borderRadius: 12 }}>
+                      <div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Fecha Siembra</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem' }}>{new Date(selectedSembrio.fecha_siembra).toLocaleDateString('es-EC')}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Estado</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem', color: ESTADO_STYLE[selectedSembrio.estado]?.color || 'inherit' }}>{ESTADO_LABEL[selectedSembrio.estado] || selectedSembrio.estado}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Etapa Actual</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem' }}>{getStageByKey(stageConfig?.stages || DEFAULT_STAGES, selectedSembrio.current_stage || 'siembra')?.label || selectedSembrio.current_stage || 'Sin configurar'}</div>
+                      </div>
+                      {selectedSembrio.potreros?.tipo_suelo && (
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Tipo de Suelo</div>
+                          <div style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.2rem' }}>{selectedSembrio.potreros.tipo_suelo}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {stageConfig ? (
+                      <>
+                        <div style={{ marginBottom: '1rem' }}>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Calendar size={16} /> Línea de Tiempo de Etapas
+                          </div>
+                          <TimelineView stages={stageConfig.stages} currentStage={selectedSembrio.current_stage || null} logs={stageLogs} />
+                        </div>
+
+                        {!pendingSuggestion && isAdmin && selectedSembrio.estado === 'en_crecimiento' && (
+                          <div style={{ marginTop: '1rem', padding: '1rem', background: 'color-mix(in srgb, var(--primary) 5%, transparent)', borderRadius: 12, border: '1px dashed color-mix(in srgb, var(--primary) 30%, transparent)' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>Verificar Sugerencia de Etapa</div>
+                            <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0 0 0.75rem 0' }}>
+                              El sistema puede calcular si el cultivo debería avanzar a la siguiente etapa basándose en los días transcurridos.
+                            </p>
+                            <button onClick={createSuggestionFromClient} disabled={saving} style={btnStyle('var(--primary)')}>
+                              {saving ? 'Verificando...' : 'Verificar Ahora'}
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div style={{ padding: '2rem', textAlign: 'center', background: 'color-mix(in srgb, currentColor 3%, transparent)', borderRadius: 12, border: '1px dashed color-mix(in srgb, currentColor 15%, transparent)' }}>
+                        <Settings size={32} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem' }}>Sin configuración de etapas</div>
+                        <p style={{ fontSize: '0.8rem', opacity: 0.6, margin: '0 0 1rem 0' }}>
+                          Configure las etapas de crecimiento para habilitar sugerencias automáticas y la línea de tiempo.
+                        </p>
+                        {isAdmin && (
+                          <button onClick={() => { setShowStageConfig(true); setStageConfigForm(DEFAULT_STAGES) }} style={btnStyle('#8b5cf6')}>
+                            <Settings size={16} /> Configurar Etapas
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {/* MAP MODAL */}
       {showMapModal && (
         <div
@@ -428,6 +700,61 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
           </div>
         </Modal>
       )}
+
+      {/* FORM: Stage Config */}
+      {isAdmin && showStageConfig && (
+        <Modal title="Configurar Etapas de Crecimiento" onClose={() => setShowStageConfig(false)}>
+          {error && <div style={errStyle}>{error}</div>}
+          <p style={{ fontSize: '0.85rem', opacity: 0.7, margin: 0 }}>
+            Defina las etapas y su duración teórica en días. El sistema usará esta configuración para sugerir cambios de etapa.
+          </p>
+          {stageConfigForm.map((stage, idx) => (
+            <div key={stage.key} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', padding: '0.75rem', background: 'color-mix(in srgb, currentColor 3%, transparent)', borderRadius: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'color-mix(in srgb, var(--primary) 15%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', color: 'var(--primary)', flexShrink: 0 }}>{idx + 1}</div>
+              <div style={{ flex: 1 }}>
+                <input style={{ ...inputStyle, marginBottom: '0.5rem' }} placeholder="Nombre de la etapa" value={stage.label} onChange={e => { const updated = [...stageConfigForm]; updated[idx] = { ...updated[idx], label: e.target.value }; setStageConfigForm(updated) }} />
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input style={{ ...inputStyle, width: '80px' }} type="number" min="0" placeholder="0" value={stage.duration_days || ''} onChange={e => { const val = e.target.value; const updated = [...stageConfigForm]; updated[idx] = { ...updated[idx], duration_days: val === '' ? 0 : Math.max(0, Number(val)) }; setStageConfigForm(updated) }} />
+                  <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>días teóricos</span>
+                </div>
+              </div>
+              {stageConfigForm.length > 1 && (
+                <button onClick={() => { const updated = stageConfigForm.filter((_, i) => i !== idx).map((s, i) => ({ ...s, order: i + 1 })); setStageConfigForm(updated) }} style={{ background: 'color-mix(in srgb, var(--danger) 10%, transparent)', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '0.4rem', borderRadius: '8px', transition: 'background 0.2s', flexShrink: 0 }} onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--danger) 20%, transparent)'} onMouseLeave={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--danger) 10%, transparent)'} title="Eliminar etapa">
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          ))}
+          <button onClick={() => { const newOrder = stageConfigForm.length + 1; setStageConfigForm([...stageConfigForm, { key: `etapa_${newOrder}`, label: `Etapa ${newOrder}`, order: newOrder, duration_days: 0 }]) }} style={{ ...btnStyle('#6b7280'), background: 'color-mix(in srgb, currentColor 8%, transparent)', color: 'inherit', border: '1px dashed color-mix(in srgb, currentColor 20%, transparent)' }}>
+            <Plus size={16} /> Agregar Etapa
+          </button>
+          <div style={{ marginTop: '0.5rem' }}>
+            <button style={btnStyle('#8b5cf6', true)} onClick={saveStageConfig} disabled={saving || stageConfigForm.some(s => !s.label.trim())}>{saving ? 'Guardando...' : 'Guardar Configuración'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* FORM: Manual Stage Change */}
+      {isAdmin && showManualStageChange && stageConfig && (
+        <Modal title="Cambiar Etapa Manualmente" onClose={() => setShowManualStageChange(false)}>
+          {error && <div style={errStyle}>{error}</div>}
+          <p style={{ fontSize: '0.85rem', opacity: 0.7, margin: 0 }}>
+            Cambie la etapa actual del sembrío. Esta acción quedará registrada en el historial.
+          </p>
+          <label style={labelStyle}>Etapa Destino *</label>
+          <select style={inputStyle} value={manualStageTarget} onChange={e => setManualStageTarget(e.target.value)}>
+            <option value="">Seleccionar etapa...</option>
+            {stageConfig.stages.filter(s => s.key !== selectedSembrio?.current_stage).map(s => (
+              <option key={s.key} value={s.key}>{s.label}</option>
+            ))}
+          </select>
+          <label style={labelStyle}>Notas (opcional)</label>
+          <textarea style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }} placeholder="Motivo del cambio manual..." value={manualStageNotes} onChange={e => setManualStageNotes(e.target.value)} />
+          <div style={{ marginTop: '0.5rem' }}>
+            <button style={btnStyle('#6366f1', true)} onClick={manualStageChange} disabled={saving || !manualStageTarget}>{saving ? 'Cambiando...' : 'Confirmar Cambio'}</button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
@@ -443,6 +770,66 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
         </div>
         {children}
       </div>
+    </div>
+  )
+}
+
+function TimelineView({ stages, currentStage, logs, highlightStage }: { stages: StageDefinition[]; currentStage: string | null; logs: SembrioStageLog[]; highlightStage?: string }) {
+  const timeline = buildTimeline(stages, currentStage, logs)
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', overflowX: 'auto', padding: '1rem 0' }}>
+      {timeline.map((entry, idx) => {
+        const isHighlighted = highlightStage === entry.key
+        const isCurrent = entry.status === 'current'
+        const isCompleted = entry.status === 'completed'
+
+        const bgColor = isCompleted
+          ? 'rgba(16, 185, 129, 0.15)'
+          : isHighlighted
+          ? 'rgba(251, 191, 36, 0.2)'
+          : isCurrent
+          ? 'rgba(59, 130, 246, 0.15)'
+          : 'color-mix(in srgb, currentColor 5%, transparent)'
+
+        const borderColor = isCompleted
+          ? 'rgba(16, 185, 129, 0.4)'
+          : isHighlighted
+          ? 'rgba(251, 191, 36, 0.5)'
+          : isCurrent
+          ? 'rgba(59, 130, 246, 0.4)'
+          : 'color-mix(in srgb, currentColor 10%, transparent)'
+
+        const textColor = isCompleted
+          ? '#059669'
+          : isHighlighted
+          ? '#92400e'
+          : isCurrent
+          ? '#1e40af'
+          : 'inherit'
+
+        return (
+          <div key={entry.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 80, padding: '0.75rem', borderRadius: 12, background: bgColor, border: `2px solid ${borderColor}`, textAlign: 'center', transition: 'all 0.3s' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                {isCompleted && <Check size={14} color="#059669" />}
+                {isHighlighted && <AlertTriangle size={14} color="#f59e0b" />}
+                {isCurrent && !isHighlighted && <Clock size={14} color="#3b82f6" />}
+              </div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: textColor }}>{entry.label}</div>
+              <div style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: '0.15rem' }}>
+                {isCompleted ? 'Completado' : isHighlighted ? 'Pendiente' : isCurrent ? 'Actual' : 'Futuro'}
+              </div>
+              {entry.duration_days > 0 && (
+                <div style={{ fontSize: '0.6rem', opacity: 0.5, marginTop: '0.1rem' }}>{entry.duration_days} días</div>
+              )}
+            </div>
+            {idx < timeline.length - 1 && (
+              <div style={{ width: 20, height: 2, background: isCompleted ? 'rgba(16, 185, 129, 0.4)' : 'color-mix(in srgb, currentColor 15%, transparent)', flexShrink: 0 }} />
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

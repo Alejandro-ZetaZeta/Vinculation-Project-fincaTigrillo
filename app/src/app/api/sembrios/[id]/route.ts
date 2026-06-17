@@ -29,7 +29,7 @@ export async function PATCH(
     const {
       tipo_cultivo, variedad, area_sembrada_m2, fecha_siembra,
       fecha_cosecha_estimada, fecha_cosecha_real, estado,
-      rendimiento_kg, observaciones,
+      rendimiento_kg, observaciones, current_stage, stage_updated_at,
     } = body
 
     const { data, error: dbError } = await client.database
@@ -37,7 +37,7 @@ export async function PATCH(
       .update({
         tipo_cultivo, variedad, area_sembrada_m2, fecha_siembra,
         fecha_cosecha_estimada, fecha_cosecha_real, estado,
-        rendimiento_kg, observaciones,
+        rendimiento_kg, observaciones, current_stage, stage_updated_at,
       })
       .eq('id', id)
       .select()
