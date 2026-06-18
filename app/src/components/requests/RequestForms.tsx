@@ -1029,6 +1029,12 @@ export function VaccineAssignmentForm({
 
   const set = (key: string, v: unknown) => onChange({ ...value, [key]: v })
 
+  const stockInsufficient =
+    selectedVaccine !== null &&
+    typeof selectedVaccine.stock_doses === 'number' &&
+    selectedIds.length > 0 &&
+    selectedVaccine.stock_doses < selectedIds.length
+
   async function filterEligible() {
     if (!vaccineId) { setFilterErr('Selecciona una vacuna primero'); return }
     setFilterErr(''); setLE(true)
@@ -1055,7 +1061,7 @@ export function VaccineAssignmentForm({
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField label="Vacuna" required>
-          <SelectInput value={vaccineId} onChange={v => { set('vaccine_id', v); set('animal_ids', []); setEligible([]) }} required>
+          <SelectInput value={vaccineId} onChange={v => { onChange({ ...value, vaccine_id: v, animal_ids: [] }); setEligible([]) }} required>
             <option value="">Seleccionar vacuna...</option>
             {vaccines.map(v => (
               <option key={v.id} value={v.id}>
@@ -1065,7 +1071,7 @@ export function VaccineAssignmentForm({
           </SelectInput>
         </FormField>
         <FormField label="Fecha de Aplicación" required>
-          <TextInput type="date" value={appliedAt} onChange={v => { set('applied_at', v); set('next_dose_at', '') }} required />
+          <TextInput type="date" value={appliedAt} onChange={v => { onChange({ ...value, applied_at: v, next_dose_at: '' }) }} required />
         </FormField>
         <FormField label="Próxima dosis (opcional)" hint={selectedVaccine?.default_next_dose_days != null ? `Sugerida: ${selectedVaccine.default_next_dose_days} días` : undefined}>
           <TextInput type="date" value={nextDoseAt} onChange={v => set('next_dose_at', v || null)} />
@@ -1075,6 +1081,17 @@ export function VaccineAssignmentForm({
             placeholder="Ej: lote, marca, observaciones" maxLength={2000} />
         </FormField>
       </div>
+
+      {/* Stock-insufficient early warning (informational — teacher can still submit) */}
+      {stockInsufficient && selectedVaccine && (
+        <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-700 dark:text-yellow-400 rounded-xl text-sm flex items-start gap-2" role="alert">
+          <span className="text-base leading-none mt-0.5" aria-hidden="true">⚠️</span>
+          <span>
+            <strong>Stock insuficiente:</strong> {selectedVaccine.stock_doses} dosis disponible{selectedVaccine.stock_doses !== 1 ? 's' : ''},
+            se requieren {selectedIds.length}. El administrador verá esta advertencia al revisar la solicitud.
+          </span>
+        </div>
+      )}
 
       {/* Eligible-animals group selector */}
       <div className="space-y-3">

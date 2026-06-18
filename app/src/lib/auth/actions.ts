@@ -6,6 +6,75 @@ import { buildWelcomeEmail } from '@/lib/email/welcome'
 import { createGmailTransporter } from '@/lib/email/transporter'
 import { redirect } from 'next/navigation'
 
+// ── Error translation ─────────────────────────────────────────────────────────
+// Maps raw SDK / fetch / HTTP error messages → user-friendly Spanish strings.
+// Called before every `return { success: false, error: ... }` in auth flows.
+
+function translateAuthError(raw: string | undefined | null): string {
+  const msg = (raw ?? '').toLowerCase()
+
+  // Network / connectivity
+  if (
+    msg.includes('failed to fetch') ||
+    msg.includes('fetch failed') ||
+    msg.includes('networkerror') ||
+    msg.includes('network request failed') ||
+    msg.includes('net::') ||
+    msg.includes('load failed') ||
+    msg.includes('connection refused') ||
+    msg.includes('connection reset') ||
+    msg.includes('econnrefused') ||
+    msg.includes('enotfound') ||
+    msg.includes('socket hang up')
+  ) {
+    return 'No se pudo conectar al servidor. Verifica tu conexión a internet e inténtalo de nuevo.'
+  }
+
+  // Timeout / abort
+  if (
+    msg.includes('timeout') ||
+    msg.includes('timed out') ||
+    msg.includes('aborted') ||
+    msg.includes('abort')
+  ) {
+    return 'La solicitud tardó demasiado. Verifica tu conexión e inténtalo de nuevo.'
+  }
+
+  // Server-side (5xx)
+  if (
+    msg.includes('internal server error') ||
+    msg.includes('500') ||
+    msg.includes('service unavailable') ||
+    msg.includes('502') ||
+    msg.includes('503') ||
+    msg.includes('504')
+  ) {
+    return 'El servidor no está disponible en este momento. Inténtalo más tarde.'
+  }
+
+  // Invalid credentials
+  if (
+    msg.includes('invalid credentials') ||
+    msg.includes('invalid login') ||
+    msg.includes('wrong password') ||
+    msg.includes('incorrect password') ||
+    msg.includes('user not found') ||
+    msg.includes('no user') ||
+    msg.includes('unauthorized')
+  ) {
+    return 'Correo o contraseña incorrectos.'
+  }
+
+  // Rate-limiting
+  if (msg.includes('rate limit') || msg.includes('too many requests') || msg.includes('429')) {
+    return 'Demasiados intentos. Espera unos minutos antes de volver a intentarlo.'
+  }
+
+  // Already in Spanish or unknown → return as-is (non-empty) or generic fallback
+  if (raw && raw.trim().length > 0) return raw.trim()
+  return 'Error al iniciar sesión. Inténtalo de nuevo.'
+}
+
 // @live.uleam.edu.ec → student (viewer), @uleam.edu.ec → teacher
 // The live-subdomain check must come first to avoid matching the parent domain.
 function getRoleForEmail(email: string): 'viewer' | 'teacher' | null {
@@ -20,10 +89,18 @@ export async function signIn(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim()
   const password = String(formData.get('password') ?? '')
 
-  const { data, error } = await insforge.auth.signInWithPassword({ email, password })
+  let data: Awaited<ReturnType<typeof insforge.auth.signInWithPassword>>['data']
+  let error: Awaited<ReturnType<typeof insforge.auth.signInWithPassword>>['error']
+
+  try {
+    ;({ data, error } = await insforge.auth.signInWithPassword({ email, password }))
+  } catch (err) {
+    // Raw fetch/network throw (e.g. Capacitor offline, CORS, DNS failure)
+    return { success: false, error: translateAuthError((err as Error)?.message) }
+  }
 
   if (error) {
-    return { success: false, error: error.message || 'Credenciales inválidas.' }
+    return { success: false, error: translateAuthError(error.message) }
   }
 
   if (!data?.accessToken || !data?.refreshToken) {
