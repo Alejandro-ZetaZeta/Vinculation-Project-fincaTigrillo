@@ -116,13 +116,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    /* 3. Upload to storage  (path = user_id, content-type set per object) */
+    /* 3a. Remove old file if it exists (SDK upload doesn't support upsert) */
     const path = authUser.id   // no extension; content-type stored per object
+    await client.storage.from(BUCKET).remove(path)
 
-    // Pass the File/Blob directly so the SDK can read .size automatically
+    /* 3b. Upload new file */
     const { error: uploadError } = await client.storage
       .from(BUCKET)
-      .upload(path, file, { upsert: true })
+      .upload(path, file)
 
     if (uploadError) {
       console.error('[avatar] Storage upload error:', uploadError)
