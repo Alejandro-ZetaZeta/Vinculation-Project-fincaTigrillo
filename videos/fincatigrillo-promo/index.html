@@ -28,10 +28,6 @@
         background: #000;
       }
       body { font-family: "DM Sans"; }
-      code, pre, .monospace {
-        font-family: "DM Sans";
-        font-variant-numeric: tabular-nums;
-      }
       :root {
         --emerald: #16a34a;
         --emerald-light: #22c55e;
@@ -44,7 +40,6 @@
         --white: #ffffff;
       }
 
-      /* ── Root & plates ── */
       .root {
         position: relative;
         width: 1920px;
@@ -57,7 +52,7 @@
         inset: 0;
         display: grid;
         place-items: center;
-        padding: 100px 140px;
+        padding: 50px 80px;
         opacity: 0;
       }
       .plate-inner {
@@ -68,7 +63,6 @@
         gap: 20px;
       }
 
-      /* ── Masthead ── */
       .masthead {
         display: flex;
         align-items: center;
@@ -78,58 +72,55 @@
       .brand-chip {
         display: inline-flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 16px;
-        border-radius: 12px;
+        gap: 14px;
+        padding: 12px 20px;
+        border-radius: 14px;
         border: 1px solid rgba(22, 163, 74, 0.3);
         background: rgba(255, 255, 255, 0.1);
         color: var(--white);
         font-weight: 600;
-        font-size: 18px;
+        font-size: 20px;
         letter-spacing: -0.3px;
       }
       .brand-chip img {
-        width: 36px;
-        height: 36px;
+        width: 42px;
+        height: 42px;
         border-radius: 999px;
       }
 
-      /* ── Display type ── */
       .display { font-family: "Syne"; letter-spacing: -1.2px; }
 
-      /* ── Scene 1: Hero ── */
       .hero-title {
-        font-size: 88px;
-        line-height: 1.04;
+        font-size: 92px;
+        line-height: 1.08;
         font-weight: 900;
         color: var(--white);
       }
       .hero-accent { color: var(--danger); }
       .hero-sub {
-        margin-top: 16px;
-        font-size: 28px;
-        line-height: 1.25;
+        margin-top: 20px;
+        font-size: 30px;
+        line-height: 1.3;
         color: rgba(255,255,255,0.85);
-        max-width: 900px;
+        max-width: 1100px;
       }
       .pain-pills {
         display: flex;
-        gap: 14px;
+        gap: 16px;
         margin-top: 28px;
         flex-wrap: wrap;
       }
       .pain-pill {
-        padding: 10px 20px;
+        padding: 14px 26px;
         border-radius: 999px;
         border: 1px solid rgba(252, 165, 165, 0.35);
         background: rgba(252, 165, 165, 0.1);
         color: var(--danger);
         font-weight: 700;
-        font-size: 17px;
+        font-size: 20px;
         opacity: 0;
       }
 
-      /* ── Scene 2: Brand reveal ── */
       .brand-center {
         display: flex;
         flex-direction: column;
@@ -139,8 +130,8 @@
         height: 100%;
       }
       .brand-logo {
-        width: 200px;
-        height: 200px;
+        width: 220px;
+        height: 220px;
         border-radius: 999px;
         background: rgba(22, 163, 74, 0.08);
         border: 2px solid rgba(22, 163, 74, 0.2);
@@ -149,54 +140,77 @@
         position: relative;
       }
       .brand-logo img {
-        width: 160px;
-        height: 160px;
+        width: 180px;
+        height: 180px;
         border-radius: 999px;
       }
       .brand-logo .glow {
         position: absolute;
-        inset: -20px;
+        inset: -24px;
         border-radius: 999px;
         background: radial-gradient(circle, rgba(22,163,74,0.15) 0%, transparent 70%);
         opacity: 0;
       }
       .brand-name {
-        margin-top: 28px;
-        font-size: 100px;
+        margin-top: 32px;
+        font-size: 110px;
         font-weight: 900;
         color: var(--emerald);
         letter-spacing: -2px;
       }
       .brand-sub {
-        margin-top: 10px;
-        font-size: 26px;
+        margin-top: 14px;
+        font-size: 28px;
         color: #1f2937;
         font-weight: 600;
-        max-width: 700px;
+        max-width: 1000px;
+      }
+      .role-chips {
+        display: flex;
+        gap: 20px;
+        margin-top: 36px;
+      }
+      .role-chip {
+        padding: 16px 32px;
+        border-radius: 16px;
+        border: 1px solid rgba(22, 163, 74, 0.25);
+        background: rgba(22, 163, 74, 0.06);
+        color: var(--forest);
+        font-weight: 700;
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+      }
+      .role-chip .icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: var(--emerald);
+        color: var(--white);
+        display: grid;
+        place-items: center;
+        font-size: 20px;
       }
 
-      /* ── Scene 3: KPIs ── */
-      .kpi-section {
-        align-self: center;
-      }
       .kpi-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+        align-self: center;
       }
       .kpi {
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(209, 250, 229, 0.2);
-        border-radius: 20px;
-        padding: 28px 24px;
+        border-radius: 24px;
+        padding: 32px 20px;
         text-align: center;
-        position: relative;
-        overflow: hidden;
       }
       .kpi-label {
         color: rgba(255,255,255,0.7);
         font-weight: 600;
-        font-size: 17px;
+        font-size: 18px;
         text-transform: uppercase;
         letter-spacing: 1.5px;
       }
@@ -204,138 +218,162 @@
         margin-top: 12px;
         font-family: "Syne";
         font-weight: 900;
-        font-size: 80px;
+        font-size: 72px;
         letter-spacing: -3px;
         color: var(--white);
         font-variant-numeric: tabular-nums;
       }
       .kpi-ring {
-        margin-top: 16px;
+        margin-top: 14px;
         display: flex;
         justify-content: center;
       }
       .kpi-ring svg {
-        width: 80px;
-        height: 80px;
+        width: 72px;
+        height: 72px;
         transform: rotate(-90deg);
       }
       .kpi-ring circle {
         fill: none;
-        stroke-width: 6;
+        stroke-width: 5;
         stroke-linecap: round;
       }
       .kpi-ring .bg { stroke: rgba(255,255,255,0.1); }
       .kpi-ring .fill {
         stroke: var(--emerald-light);
-        stroke-dasharray: 226;
-        stroke-dashoffset: 226;
+        stroke-dasharray: 188;
+        stroke-dashoffset: 188;
+      }
+      .kpi-extra {
+        margin-top: 24px;
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+      }
+      .kpi-pill {
+        padding: 14px 24px;
+        border-radius: 16px;
+        border: 1px solid rgba(209, 250, 229, 0.2);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255,255,255,0.8);
+        font-weight: 600;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0;
+      }
+      .kpi-pill .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--emerald-light);
       }
 
-      /* ── Scene 4: IA ── */
       .split {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 24px;
+        gap: 28px;
         height: 100%;
         align-self: center;
       }
       .panel {
-        border-radius: 18px;
+        border-radius: 22px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         background: rgba(0, 0, 0, 0.25);
-        padding: 24px;
+        padding: 32px;
         display: flex;
         flex-direction: column;
       }
       .panel-header {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 16px;
+        gap: 14px;
+        margin-bottom: 20px;
       }
       .panel-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         background: rgba(22, 163, 74, 0.15);
         display: grid;
         place-items: center;
-        font-size: 18px;
+        font-size: 22px;
       }
       .panel-title {
         font-weight: 800;
-        font-size: 19px;
+        font-size: 24px;
         color: var(--white);
       }
       .vax-list {
         display: grid;
-        gap: 10px;
+        gap: 14px;
         flex: 1;
       }
       .vax-row {
         display: grid;
-        grid-template-columns: 38px 1fr auto;
+        grid-template-columns: 44px 1fr auto;
         align-items: center;
-        gap: 12px;
-        padding: 12px;
-        border-radius: 12px;
+        gap: 16px;
+        padding: 16px;
+        border-radius: 14px;
         border: 1px solid rgba(209, 250, 229, 0.15);
         background: rgba(255, 255, 255, 0.05);
         opacity: 0;
       }
       .vax-badge {
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
         display: grid;
         place-items: center;
-        border-radius: 10px;
+        border-radius: 12px;
         background: rgba(22, 163, 74, 0.15);
         border: 1px solid rgba(22, 163, 74, 0.3);
         color: var(--emerald-light);
         font-weight: 900;
-        font-size: 15px;
+        font-size: 18px;
       }
       .vax-name {
         font-weight: 700;
         color: var(--white);
-        font-size: 16px;
+        font-size: 20px;
       }
       .vax-meta {
         color: rgba(255,255,255,0.6);
-        font-size: 13px;
-        margin-top: 2px;
+        font-size: 15px;
+        margin-top: 4px;
       }
       .vax-date {
         font-variant-numeric: tabular-nums;
-        font-size: 13px;
+        font-size: 16px;
         color: rgba(255,255,255,0.5);
       }
       .ai-box {
         margin-top: auto;
-        padding: 18px;
-        border-radius: 14px;
+        padding: 24px;
+        border-radius: 18px;
         border: 1px solid rgba(22, 163, 74, 0.3);
         background: rgba(22, 163, 74, 0.08);
       }
       .ai-label {
         font-weight: 700;
         color: rgba(255,255,255,0.7);
-        font-size: 14px;
+        font-size: 16px;
         text-transform: uppercase;
         letter-spacing: 1px;
       }
       .ai-date {
-        margin-top: 8px;
+        margin-top: 10px;
         font-family: "Syne";
         font-weight: 900;
-        font-size: 42px;
+        font-size: 52px;
         color: var(--white);
         letter-spacing: -1px;
       }
       .ai-cursor {
         display: inline-block;
-        width: 3px;
-        height: 42px;
+        width: 4px;
+        height: 52px;
         background: var(--emerald-light);
         margin-left: 4px;
         vertical-align: middle;
@@ -345,8 +383,8 @@
         50% { opacity: 0; }
       }
       .ai-bar {
-        margin-top: 12px;
-        height: 10px;
+        margin-top: 16px;
+        height: 14px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.1);
         overflow: hidden;
@@ -358,81 +396,263 @@
         border-radius: 999px;
       }
       .ai-note {
-        margin-top: 8px;
+        margin-top: 12px;
         color: rgba(255,255,255,0.6);
-        font-size: 13px;
+        font-size: 15px;
       }
 
-      /* ── Scene 5: Kanban ── */
-      .kanban {
+      .agro-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        height: 100%;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 24px;
         align-self: center;
+        height: 100%;
       }
-      .kanban-col {
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(22, 163, 74, 0.2);
-        border-radius: 16px;
-        padding: 16px;
-        display: grid;
-        grid-template-rows: auto 1fr;
-        gap: 12px;
-      }
-      .kanban-col h3 {
-        font-family: "Syne";
-        font-weight: 800;
-        color: var(--forest);
-        font-size: 18px;
+      .agro-card {
+        border-radius: 22px;
+        border: 1px solid rgba(209, 250, 229, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 28px;
         display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .kanban-col h3 .count {
-        background: var(--emerald);
-        color: var(--white);
-        font-size: 12px;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 999px;
-      }
-      .kanban-cards {
-        display: grid;
-        gap: 10px;
-        align-content: start;
-      }
-      .kanban-card {
-        border-radius: 12px;
-        background: #fff;
-        border: 1px solid rgba(22, 163, 74, 0.2);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        padding: 12px 14px;
+        flex-direction: column;
+        gap: 16px;
         opacity: 0;
       }
-      .kanban-card .who {
-        font-weight: 700;
-        color: var(--forest);
-        font-size: 14px;
+      .agro-card-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
       }
-      .kanban-card .what {
-        margin-top: 4px;
-        color: #475569;
-        font-size: 13px;
-        line-height: 1.3;
+      .agro-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(22, 163, 74, 0.15);
+        display: grid;
+        place-items: center;
+        font-size: 24px;
       }
-      .kanban-card .tag {
-        display: inline-block;
-        margin-top: 6px;
-        padding: 2px 8px;
-        border-radius: 6px;
-        font-size: 11px;
+      .agro-card-title {
+        font-weight: 800;
+        font-size: 22px;
+        color: var(--white);
+      }
+      .agro-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .agro-row-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 16px;
         font-weight: 600;
-        background: rgba(22, 163, 74, 0.1);
-        color: var(--emerald);
+      }
+      .agro-row-value {
+        color: var(--white);
+        font-weight: 800;
+        font-size: 18px;
+        font-variant-numeric: tabular-nums;
+      }
+      .stage-bar {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      .stage-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--emerald), var(--emerald-light));
+        border-radius: 999px;
+      }
+      .stage-label {
+        color: rgba(255,255,255,0.5);
+        font-size: 14px;
+        margin-top: 6px;
       }
 
-      /* ── Scene 6: Finale ── */
+      .intel-grid {
+        display: grid;
+        grid-template-columns: 5fr 3fr;
+        gap: 24px;
+        align-self: center;
+        height: 100%;
+      }
+      .chart-panel {
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.25);
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        opacity: 0;
+      }
+      .mini-charts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
+      }
+      .mini-chart {
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .mini-chart-label {
+        color: rgba(255,255,255,0.6);
+        font-size: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      .mini-chart-value {
+        font-family: "Syne";
+        font-weight: 900;
+        font-size: 42px;
+        color: var(--white);
+      }
+      .gauge-ring {
+        width: 88px;
+        height: 88px;
+      }
+      .gauge-ring circle {
+        fill: none;
+        stroke-width: 6;
+        stroke-linecap: round;
+      }
+      .gauge-ring .bg { stroke: rgba(255,255,255,0.1); }
+      .gauge-ring .fill {
+        stroke: var(--emerald-light);
+        stroke-dasharray: 226;
+        stroke-dashoffset: 226;
+        transform: rotate(-90deg);
+        transform-origin: center;
+      }
+      .chatbot-panel {
+        border-radius: 22px;
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        background: rgba(22, 163, 74, 0.06);
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        opacity: 0;
+      }
+      .chat-bubble {
+        padding: 16px 22px;
+        border-radius: 18px;
+        font-size: 18px;
+        line-height: 1.4;
+        max-width: 92%;
+        opacity: 0;
+      }
+      .chat-user {
+        background: var(--emerald);
+        color: var(--white);
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+      .chat-ai {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255,255,255,0.9);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+      .calc-chips {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .calc-chip {
+        padding: 10px 18px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255,255,255,0.7);
+        font-size: 15px;
+        font-weight: 600;
+        opacity: 0;
+      }
+
+      .community-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        align-self: center;
+        height: 100%;
+      }
+      .community-card {
+        border-radius: 22px;
+        border: 1px solid rgba(22, 163, 74, 0.2);
+        background: rgba(255, 255, 255, 0.92);
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        opacity: 0;
+      }
+      .community-card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: var(--emerald);
+        color: var(--white);
+        display: grid;
+        place-items: center;
+        font-size: 26px;
+      }
+      .community-card-title {
+        font-family: "Syne";
+        font-weight: 800;
+        font-size: 28px;
+        color: var(--forest);
+      }
+      .community-card-desc {
+        color: #475569;
+        font-size: 18px;
+        line-height: 1.5;
+      }
+      .community-items {
+        display: grid;
+        gap: 10px;
+        flex: 1;
+      }
+      .community-item {
+        padding: 14px 18px;
+        border-radius: 12px;
+        background: rgba(22, 163, 74, 0.06);
+        border: 1px solid rgba(22, 163, 74, 0.12);
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--forest);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .community-item .check {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        background: var(--emerald);
+        color: var(--white);
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+
       .finale-center {
         display: flex;
         flex-direction: column;
@@ -442,8 +662,8 @@
         height: 100%;
       }
       .finale-logo {
-        width: 180px;
-        height: 180px;
+        width: 200px;
+        height: 200px;
         border-radius: 999px;
         background: rgba(255,255,255,0.12);
         border: 2px solid rgba(255,255,255,0.25);
@@ -451,33 +671,32 @@
         place-items: center;
       }
       .finale-logo img {
-        width: 140px;
-        height: 140px;
+        width: 160px;
+        height: 160px;
         border-radius: 999px;
       }
       .finale-name {
-        margin-top: 24px;
-        font-size: 96px;
+        margin-top: 28px;
+        font-size: 108px;
         font-weight: 900;
         color: var(--white);
         letter-spacing: -2px;
       }
       .finale-rule {
-        width: 120px;
-        height: 4px;
+        width: 140px;
+        height: 5px;
         background: rgba(255,255,255,0.3);
-        border-radius: 2px;
-        margin: 16px auto;
+        border-radius: 3px;
+        margin: 20px auto;
         opacity: 0;
       }
       .finale-tagline {
-        font-size: 24px;
+        font-size: 30px;
         color: rgba(255,255,255,0.85);
-        max-width: 800px;
+        max-width: 1000px;
         line-height: 1.4;
       }
 
-      /* ── Transition overlay ── */
       .transition-overlay {
         position: absolute;
         inset: 0;
@@ -489,103 +708,108 @@
     </style>
   </head>
   <body>
-    <div data-hf-id="hf-root" id="root" data-composition-id="main" data-start="0" data-duration="30.122" data-width="1920" data-height="1080" class="root">
-      <!-- Transition overlay -->
+    <div data-hf-id="hf-root" id="root" data-composition-id="main" data-start="0" data-duration="73.665" data-width="1920" data-height="1080" class="root">
       <div data-hf-id="hf-pvdu" class="transition-overlay" id="transOverlay"></div>
 
-      <!-- Audio tracks -->
-      <audio data-hf-id="hf-a1" id="audio-s1" class="clip" data-start="0" data-duration="6.14" data-track-index="0" src="assets/voice/scene_1.mp3"></audio>
-      <audio data-hf-id="hf-a2" id="audio-s2" class="clip" data-start="6.15" data-duration="5.22" data-track-index="0" src="assets/voice/scene_2.mp3"></audio>
-      <audio data-hf-id="hf-a3" id="audio-s3" class="clip" data-start="11.38" data-duration="4.43" data-track-index="0" src="assets/voice/scene_3.mp3"></audio>
-      <audio data-hf-id="hf-a4" id="audio-s4" class="clip" data-start="15.82" data-duration="5.30" data-track-index="0" src="assets/voice/scene_4.mp3"></audio>
-      <audio data-hf-id="hf-a5" id="audio-s5" class="clip" data-start="21.13" data-duration="4.49" data-track-index="0" src="assets/voice/scene_5.mp3"></audio>
-      <audio data-hf-id="hf-a6" id="audio-s6" class="clip" data-start="25.63" data-duration="4.49" data-track-index="0" src="assets/voice/scene_6.mp3"></audio>
+      <audio data-hf-id="hf-bgm" id="bgm" class="clip" data-start="0" data-duration="73.665" data-track-index="0" src="assets/bgm.mp3"></audio>
 
-      <!-- ═══════════ Scene 1: El Reto (0 → 6.144) ═══════════ -->
-      <section data-hf-id="hf-s1" id="s1" class="clip plate" data-start="0" data-duration="6.14" data-track-index="1" style="background: #0b2414">
+      <section data-hf-id="hf-s1" id="s1" class="clip plate" data-start="0" data-duration="8.448" data-track-index="1" style="background: #0b2414">
         <div data-hf-id="hf-rpnj" class="plate-inner">
           <div data-hf-id="hf-ukjd" class="masthead">
             <div data-hf-id="hf-kjxv" class="brand-chip" id="s1-chip">
-              <img data-hf-id="hf-logo1" id="logo-s1" class="clip" data-start="0" data-duration="6.14" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+              <img data-hf-id="hf-logo1" id="logo-s1" class="clip" data-start="0" data-duration="8.448" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
               <span data-hf-id="hf-ul88">Finca Tigrillo</span>
             </div>
-            <div data-hf-id="hf-4zsw" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 16px; letter-spacing: 0.5px" id="s1-tag">GESTIÓN GANADERA + EDUCACIÓN</div>
+            <div data-hf-id="hf-4zsw" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 18px; letter-spacing: 0.5px" id="s1-tag">GESTIÓN GANADERA + EDUCACIÓN</div>
           </div>
           <div data-hf-id="hf-88jy" style="align-self: center">
             <div data-hf-id="hf-ufkq" class="hero-title" id="s1-title">
-              Gestionar una finca y las prácticas estudiantiles
-              <span data-hf-id="hf-xtcq" class="hero-accent" id="s1-accent">sin herramientas digitales</span>
-              es un desafío enorme.
+              Gestionar una finca y las prácticas académicas
+              <span data-hf-id="hf-xtcq" class="hero-accent" id="s1-accent">sin un sistema integral</span>
+              frena el progreso.
             </div>
-            <div data-hf-id="hf-sl9c" class="hero-sub" id="s1-sub">Registros manuales, seguimiento limitado, decisiones tardías.</div>
+            <div data-hf-id="hf-sl9c" class="hero-sub" id="s1-sub">Herramientas dispersas, registros manuales, decisiones tardías.</div>
             <div data-hf-id="hf-tve6" class="pain-pills" id="s1-pills">
-              <div data-hf-id="hf-08r5" class="pain-pill">📋 Sin control de inventario</div>
-              <div data-hf-id="hf-yxg2" class="pain-pill">📅 Sin recordatorios</div>
-              <div data-hf-id="hf-njs0" class="pain-pill">📊 Sin reportes automáticos</div>
-              <div data-hf-id="hf-2npf" class="pain-pill">🤝 Sin colaboración digital</div>
+              <div data-hf-id="hf-08r5" class="pain-pill">📋 Sin inventario centralizado</div>
+              <div data-hf-id="hf-yxg2" class="pain-pill">📅 Sin recordatorios automáticos</div>
+              <div data-hf-id="hf-njs0" class="pain-pill">📊 Sin reportes integrados</div>
+              <div data-hf-id="hf-2npf" class="pain-pill">🤝 Sin colaboración entre roles</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ═══════════ Scene 2: Presentación (6.144 → 11.371) ═══════════ -->
-      <section data-hf-id="hf-s2" id="s2" class="clip plate" data-start="6.15" data-duration="5.22" data-track-index="1" style="background: #ffffff">
+      <section data-hf-id="hf-s2" id="s2" class="clip plate" data-start="8.448" data-duration="7.531" data-track-index="1" style="background: #ffffff">
         <div data-hf-id="hf-ig3n" class="brand-center">
           <div data-hf-id="hf-1lyl" class="brand-logo" id="s2-logo-wrap">
             <div data-hf-id="hf-c6p0" class="glow" id="s2-glow"></div>
-            <img data-hf-id="hf-logo2" id="logo-s2" class="clip" data-start="6.15" data-duration="5.22" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+            <img data-hf-id="hf-logo2" id="logo-s2" class="clip" data-start="8.448" data-duration="7.531" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
           </div>
           <div data-hf-id="hf-tbkf" class="brand-name display" id="s2-name">FINCA TIGRILLO</div>
-          <div data-hf-id="hf-wt93" class="brand-sub" id="s2-sub">Una sola plataforma para gestión ganadera y formación educativa.</div>
-          <div data-hf-id="hf-fwlr" style="display: flex; gap: 32px; margin-top: 32px" id="s2-features">
-            <div data-hf-id="hf-dko1" style="display: flex; align-items: center; gap: 8px; color: #374151; font-weight: 600; font-size: 16px; opacity: 0">
-              <span data-hf-id="hf-g34c" style="color: var(--emerald); font-size: 20px">✓</span> Registro ganadero
+          <div data-hf-id="hf-wt93" class="brand-sub" id="s2-sub">Un solo ecosistema digital para toda la gestión ganadera, agronómica y educativa.</div>
+          <div data-hf-id="hf-fwlr" class="role-chips" id="s2-roles">
+            <div data-hf-id="hf-dko1" class="role-chip" id="role1">
+              <span data-hf-id="hf-g34c" class="icon">👤</span> Administradores
             </div>
-            <div data-hf-id="hf-9row" style="display: flex; align-items: center; gap: 8px; color: #374151; font-weight: 600; font-size: 16px; opacity: 0">
-              <span data-hf-id="hf-rrvo" style="color: var(--emerald); font-size: 20px">✓</span> Salud con IA
+            <div data-hf-id="hf-9row" class="role-chip" id="role2">
+              <span data-hf-id="hf-rrvo" class="icon">📚</span> Docentes
             </div>
-            <div data-hf-id="hf-qubm" style="display: flex; align-items: center; gap: 8px; color: #374151; font-weight: 600; font-size: 16px; opacity: 0">
-              <span data-hf-id="hf-qkyl" style="color: var(--emerald); font-size: 20px">✓</span> Kanban educativo
+            <div data-hf-id="hf-qubm" class="role-chip" id="role3">
+              <span data-hf-id="hf-qkyl" class="icon">🎓</span> Estudiantes
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ═══════════ Scene 3: Gestión Ganadera (11.371 → 15.808) ═══════════ -->
-      <section data-hf-id="hf-s3" id="s3" class="clip plate" data-start="11.38" data-duration="4.43" data-track-index="1" style="background: #0b2414">
+      <section data-hf-id="hf-s3" id="s3" class="clip plate" data-start="15.979" data-duration="10.859" data-track-index="1" style="background: #0b2414">
         <div data-hf-id="hf-u59b" class="plate-inner">
           <div data-hf-id="hf-4thp" class="masthead">
-            <div data-hf-id="hf-y3hh" class="display" style="font-size: 52px; font-weight: 900; color: var(--white)" id="s3-title">Gestión ganadera en tiempo real</div>
-            <div data-hf-id="hf-sowh" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 16px" id="s3-sub">Registro · Reproducción · Salud</div>
+            <div data-hf-id="hf-y3hh" class="display" style="font-size: 56px; font-weight: 900; color: var(--white)" id="s3-title">Gestión ganadera integral</div>
+            <div data-hf-id="hf-sowh" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 20px" id="s3-sub">Registro · Reproducción · Leche · Camadas</div>
           </div>
-          <div data-hf-id="hf-altk" class="kpi-section">
+          <div data-hf-id="hf-altk" style="align-self: center; display: grid; gap: 24px">
             <div data-hf-id="hf-gobt" class="kpi-grid" id="s3-kpis">
               <div data-hf-id="hf-rwnr" class="kpi" id="kpi1">
                 <div data-hf-id="hf-pv0r" class="kpi-label">Bovinos</div>
                 <div data-hf-id="hf-rtq7" class="kpi-value" data-target="48">0</div>
-                <div data-hf-id="hf-ux6l" class="kpi-ring"><svg data-hf-id="hf-3io1" viewBox="0 0 80 80"><circle data-hf-id="hf-cvph" class="bg" cx="40" cy="40" r="36" /><circle data-hf-id="hf-k13a" class="fill" cx="40" cy="40" r="36" data-pct="0.80" /></svg></div>
+                <div data-hf-id="hf-ux6l" class="kpi-ring"><svg data-hf-id="hf-3io1" viewBox="0 0 64 64"><circle data-hf-id="hf-cvph" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-k13a" class="fill" cx="32" cy="32" r="28" data-pct="0.80" /></svg></div>
               </div>
               <div data-hf-id="hf-h164" class="kpi" id="kpi2">
                 <div data-hf-id="hf-7hph" class="kpi-label">Equinos</div>
                 <div data-hf-id="hf-o5lw" class="kpi-value" data-target="12">0</div>
-                <div data-hf-id="hf-m5qp" class="kpi-ring"><svg data-hf-id="hf-gwut" viewBox="0 0 80 80"><circle data-hf-id="hf-x4gp" class="bg" cx="40" cy="40" r="36" /><circle data-hf-id="hf-frq9" class="fill" cx="40" cy="40" r="36" data-pct="0.45" /></svg></div>
+                <div data-hf-id="hf-m5qp" class="kpi-ring"><svg data-hf-id="hf-gwut" viewBox="0 0 64 64"><circle data-hf-id="hf-x4gp" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-frq9" class="fill" cx="32" cy="32" r="28" data-pct="0.45" /></svg></div>
               </div>
               <div data-hf-id="hf-hstx" class="kpi" id="kpi3">
                 <div data-hf-id="hf-mrmk" class="kpi-label">Porcinos</div>
                 <div data-hf-id="hf-uv9w" class="kpi-value" data-target="7">0</div>
-                <div data-hf-id="hf-ncns" class="kpi-ring"><svg data-hf-id="hf-i3rw" viewBox="0 0 80 80"><circle data-hf-id="hf-ybds" class="bg" cx="40" cy="40" r="36" /><circle data-hf-id="hf-9od3" class="fill" cx="40" cy="40" r="36" data-pct="0.25" /></svg></div>
+                <div data-hf-id="hf-ncns" class="kpi-ring"><svg data-hf-id="hf-i3rw" viewBox="0 0 64 64"><circle data-hf-id="hf-ybds" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od3" class="fill" cx="32" cy="32" r="28" data-pct="0.25" /></svg></div>
               </div>
+              <div data-hf-id="hf-hst4" class="kpi" id="kpi4">
+                <div data-hf-id="hf-mrm4" class="kpi-label">Caprinos</div>
+                <div data-hf-id="hf-uv94" class="kpi-value" data-target="15">0</div>
+                <div data-hf-id="hf-ncn4" class="kpi-ring"><svg data-hf-id="hf-i3r4" viewBox="0 0 64 64"><circle data-hf-id="hf-ybd4" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od4" class="fill" cx="32" cy="32" r="28" data-pct="0.55" /></svg></div>
+              </div>
+              <div data-hf-id="hf-hst5" class="kpi" id="kpi5">
+                <div data-hf-id="hf-mrm5" class="kpi-label">Aves</div>
+                <div data-hf-id="hf-uv95" class="kpi-value" data-target="120">0</div>
+                <div data-hf-id="hf-ncn5" class="kpi-ring"><svg data-hf-id="hf-i3r5" viewBox="0 0 64 64"><circle data-hf-id="hf-ybd5" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od5" class="fill" cx="32" cy="32" r="28" data-pct="0.90" /></svg></div>
+              </div>
+            </div>
+            <div data-hf-id="hf-xtra" class="kpi-extra" id="s3-extra">
+              <div data-hf-id="hf-xtr1" class="kpi-pill"><span data-hf-id="hf-xtr1d" class="dot"></span> Eventos reproductivos</div>
+              <div data-hf-id="hf-xtr2" class="kpi-pill"><span data-hf-id="hf-xtr2d" class="dot"></span> Producción de leche</div>
+              <div data-hf-id="hf-xtr3" class="kpi-pill"><span data-hf-id="hf-xtr3d" class="dot"></span> Camadas porcinas</div>
+              <div data-hf-id="hf-xtr4" class="kpi-pill"><span data-hf-id="hf-xtr4d" class="dot"></span> Historial de pesos</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ═══════════ Scene 4: IA (15.808 → 21.120) ═══════════ -->
-      <section data-hf-id="hf-s4" id="s4" class="clip plate" data-start="15.82" data-duration="5.30" data-track-index="1" style="background: #374151">
+      <section data-hf-id="hf-s4" id="s4" class="clip plate" data-start="26.838" data-duration="11.349" data-track-index="1" style="background: #374151">
         <div data-hf-id="hf-tqya" class="plate-inner">
           <div data-hf-id="hf-60es" class="masthead">
-            <div data-hf-id="hf-52i6" class="display" style="font-size: 52px; font-weight: 900; color: var(--white)" id="s4-title">Salud y vacunas con IA</div>
-            <div data-hf-id="hf-8qyu" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 16px" id="s4-sub">Automatización + predicción</div>
+            <div data-hf-id="hf-52i6" class="display" style="font-size: 56px; font-weight: 900; color: var(--white)" id="s4-title">Salud animal e inteligencia artificial</div>
+            <div data-hf-id="hf-8qyu" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 20px" id="s4-sub">Vacunas · Recordatorios · Predicciones IA</div>
           </div>
           <div data-hf-id="hf-be80" class="split" id="s4-split">
             <div data-hf-id="hf-wgbg" class="panel" id="vacPanel">
@@ -629,69 +853,176 @@
                 <div data-hf-id="hf-4e5b" class="ai-label">Fecha estimada de parto</div>
                 <div data-hf-id="hf-ti5k" class="ai-date" id="aiDate">14 SEP 2026<span data-hf-id="hf-x7yk" class="ai-cursor" id="aiCursor"></span></div>
                 <div data-hf-id="hf-5n36" class="ai-bar"><div data-hf-id="hf-st7v" class="ai-bar-fill" id="aiBar"></div></div>
-                <div data-hf-id="hf-abeu" class="ai-note">Progreso de gestación calculado</div>
+                <div data-hf-id="hf-abeu" class="ai-note">Progreso de gestación calculado por IA</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ═══════════ Scene 5: Kanban (21.120 → 25.621) ═══════════ -->
-      <section data-hf-id="hf-s5" id="s5" class="clip plate" data-start="21.13" data-duration="4.49" data-track-index="1" style="background: #f6f7f2">
+      <section data-hf-id="hf-s5" id="s5" class="clip plate" data-start="38.187" data-duration="10.667" data-track-index="1" style="background: #0b2414">
         <div data-hf-id="hf-tcn9" class="plate-inner">
           <div data-hf-id="hf-5m3r" class="masthead">
-            <div data-hf-id="hf-1uo7" class="display" style="font-size: 52px; font-weight: 900; color: var(--forest)" id="s5-title">Formación educativa en un solo flujo</div>
-            <div data-hf-id="hf-fadz" style="color: rgba(26,36,20,0.6); font-weight: 600; font-size: 16px" id="s5-sub">Kanban para estudiantes y docentes</div>
+            <div data-hf-id="hf-1uo7" class="display" style="font-size: 56px; font-weight: 900; color: var(--white)" id="s5-title">Agronomía y gestión de potreros</div>
+            <div data-hf-id="hf-fadz" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 20px" id="s5-sub">Sembríos · Herramientas · Alimentación avícola</div>
           </div>
-          <div data-hf-id="hf-4ex9" class="kanban" id="s5-kanban">
-            <div data-hf-id="hf-cpka" class="kanban-col" id="col-pend">
-              <h3 data-hf-id="hf-4ka0">Pendiente <span data-hf-id="hf-o4rk" class="count">2</span></h3>
-              <div data-hf-id="hf-q4af" class="kanban-cards">
-                <div data-hf-id="hf-wpbp" class="kanban-card" id="card1">
-                  <div data-hf-id="hf-oa58" class="who">Mariana G.</div>
-                  <div data-hf-id="hf-r9as" class="what">Registro de pesos semanales (bovinos)</div>
-                  <div data-hf-id="hf-qsqi" class="tag">Prioridad alta</div>
-                </div>
-                <div data-hf-id="hf-0nfq" class="kanban-card" id="card2">
-                  <div data-hf-id="hf-ba24" class="who">Juan P.</div>
-                  <div data-hf-id="hf-fxqr" class="what">Checklist de vacunación por lote</div>
-                  <div data-hf-id="hf-lhbs" class="tag">Urgente</div>
-                </div>
+          <div data-hf-id="hf-4ex9" class="agro-grid" id="s5-agro">
+            <div data-hf-id="hf-cpka" class="agro-card" id="agro1">
+              <div data-hf-id="hf-4ka0" class="agro-card-header">
+                <div data-hf-id="hf-o4rk" class="agro-icon">🌱</div>
+                <div data-hf-id="hf-q4af" class="agro-card-title">Sembríos y potreros</div>
+              </div>
+              <div data-hf-id="hf-wpbp" class="agro-row">
+                <span data-hf-id="hf-oa58" class="agro-row-label">Potrero Norte</span>
+                <span data-hf-id="hf-r9as" class="agro-row-value">Pasto estrella</span>
+              </div>
+              <div data-hf-id="hf-qsqi" class="agro-row">
+                <span data-hf-id="hf-qsq1" class="agro-row-label">Etapa</span>
+                <span data-hf-id="hf-qsq2" class="agro-row-value">Crecimiento</span>
+              </div>
+              <div data-hf-id="hf-stg1" class="stage-bar"><div data-hf-id="hf-stg1f" class="stage-bar-fill" id="cropBar1"></div></div>
+              <div data-hf-id="hf-stg1l" class="stage-label">Etapa asistida por IA</div>
+            </div>
+            <div data-hf-id="hf-ld25" class="agro-card" id="agro2">
+              <div data-hf-id="hf-a8vu" class="agro-card-header">
+                <div data-hf-id="hf-mxuh" class="agro-icon">🔧</div>
+                <div data-hf-id="hf-2p13" class="agro-card-title">Herramientas y equipos</div>
+              </div>
+              <div data-hf-id="hf-6t5j" class="agro-row">
+                <span data-hf-id="hf-misx" class="agro-row-label">Maquinaria</span>
+                <span data-hf-id="hf-qgjj" class="agro-row-value">12 items</span>
+              </div>
+              <div data-hf-id="hf-t6ww" class="agro-row">
+                <span data-hf-id="hf-t6w1" class="agro-row-label">Veterinaria</span>
+                <span data-hf-id="hf-t6w2" class="agro-row-value">8 items</span>
+              </div>
+              <div data-hf-id="hf-t6w3" class="agro-row">
+                <span data-hf-id="hf-t6w4" class="agro-row-label">Stock bajo</span>
+                <span data-hf-id="hf-t6w5" class="agro-row-value" style="color: var(--danger)">⚠ 3 alertas</span>
               </div>
             </div>
-            <div data-hf-id="hf-ld25" class="kanban-col" id="col-prog">
-              <h3 data-hf-id="hf-a8vu">En Progreso <span data-hf-id="hf-mxuh" class="count">1</span></h3>
-              <div data-hf-id="hf-2p13" class="kanban-cards">
-                <div data-hf-id="hf-6t5j" class="kanban-card" id="card3">
-                  <div data-hf-id="hf-misx" class="who">Andrea R.</div>
-                  <div data-hf-id="hf-qgjj" class="what">Actualización de historial de salud</div>
-                  <div data-hf-id="hf-t6ww" class="tag">En revisión</div>
-                </div>
+            <div data-hf-id="hf-mm91" class="agro-card" id="agro3">
+              <div data-hf-id="hf-odyq" class="agro-card-header">
+                <div data-hf-id="hf-mjl9" class="agro-icon">🐔</div>
+                <div data-hf-id="hf-2aq2" class="agro-card-title">Alimentación avícola</div>
               </div>
-            </div>
-            <div data-hf-id="hf-mm91" class="kanban-col" id="col-done">
-              <h3 data-hf-id="hf-odyq">Completado <span data-hf-id="hf-mjl9" class="count">1</span></h3>
-              <div data-hf-id="hf-2aq2" class="kanban-cards">
-                <div data-hf-id="hf-ar9k" class="kanban-card" id="card4">
-                  <div data-hf-id="hf-bhox" class="who">Equipo</div>
-                  <div data-hf-id="hf-20v3" class="what">Inventario inicial del hato</div>
-                  <div data-hf-id="hf-zqla" class="tag" style="background: rgba(22,163,74,0.15); color: var(--emerald)">✓ Listo</div>
-                </div>
+              <div data-hf-id="hf-ar9k" class="agro-row">
+                <span data-hf-id="hf-bhox" class="agro-row-label">Ross 308 AP</span>
+                <span data-hf-id="hf-20v3" class="agro-row-value">Día 28</span>
+              </div>
+              <div data-hf-id="hf-zqla" class="agro-row">
+                <span data-hf-id="hf-zql1" class="agro-row-label">Consumo diario</span>
+                <span data-hf-id="hf-zql2" class="agro-row-value">98 g/ave</span>
+              </div>
+              <div data-hf-id="hf-zql3" class="agro-row">
+                <span data-hf-id="hf-zql4" class="agro-row-label">Proyección semanal</span>
+                <span data-hf-id="hf-zql5" class="agro-row-value">Auto</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ═══════════ Scene 6: Cierre (25.621 → 30.122) ═══════════ -->
-      <section data-hf-id="hf-s6" id="s6" class="clip plate" data-start="25.63" data-duration="4.49" data-track-index="1" style="background: #16a34a">
-        <div data-hf-id="hf-tscp" class="finale-center">
-          <div data-hf-id="hf-7lvm" class="finale-logo" id="s6-logo">
-            <img data-hf-id="hf-logo6" id="logo-s6" class="clip" data-start="25.63" data-duration="4.49" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+      <section data-hf-id="hf-s6" id="s6" class="clip plate" data-start="48.854" data-duration="9.621" data-track-index="1" style="background: #1a2414">
+        <div data-hf-id="hf-tscp6" class="plate-inner">
+          <div data-hf-id="hf-mh6" class="masthead">
+            <div data-hf-id="hf-tt6" class="display" style="font-size: 56px; font-weight: 900; color: var(--white)" id="s6-title">Inteligencia operativa</div>
+            <div data-hf-id="hf-sb6" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 20px" id="s6-sub">Reportes · Calculadoras · Asistente IA · Notificaciones</div>
           </div>
-          <div data-hf-id="hf-ark5" class="finale-name display" id="s6-name">FINCA TIGRILLO</div>
-          <div data-hf-id="hf-6ops" class="finale-rule" id="s6-rule"></div>
-          <div data-hf-id="hf-i6b3" class="finale-tagline" id="s6-tagline">La tecnología al servicio del agro educativo ecuatoriano.</div>
+          <div data-hf-id="hf-intel" class="intel-grid" id="s6-intel">
+            <div data-hf-id="hf-charts" class="chart-panel" id="chartsPanel">
+              <div data-hf-id="hf-ch6h" class="panel-header">
+                <div data-hf-id="hf-ch6i" class="panel-icon">📊</div>
+                <div data-hf-id="hf-ch6t" class="panel-title">Dashboard de reportes</div>
+              </div>
+              <div data-hf-id="hf-mini" class="mini-charts">
+                <div data-hf-id="hf-mc1" class="mini-chart">
+                  <svg data-hf-id="hf-gauge" class="gauge-ring" viewBox="0 0 80 80">
+                    <circle data-hf-id="hf-gbg" class="bg" cx="40" cy="40" r="36" />
+                    <circle data-hf-id="hf-gfill" id="gaugeFill" class="fill" cx="40" cy="40" r="36" />
+                  </svg>
+                  <div data-hf-id="hf-mc1v" class="mini-chart-value" id="gaugeVal">0%</div>
+                  <div data-hf-id="hf-mc1l" class="mini-chart-label">Operatividad</div>
+                </div>
+                <div data-hf-id="hf-mc2" class="mini-chart">
+                  <div data-hf-id="hf-mc2v" class="mini-chart-value" data-target="94" id="vaxPct">0%</div>
+                  <div data-hf-id="hf-mc2l" class="mini-chart-label">Vacunación</div>
+                </div>
+                <div data-hf-id="hf-mc3" class="mini-chart">
+                  <div data-hf-id="hf-mc3v" class="mini-chart-value" data-target="202" id="totalAnimals">0</div>
+                  <div data-hf-id="hf-mc3l" class="mini-chart-label">Total animales</div>
+                </div>
+                <div data-hf-id="hf-mc4" class="mini-chart">
+                  <div data-hf-id="hf-mc4v" class="mini-chart-value">9</div>
+                  <div data-hf-id="hf-mc4l" class="mini-chart-label">Calculadoras</div>
+                </div>
+              </div>
+              <div data-hf-id="hf-calcs" class="calc-chips" id="calcChips">
+                <div data-hf-id="hf-cc1" class="calc-chip">Gestación</div>
+                <div data-hf-id="hf-cc2" class="calc-chip">Alimentación</div>
+                <div data-hf-id="hf-cc3" class="calc-chip">Conversión</div>
+                <div data-hf-id="hf-cc4" class="calc-chip">Intervalo partos</div>
+                <div data-hf-id="hf-cc5" class="calc-chip">Tasa preñez</div>
+              </div>
+            </div>
+            <div data-hf-id="hf-chat" class="chatbot-panel" id="chatPanel">
+              <div data-hf-id="hf-ch6h2" class="panel-header">
+                <div data-hf-id="hf-ch6i2" class="panel-icon" style="background: var(--emerald); color: white">🤖</div>
+                <div data-hf-id="hf-ch6t2" style="font-weight: 800; font-size: 22px; color: var(--forest)">Asistente IA</div>
+              </div>
+              <div data-hf-id="hf-cb1" class="chat-bubble chat-user" id="chatUser">¿Cuántos bovinos necesitan vacuna este mes?</div>
+              <div data-hf-id="hf-cb2" class="chat-bubble chat-ai" id="chatAI">12 bovinos del lote Norte tienen fiebre aftosa pendiente para el 20 de junio.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s7" id="s7" class="clip plate" data-start="58.475" data-duration="10.091" data-track-index="1" style="background: #f6f7f2">
+        <div data-hf-id="hf-tcn7" class="plate-inner">
+          <div data-hf-id="hf-mh7" class="masthead">
+            <div data-hf-id="hf-tt7" class="display" style="font-size: 56px; font-weight: 900; color: var(--forest)" id="s7-title">Comunidad educativa integrada</div>
+            <div data-hf-id="hf-sb7" style="color: rgba(26,36,20,0.6); font-weight: 600; font-size: 20px" id="s7-sub">Actividades · Progreso · Aprobaciones</div>
+          </div>
+          <div data-hf-id="hf-comm" class="community-grid" id="s7-comm">
+            <div data-hf-id="hf-cm1" class="community-card" id="comm1">
+              <div data-hf-id="hf-cm1i" class="community-card-icon">📋</div>
+              <div data-hf-id="hf-cm1t" class="community-card-title">Actividades</div>
+              <div data-hf-id="hf-cm1d" class="community-card-desc">Coordinación de tareas prácticas entre docentes y estudiantes por carrera y semestre.</div>
+              <div data-hf-id="hf-cm1items" class="community-items">
+                <div data-hf-id="hf-cm1a" class="community-item"><span data-hf-id="hf-cm1ac" class="check">✓</span> Asignación automática</div>
+                <div data-hf-id="hf-cm1b" class="community-item"><span data-hf-id="hf-cm1bc" class="check">✓</span> Seguimiento en tiempo real</div>
+              </div>
+            </div>
+            <div data-hf-id="hf-cm2" class="community-card" id="comm2">
+              <div data-hf-id="hf-cm2i" class="community-card-icon">🎓</div>
+              <div data-hf-id="hf-cm2t" class="community-card-title">Progreso estudiantil</div>
+              <div data-hf-id="hf-cm2d" class="community-card-desc">Visualización del avance individual y grupal de las prácticas agropecuarias.</div>
+              <div data-hf-id="hf-cm2items" class="community-items">
+                <div data-hf-id="hf-cm2a" class="community-item"><span data-hf-id="hf-cm2ac" class="check">✓</span> Gestión de estudiantes</div>
+                <div data-hf-id="hf-cm2b" class="community-item"><span data-hf-id="hf-cm2bc" class="check">✓</span> Reportes de avance</div>
+              </div>
+            </div>
+            <div data-hf-id="hf-cm3" class="community-card" id="comm3">
+              <div data-hf-id="hf-cm3i" class="community-card-icon">🔄</div>
+              <div data-hf-id="hf-cm3t" class="community-card-title">Flujos de aprobación</div>
+              <div data-hf-id="hf-cm3d" class="community-card-desc">Docentes solicitan cambios de datos, administradores revisan y aprueban con control total.</div>
+              <div data-hf-id="hf-cm3items" class="community-items">
+                <div data-hf-id="hf-cm3a" class="community-item"><span data-hf-id="hf-cm3ac" class="check">✓</span> Solicitudes estructuradas</div>
+                <div data-hf-id="hf-cm3b" class="community-item"><span data-hf-id="hf-cm3bc" class="check">✓</span> Ejecución automática</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s8" id="s8" class="clip plate" data-start="68.566" data-duration="5.099" data-track-index="1" style="background: #16a34a">
+        <div data-hf-id="hf-tscp8" class="finale-center">
+          <div data-hf-id="hf-7lvm" class="finale-logo" id="s8-logo">
+            <img data-hf-id="hf-logo8" id="logo-s8" class="clip" data-start="68.566" data-duration="5.099" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+          </div>
+          <div data-hf-id="hf-ark5" class="finale-name display" id="s8-name">FINCA TIGRILLO</div>
+          <div data-hf-id="hf-6ops" class="finale-rule" id="s8-rule"></div>
+          <div data-hf-id="hf-i6b3" class="finale-tagline" id="s8-tagline">La tecnología al servicio del agro educativo ecuatoriano.</div>
         </div>
       </section>
     </div>
@@ -700,146 +1031,138 @@
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
 
-      /* ── Helpers ── */
-      const CIRC = 2 * Math.PI * 36; // ring circumference (r=36)
+      const CIRC64 = 2 * Math.PI * 28;
+      const CIRC80 = 2 * Math.PI * 36;
 
-      /* ════════════════════════════════════════════════════════
-         SCENE 1 — El Reto (0 → 6.144)
-         ════════════════════════════════════════════════════════ */
-      // Plate fade in
       tl.to("#s1", { opacity: 1, duration: 0.4, ease: "power2.out" }, 0);
-      // Brand chip slides in
       tl.fromTo("#s1-chip", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.1);
-      // Tag
       tl.fromTo("#s1-tag", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.2);
-      // Title — kinetic slam
       tl.fromTo("#s1-title", { opacity: 0, y: 30, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "power4.out" }, 0.15);
-      // Accent word — red pulse
       tl.fromTo("#s1-accent", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2)" }, 0.5);
-      // Sub
       tl.fromTo("#s1-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.6);
-      // Pain pills — staggered slam
       tl.fromTo("#s1-pills .pain-pill", { opacity: 0, y: 16, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power3.out", stagger: 0.12 }, 0.85);
+      tl.to("#s1", { opacity: 0, duration: 0.3, ease: "power2.in" }, 8.0);
 
-      // Exit: fade out before transition
-      tl.to("#s1", { opacity: 0, duration: 0.3, ease: "power2.in" }, 5.7);
-
-      /* ════════════════════════════════════════════════════════
-         SCENE 2 — Presentación (6.15 → 11.37)
-         ════════════════════════════════════════════════════════ */
-      const s2 = 6.15;
-      // Plate
+      const s2 = 8.448;
       tl.to("#s2", { opacity: 1, duration: 0.4, ease: "power2.out" }, s2);
-      // Logo glow pulse
-      tl.fromTo("#s2-glow", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1.1, duration: 0.8, ease: "power2.out" }, s2 + 0.05);
-      tl.to("#s2-glow", { scale: 1, duration: 1.2, ease: "sine.inOut", yoyo: true, repeat: 2 }, s2 + 0.8);
-      // Logo
+      tl.fromTo("#s2-glow", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1.1, duration: 0.7, ease: "power2.out" }, s2 + 0.05);
+      tl.to("#s2-glow", { scale: 1, duration: 1.2, ease: "sine.inOut", yoyo: true, repeat: 2 }, s2 + 0.85);
       tl.fromTo("#logo-s2", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.5)" }, s2 + 0.1);
-      // Name — letter-by-letter via clip
       tl.fromTo("#s2-name", { opacity: 0, y: 24, letterSpacing: "8px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.8, ease: "power3.out" }, s2 + 0.35);
-      // Sub
       tl.fromTo("#s2-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, s2 + 0.6);
-      // Feature checks — stagger
-      tl.fromTo("#s2-features div", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, s2 + 0.9);
+      tl.fromTo(".role-chip", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, s2 + 0.9);
+      tl.to("#s2", { opacity: 0, duration: 0.3, ease: "power2.in" }, s2 + 7.1);
 
-      // Exit
-      tl.to("#s2", { opacity: 0, duration: 0.3, ease: "power2.in" }, s2 + 4.8);
-
-      /* ════════════════════════════════════════════════════════
-         SCENE 3 — Gestión Ganadera (11.38 → 15.81)
-         ════════════════════════════════════════════════════════ */
-      const s3 = 11.38;
-      // Plate
+      const s3 = 15.979;
       tl.to("#s3", { opacity: 1, duration: 0.4, ease: "power2.out" }, s3);
-      // Title
       tl.fromTo("#s3-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s3 + 0.05);
       tl.fromTo("#s3-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s3 + 0.15);
-      // KPI cards — scale in
-      tl.fromTo(".kpi", { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.3)", stagger: 0.12 }, s3 + 0.3);
+      tl.fromTo(".kpi", { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.3)", stagger: 0.1 }, s3 + 0.3);
 
-      // Counting numbers + ring fills
-      document.querySelectorAll(".kpi-value").forEach((el) => {
+      document.querySelectorAll("#s3 .kpi-value").forEach((el) => {
         const target = parseInt(el.dataset.target, 10);
         const obj = { v: 0 };
         tl.to(obj, {
           v: target,
-          duration: 1.8,
+          duration: 2.0,
           ease: "power3.out",
           onUpdate: () => { el.textContent = Math.round(obj.v); },
         }, s3 + 0.5);
       });
-      document.querySelectorAll(".kpi-ring .fill").forEach((el) => {
+      document.querySelectorAll("#s3 .kpi-ring .fill").forEach((el) => {
         const pct = parseFloat(el.dataset.pct);
         tl.to(el, {
-          strokeDashoffset: CIRC * (1 - pct),
-          duration: 1.8,
+          strokeDashoffset: CIRC64 * (1 - pct),
+          duration: 2.0,
           ease: "power3.out",
         }, s3 + 0.5);
       });
 
-      // Exit
-      tl.to("#s3", { opacity: 0, duration: 0.3, ease: "power2.in" }, s3 + 4.0);
+      tl.fromTo(".kpi-pill", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.1 }, s3 + 2.8);
+      tl.to("#s3", { opacity: 0, duration: 0.3, ease: "power2.in" }, s3 + 10.4);
 
-      /* ════════════════════════════════════════════════════════
-         SCENE 4 — IA (15.82 → 21.12)
-         ════════════════════════════════════════════════════════ */
-      const s4 = 15.82;
-      // Plate
+      const s4 = 26.838;
       tl.to("#s4", { opacity: 1, duration: 0.4, ease: "power2.out" }, s4);
-      // Title
       tl.fromTo("#s4-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s4 + 0.05);
       tl.fromTo("#s4-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s4 + 0.15);
-      // Panels — slide from sides
       tl.fromTo("#vacPanel", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, s4 + 0.25);
       tl.fromTo("#aiPanel", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, s4 + 0.25);
-      // Vaccine rows — stagger
-      tl.fromTo(".vax-row", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, s4 + 0.5);
-      // AI bar fill
-      tl.to("#aiBar", { width: "78%", duration: 1.4, ease: "power2.out" }, s4 + 0.8);
-      // AI cursor blinks (continuous)
-      tl.to("#aiCursor", { opacity: 0, duration: 0.3, ease: "steps(1)", yoyo: true, repeat: 12 }, s4 + 0.8);
+      tl.fromTo(".vax-row", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, s4 + 0.5);
+      tl.to("#aiBar", { width: "78%", duration: 1.8, ease: "power2.out" }, s4 + 1.2);
+      tl.to("#aiCursor", { opacity: 0, duration: 0.3, ease: "steps(1)", yoyo: true, repeat: 16 }, s4 + 1.2);
+      tl.to("#s4", { opacity: 0, duration: 0.3, ease: "power2.in" }, s4 + 10.9);
 
-      // Exit
-      tl.to("#s4", { opacity: 0, duration: 0.3, ease: "power2.in" }, s4 + 4.9);
-
-      /* ════════════════════════════════════════════════════════
-         SCENE 5 — Kanban (21.13 → 25.62)
-         ════════════════════════════════════════════════════════ */
-      const s5 = 21.13;
-      // Plate
+      const s5 = 38.187;
       tl.to("#s5", { opacity: 1, duration: 0.4, ease: "power2.out" }, s5);
-      // Title
       tl.fromTo("#s5-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s5 + 0.05);
       tl.fromTo("#s5-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s5 + 0.15);
-      // Columns — stagger
-      tl.fromTo(".kanban-col", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1 }, s5 + 0.25);
-      // Cards — stagger
-      tl.fromTo(".kanban-card", { opacity: 0, y: 12, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "power2.out", stagger: 0.08 }, s5 + 0.45);
-      // Card drag: move card1 from Pendiente → En Progreso
-      tl.to("#card1", { x: 560, y: 8, rotation: -1.5, duration: 0.7, ease: "power2.inOut" }, s5 + 1.8);
-      tl.to("#card1", { x: 560, y: 20, rotation: 0, duration: 0.3, ease: "power2.out" }, s5 + 2.5);
+      tl.fromTo(".agro-card", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.2)", stagger: 0.15 }, s5 + 0.3);
+      tl.to("#cropBar1", { width: "65%", duration: 1.6, ease: "power2.out" }, s5 + 1.2);
+      tl.to("#s5", { opacity: 0, duration: 0.3, ease: "power2.in" }, s5 + 10.2);
 
-      // Exit
-      tl.to("#s5", { opacity: 0, duration: 0.3, ease: "power2.in" }, s5 + 4.1);
+      const s6 = 48.854;
+      tl.to("#s6", { opacity: 1, duration: 0.4, ease: "power2.out" }, s6);
+      tl.fromTo("#s6-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s6 + 0.05);
+      tl.fromTo("#s6-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s6 + 0.15);
+      tl.fromTo("#chartsPanel", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, s6 + 0.25);
+      tl.fromTo("#chatPanel", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, s6 + 0.25);
 
-      /* ════════════════════════════════════════════════════════
-         SCENE 6 — Cierre (25.63 → 30.12)
-         ════════════════════════════════════════════════════════ */
-      const s6 = 25.63;
-      // Plate
-      tl.to("#s6", { opacity: 1, duration: 0.5, ease: "power2.out" }, s6);
-      // Logo — dramatic scale
-      tl.fromTo("#s6-logo", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.4)" }, s6 + 0.1);
-      // Name
-      tl.fromTo("#s6-name", { opacity: 0, y: 20, letterSpacing: "6px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.7, ease: "power3.out" }, s6 + 0.35);
-      // Rule
-      tl.to("#s6-rule", { opacity: 1, width: 120, duration: 0.5, ease: "power2.out" }, s6 + 0.6);
-      // Tagline
-      tl.fromTo("#s6-tagline", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, s6 + 0.75);
-      // Subtle pulse on logo
-      tl.to("#s6-logo", { scale: 1.03, duration: 1.0, ease: "sine.inOut", yoyo: true, repeat: 2 }, s6 + 1.2);
+      const gaugeObj = { v: 0 };
+      tl.to(gaugeObj, {
+        v: 87,
+        duration: 2.0,
+        ease: "power3.out",
+        onUpdate: () => {
+          document.getElementById("gaugeVal").textContent = Math.round(gaugeObj.v) + "%";
+        },
+      }, s6 + 0.6);
+      tl.to("#gaugeFill", {
+        strokeDashoffset: CIRC80 * (1 - 0.87),
+        duration: 2.0,
+        ease: "power3.out",
+      }, s6 + 0.6);
 
-      /* ── Register timeline ── */
+      const vaxObj = { v: 0 };
+      tl.to(vaxObj, {
+        v: 94,
+        duration: 2.0,
+        ease: "power3.out",
+        onUpdate: () => {
+          document.getElementById("vaxPct").textContent = Math.round(vaxObj.v) + "%";
+        },
+      }, s6 + 0.8);
+
+      const animObj = { v: 0 };
+      tl.to(animObj, {
+        v: 202,
+        duration: 2.0,
+        ease: "power3.out",
+        onUpdate: () => {
+          document.getElementById("totalAnimals").textContent = Math.round(animObj.v);
+        },
+      }, s6 + 1.0);
+
+      tl.fromTo(".calc-chip", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out", stagger: 0.08 }, s6 + 2.5);
+      tl.fromTo("#chatUser", { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, s6 + 1.5);
+      tl.fromTo("#chatAI", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, s6 + 2.5);
+      tl.to("#s6", { opacity: 0, duration: 0.3, ease: "power2.in" }, s6 + 9.2);
+
+      const s7 = 58.475;
+      tl.to("#s7", { opacity: 1, duration: 0.4, ease: "power2.out" }, s7);
+      tl.fromTo("#s7-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s7 + 0.05);
+      tl.fromTo("#s7-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s7 + 0.15);
+      tl.fromTo(".community-card", { opacity: 0, y: 24, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.2)", stagger: 0.15 }, s7 + 0.3);
+      tl.fromTo(".community-item", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.3, ease: "power2.out", stagger: 0.06 }, s7 + 1.2);
+      tl.to("#s7", { opacity: 0, duration: 0.3, ease: "power2.in" }, s7 + 9.7);
+
+      const s8 = 68.566;
+      tl.to("#s8", { opacity: 1, duration: 0.5, ease: "power2.out" }, s8);
+      tl.fromTo("#s8-logo", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.4)" }, s8 + 0.1);
+      tl.fromTo("#s8-name", { opacity: 0, y: 20, letterSpacing: "6px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.7, ease: "power3.out" }, s8 + 0.35);
+      tl.to("#s8-rule", { opacity: 1, width: 140, duration: 0.5, ease: "power2.out" }, s8 + 0.6);
+      tl.fromTo("#s8-tagline", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, s8 + 0.75);
+      tl.to("#s8-logo", { scale: 1.03, duration: 1.0, ease: "sine.inOut", yoyo: true, repeat: 2 }, s8 + 1.2);
+
       window.__timelines["main"] = tl;
     </script>
   </body>

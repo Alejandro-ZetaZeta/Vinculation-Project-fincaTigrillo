@@ -1,10 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
-  X, CheckCircle2, XCircle, Edit3, Save, AlertTriangle, Loader2
+  X, CheckCircle2, XCircle, Edit3, Save, AlertTriangle, Loader2,
 } from 'lucide-react'
 import { REQUEST_TYPE_LABELS } from '@/lib/requests/validatePayload'
+import {
+  FORM_COMPONENTS, ReadonlyPayload, clientSideValidate,
+  type ResolverMaps,
+} from '@/components/requests/RequestForms'
 
 interface Request {
   id: string
@@ -25,85 +29,97 @@ interface Props {
   onActionDone: () => void
 }
 
-function PayloadField({ label, value }: { label: string; value: unknown }) {
-  if (value == null || value === '') return null
-  const display = Array.isArray(value)
-    ? value.join(', ')
-    : typeof value === 'object'
-      ? JSON.stringify(value, null, 2)
-      : String(value)
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-muted uppercase tracking-wide">{label}</span>
-      <span className="text-sm text-foreground font-medium break-words">{display}</span>
-    </div>
-  )
+/** Fetch the id→name maps needed to resolve ids in the read-only view. */
+function useResolverMaps(): ResolverMaps {
+  const [maps, setMaps] = useState<ResolverMaps>({
+    animalTypes: {}, animals: {}, vaccines: {},
+  })
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      const [typesRes, animalsRes, vaxRes] = await Promise.all([
+        fetch('/api/animal-types').then(r => r.json()).catch(() => null),
+        fetch('/api/animals').then(r => r.json()).catch(() => null),
+        fetch('/api/vaccines').then(r => r.json()).catch(() => null),
+      ])
+
+      if (cancelled) return
+
+      const typeArr = Array.isArray(typesRes) ? typesRes : (typesRes?.data ?? [])
+      const animalArr = Array.isArray(animalsRes) ? animalsRes : (animalsRes?.data ?? [])
+      const vaxArr = Array.isArray(vaxRes?.data) ? vaxRes.data : []
+
+      const animalTypes: Record<string, string> = {}
+      for (const t of typeArr as { id: string; name: string }[]) animalTypes[t.id] = t.name
+
+      const animals: Record<string, string> = {}
+      for (const a of animalArr as { id: string; name: string | null; identification_code: string | null }[]) {
+        const label = a.name
+          ? (a.identification_code ? `${a.name} (${a.identification_code})` : a.name)
+          : (a.identification_code ?? a.id)
+        animals[a.id] = label
+      }
+
+      const vaccines: Record<string, string> = {}
+      for (const v of vaxArr as { id: string; name: string }[]) vaccines[v.id] = v.name
+
+      setMaps({ animalTypes, animals, vaccines })
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  return maps
 }
 
-const PAYLOAD_LABELS: Record<string, Record<string, string>> = {
-  animal_record: {
-    name: 'Nombre', breed: 'Raza', sex: 'Sexo', birth_date: 'Fecha nacimiento',
-    identification_code: 'Código', color: 'Color', weight_kg: 'Peso (kg)',
-    type_id: 'Tipo (ID)', status: 'Estado', acquisition_type: 'Tipo adquisición',
-    acquisition_date: 'Fecha adquisición', notes: 'Notas',
-    is_litter: 'Camada', litter_count: 'Cant. lechones',
-  },
-  reproductive_event: {
-    animal_id: 'Animal (ID)', event_type: 'Tipo evento', event_date: 'Fecha',
-    notes: 'Notas', species_slug: 'Especie', sire_id: 'Semental (ID)',
-  },
-  mortality_event: {
-    animal_id: 'Animal (ID)', event_date: 'Fecha', quantity: 'Cantidad bajas', notes: 'Notas',
-  },
-  production_event: {
-    animal_id: 'Animal (ID)', recorded_date: 'Fecha', liters_am: 'Litros AM',
-    liters_pm: 'Litros PM', notes: 'Notas',
-  },
-  vaccine_profile: {
-    name: 'Nombre', description: 'Descripción', target_type_id: 'Tipo animal (ID)',
-    target_sex: 'Sexo objetivo', age_min_days: 'Edad mín. (días)',
-    age_max_days: 'Edad máx. (días)', allowed_reproductive_states: 'Estados reproductivos',
-    default_next_dose_days: 'Días siguiente dosis', total_doses: 'Dosis totales',
-    is_active: 'Activa',
-  },
-  vaccine_assignment: {
-    animal_ids: 'Animales (IDs)', vaccine_id: 'Vacuna (ID)', applied_at: 'Fecha aplicación',
-    next_dose_at: 'Próxima dosis', notes: 'Notas', doses_count: 'Cant. dosis',
-  },
+/** Drop UI-only keys before sending to the API. _typeSlug is kept because the
+ *  server uses it for aves-de-corral required-metadata validation. */
+function stripInternal(data: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(data)) {
+    if (k === '_codeStatus') continue
+    out[k] = v
+  }
+  return out
 }
 
 export function RequestDetailModal({ request, userRole, onClose, onActionDone }: Props) {
-  const [isEditing, setIsEditing]   = useState(false)
-  const [editedPayload, setEditedPayload] = useState(() => JSON.stringify(request.payload, null, 2))
-  const [payloadError, setPayloadError]   = useState<string | null>(null)
-  const [rejectMode, setRejectMode] = useState(false)
-  const [adminNotes, setAdminNotes] = useState(request.admin_notes ?? '')
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState<string | null>(null)
-
   const isPending = request.status === 'pending'
-  const fieldLabels = PAYLOAD_LABELS[request.request_type] ?? {}
+  const resolvers = useResolverMaps()
 
-  function parseEditedPayload() {
-    try {
-      const parsed = JSON.parse(editedPayload)
-      setPayloadError(null)
-      return { ok: true as const, value: parsed as Record<string, unknown> }
-    } catch {
-      setPayloadError('JSON inválido')
-      return { ok: false as const }
-    }
+  const [isEditing, setIsEditing]     = useState(false)
+  const [editedPayload, setEditedPayload] = useState<Record<string, unknown>>(() => ({ ...request.payload }))
+  const [rejectMode, setRejectMode]   = useState(false)
+  const [adminNotes, setAdminNotes]   = useState(request.admin_notes ?? '')
+  const [loading, setLoading]         = useState(false)
+  const [error, setError]             = useState<string | null>(null)
+  const [editError, setEditError]     = useState<string | null>(null)
+
+  const FormComponent = useMemo(() => FORM_COMPONENTS[request.request_type] ?? null, [request.request_type])
+
+  function startEditing() {
+    setEditedPayload({ ...request.payload })
+    setEditError(null)
+    setIsEditing(true)
   }
 
   async function handleApprove(withEdit = false) {
     setLoading(true)
     setError(null)
-    let body: Record<string, unknown> = {}
+    const body: Record<string, unknown> = {}
 
     if (withEdit) {
-      const parsed = parseEditedPayload()
-      if (!parsed.ok) { setLoading(false); return }
-      body.payload = parsed.value
+      // Client-side gating on the edited payload (required fields + code check).
+      const clientErr = clientSideValidate(request.request_type, editedPayload)
+      if (clientErr) {
+        setEditError(clientErr)
+        setLoading(false)
+        return
+      }
+      body.payload = stripInternal(editedPayload)
     }
 
     try {
@@ -139,6 +155,8 @@ export function RequestDetailModal({ request, userRole, onClose, onActionDone }:
     }
   }
 
+  const hasEdits = isEditing
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -171,14 +189,14 @@ export function RequestDetailModal({ request, userRole, onClose, onActionDone }:
             </div>
           )}
 
-          {/* Payload display or edit */}
+          {/* Payload: read-only or form-based edit */}
           {!isEditing ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-semibold text-muted uppercase tracking-wide">Datos de la Solicitud</h3>
                 {isPending && userRole === 'admin' && (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={startEditing}
                     className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -186,30 +204,34 @@ export function RequestDetailModal({ request, userRole, onClose, onActionDone }:
                   </button>
                 )}
               </div>
-              <div className="bg-surface border border-border rounded-xl p-4 grid grid-cols-1 gap-3">
-                {Object.entries(request.payload).map(([key, value]) => (
-                  <PayloadField key={key} label={fieldLabels[key] ?? key} value={value} />
-                ))}
-              </div>
+              <ReadonlyPayload
+                requestType={request.request_type}
+                payload={request.payload}
+                resolvers={resolvers}
+              />
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-muted uppercase tracking-wide">Editar Payload (JSON)</h3>
+                <h3 className="text-xs font-semibold text-muted uppercase tracking-wide">Editar Datos</h3>
                 <button
-                  onClick={() => { setIsEditing(false); setPayloadError(null) }}
+                  onClick={() => { setIsEditing(false); setEditError(null) }}
                   className="text-xs text-muted hover:text-foreground"
                 >
                   Cancelar
                 </button>
               </div>
-              <textarea
-                value={editedPayload}
-                onChange={e => { setEditedPayload(e.target.value); setPayloadError(null) }}
-                rows={12}
-                className="w-full font-mono text-xs bg-surface border border-border rounded-xl p-3 text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              {payloadError && <p className="text-xs text-red-500">{payloadError}</p>}
+              {editError && (
+                <div className="flex items-center gap-2 p-3 bg-red-500/8 border border-red-500/20 rounded-xl text-sm text-red-600">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  {editError}
+                </div>
+              )}
+              {FormComponent ? (
+                <FormComponent value={editedPayload} onChange={setEditedPayload} />
+              ) : (
+                <p className="text-sm text-muted">Este tipo de solicitud no tiene formulario de edición.</p>
+              )}
             </div>
           )}
 
@@ -232,6 +254,7 @@ export function RequestDetailModal({ request, userRole, onClose, onActionDone }:
                 onChange={e => setAdminNotes(e.target.value)}
                 placeholder="Explica el motivo del rechazo..."
                 rows={3}
+                maxLength={2000}
                 className="w-full text-sm bg-surface border border-border rounded-xl px-3 py-2.5 text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -251,7 +274,7 @@ export function RequestDetailModal({ request, userRole, onClose, onActionDone }:
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                   Aprobar
                 </button>
-                {isEditing && (
+                {hasEdits && (
                   <button
                     onClick={() => handleApprove(true)}
                     disabled={loading}

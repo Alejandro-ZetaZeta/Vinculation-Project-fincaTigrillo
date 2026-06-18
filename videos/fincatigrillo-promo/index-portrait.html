@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Syne";
+        src: url("assets/fonts/Syne.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "DM Sans";
+        src: url("assets/fonts/DMSans.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #000;
+      }
+      body { font-family: "DM Sans"; }
+      :root {
+        --emerald: #16a34a;
+        --emerald-light: #22c55e;
+        --forest: #0b2414;
+        --forest-mid: #1a2414;
+        --slate: #374151;
+        --parchment: #f6f7f2;
+        --mint: #d1fae5;
+        --danger: #fca5a5;
+        --white: #ffffff;
+      }
+
+      .root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #000;
+      }
+      .plate {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 80px 48px;
+        opacity: 0;
+      }
+      .plate-inner {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 28px;
+      }
+
+      .masthead {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        text-align: center;
+      }
+      .brand-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 22px;
+        border-radius: 14px;
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--white);
+        font-weight: 600;
+        font-size: 22px;
+      }
+      .brand-chip img {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+      }
+
+      .display { font-family: "Syne"; letter-spacing: -1.2px; }
+
+      .hero-title {
+        font-size: 62px;
+        line-height: 1.12;
+        font-weight: 900;
+        color: var(--white);
+        text-align: center;
+      }
+      .hero-accent { color: var(--danger); }
+      .hero-sub {
+        margin-top: 24px;
+        font-size: 26px;
+        line-height: 1.35;
+        color: rgba(255,255,255,0.85);
+        text-align: center;
+      }
+      .pain-pills {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 32px;
+        align-items: center;
+      }
+      .pain-pill {
+        padding: 16px 32px;
+        border-radius: 999px;
+        border: 1px solid rgba(252, 165, 165, 0.35);
+        background: rgba(252, 165, 165, 0.1);
+        color: var(--danger);
+        font-weight: 700;
+        font-size: 22px;
+        opacity: 0;
+      }
+
+      .brand-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
+      }
+      .brand-logo {
+        width: 200px;
+        height: 200px;
+        border-radius: 999px;
+        background: rgba(22, 163, 74, 0.08);
+        border: 2px solid rgba(22, 163, 74, 0.2);
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+      .brand-logo img {
+        width: 160px;
+        height: 160px;
+        border-radius: 999px;
+      }
+      .brand-logo .glow {
+        position: absolute;
+        inset: -24px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(22,163,74,0.15) 0%, transparent 70%);
+        opacity: 0;
+      }
+      .brand-name {
+        margin-top: 36px;
+        font-size: 80px;
+        font-weight: 900;
+        color: var(--emerald);
+        letter-spacing: -2px;
+      }
+      .brand-sub {
+        margin-top: 18px;
+        font-size: 24px;
+        color: #1f2937;
+        font-weight: 600;
+        max-width: 900px;
+      }
+      .role-chips {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 40px;
+      }
+      .role-chip {
+        padding: 18px 36px;
+        border-radius: 18px;
+        border: 1px solid rgba(22, 163, 74, 0.25);
+        background: rgba(22, 163, 74, 0.06);
+        color: var(--forest);
+        font-weight: 700;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        opacity: 0;
+      }
+      .role-chip .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--emerald);
+        color: var(--white);
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        align-self: center;
+      }
+      .kpi-grid-extra {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-top: 16px;
+        max-width: 660px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .kpi {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(209, 250, 229, 0.2);
+        border-radius: 24px;
+        padding: 28px 16px;
+        text-align: center;
+      }
+      .kpi-label {
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+        font-size: 17px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+      .kpi-value {
+        margin-top: 10px;
+        font-family: "Syne";
+        font-weight: 900;
+        font-size: 52px;
+        letter-spacing: -2px;
+        color: var(--white);
+        font-variant-numeric: tabular-nums;
+      }
+      .kpi-ring {
+        margin-top: 12px;
+        display: flex;
+        justify-content: center;
+      }
+      .kpi-ring svg {
+        width: 60px;
+        height: 60px;
+        transform: rotate(-90deg);
+      }
+      .kpi-ring circle {
+        fill: none;
+        stroke-width: 5;
+        stroke-linecap: round;
+      }
+      .kpi-ring .bg { stroke: rgba(255,255,255,0.1); }
+      .kpi-ring .fill {
+        stroke: var(--emerald-light);
+        stroke-dasharray: 188;
+        stroke-dashoffset: 188;
+      }
+      .kpi-extra {
+        margin-top: 28px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        justify-content: center;
+      }
+      .kpi-pill {
+        padding: 14px 24px;
+        border-radius: 16px;
+        border: 1px solid rgba(209, 250, 229, 0.2);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255,255,255,0.8);
+        font-weight: 600;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0;
+      }
+      .kpi-pill .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--emerald-light);
+      }
+
+      .split {
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 24px;
+        height: 100%;
+        align-self: center;
+      }
+      .panel {
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.25);
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+      }
+      .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .panel-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(22, 163, 74, 0.15);
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+      }
+      .panel-title {
+        font-weight: 800;
+        font-size: 22px;
+        color: var(--white);
+      }
+      .vax-list {
+        display: grid;
+        gap: 12px;
+        flex: 1;
+      }
+      .vax-row {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(209, 250, 229, 0.15);
+        background: rgba(255, 255, 255, 0.05);
+        opacity: 0;
+      }
+      .vax-badge {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: rgba(22, 163, 74, 0.15);
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        color: var(--emerald-light);
+        font-weight: 900;
+        font-size: 18px;
+      }
+      .vax-name {
+        font-weight: 700;
+        color: var(--white);
+        font-size: 20px;
+      }
+      .vax-meta {
+        color: rgba(255,255,255,0.6);
+        font-size: 15px;
+        margin-top: 4px;
+      }
+      .vax-date {
+        font-variant-numeric: tabular-nums;
+        font-size: 15px;
+        color: rgba(255,255,255,0.5);
+      }
+      .ai-box {
+        margin-top: auto;
+        padding: 24px;
+        border-radius: 18px;
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        background: rgba(22, 163, 74, 0.08);
+      }
+      .ai-label {
+        font-weight: 700;
+        color: rgba(255,255,255,0.7);
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .ai-date {
+        margin-top: 10px;
+        font-family: "Syne";
+        font-weight: 900;
+        font-size: 44px;
+        color: var(--white);
+        letter-spacing: -1px;
+      }
+      .ai-cursor {
+        display: inline-block;
+        width: 4px;
+        height: 44px;
+        background: var(--emerald-light);
+        margin-left: 4px;
+        vertical-align: middle;
+        animation: blink 0.6s step-end infinite;
+      }
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+      .ai-bar {
+        margin-top: 14px;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .ai-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--emerald), var(--emerald-light));
+        border-radius: 999px;
+      }
+      .ai-note {
+        margin-top: 10px;
+        color: rgba(255,255,255,0.6);
+        font-size: 15px;
+      }
+
+      .agro-grid {
+        display: grid;
+        grid-template-rows: 1fr 1fr 1fr;
+        gap: 18px;
+        align-self: center;
+        height: 100%;
+      }
+      .agro-card {
+        border-radius: 22px;
+        border: 1px solid rgba(209, 250, 229, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        opacity: 0;
+      }
+      .agro-card-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .agro-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(22, 163, 74, 0.15);
+        display: grid;
+        place-items: center;
+        font-size: 24px;
+      }
+      .agro-card-title {
+        font-weight: 800;
+        font-size: 22px;
+        color: var(--white);
+      }
+      .agro-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .agro-row-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .agro-row-value {
+        color: var(--white);
+        font-weight: 800;
+        font-size: 18px;
+        font-variant-numeric: tabular-nums;
+      }
+      .stage-bar {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      .stage-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--emerald), var(--emerald-light));
+        border-radius: 999px;
+      }
+      .stage-label {
+        color: rgba(255,255,255,0.5);
+        font-size: 14px;
+        margin-top: 6px;
+      }
+
+      .intel-grid {
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 20px;
+        align-self: center;
+        height: 100%;
+      }
+      .chart-panel {
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.25);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        opacity: 0;
+      }
+      .mini-charts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        flex: 1;
+      }
+      .mini-chart {
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .mini-chart-label {
+        color: rgba(255,255,255,0.6);
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      .mini-chart-value {
+        font-family: "Syne";
+        font-weight: 900;
+        font-size: 36px;
+        color: var(--white);
+      }
+      .gauge-ring {
+        width: 72px;
+        height: 72px;
+      }
+      .gauge-ring circle {
+        fill: none;
+        stroke-width: 6;
+        stroke-linecap: round;
+      }
+      .gauge-ring .bg { stroke: rgba(255,255,255,0.1); }
+      .gauge-ring .fill {
+        stroke: var(--emerald-light);
+        stroke-dasharray: 226;
+        stroke-dashoffset: 226;
+        transform: rotate(-90deg);
+        transform-origin: center;
+      }
+      .chatbot-panel {
+        border-radius: 22px;
+        border: 1px solid rgba(22, 163, 74, 0.3);
+        background: rgba(22, 163, 74, 0.06);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        opacity: 0;
+      }
+      .chat-bubble {
+        padding: 16px 22px;
+        border-radius: 18px;
+        font-size: 18px;
+        line-height: 1.4;
+        max-width: 95%;
+        opacity: 0;
+      }
+      .chat-user {
+        background: var(--emerald);
+        color: var(--white);
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+      .chat-ai {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255,255,255,0.9);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+      .calc-chips {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .calc-chip {
+        padding: 10px 18px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255,255,255,0.7);
+        font-size: 15px;
+        font-weight: 600;
+        opacity: 0;
+      }
+
+      .community-grid {
+        display: grid;
+        grid-template-rows: 1fr 1fr 1fr;
+        gap: 18px;
+        align-self: center;
+        height: 100%;
+      }
+      .community-card {
+        border-radius: 22px;
+        border: 1px solid rgba(22, 163, 74, 0.2);
+        background: rgba(255, 255, 255, 0.92);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        opacity: 0;
+      }
+      .community-card-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: var(--emerald);
+        color: var(--white);
+        display: grid;
+        place-items: center;
+        font-size: 24px;
+      }
+      .community-card-title {
+        font-family: "Syne";
+        font-weight: 800;
+        font-size: 26px;
+        color: var(--forest);
+      }
+      .community-card-desc {
+        color: #475569;
+        font-size: 17px;
+        line-height: 1.4;
+      }
+      .community-items {
+        display: grid;
+        gap: 8px;
+        flex: 1;
+      }
+      .community-item {
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: rgba(22, 163, 74, 0.06);
+        border: 1px solid rgba(22, 163, 74, 0.12);
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--forest);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .community-item .check {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        background: var(--emerald);
+        color: var(--white);
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+
+      .finale-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
+      }
+      .finale-logo {
+        width: 180px;
+        height: 180px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        border: 2px solid rgba(255,255,255,0.25);
+        display: grid;
+        place-items: center;
+      }
+      .finale-logo img {
+        width: 140px;
+        height: 140px;
+        border-radius: 999px;
+      }
+      .finale-name {
+        margin-top: 32px;
+        font-size: 72px;
+        font-weight: 900;
+        color: var(--white);
+        letter-spacing: -2px;
+      }
+      .finale-rule {
+        width: 120px;
+        height: 5px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 3px;
+        margin: 20px auto;
+        opacity: 0;
+      }
+      .finale-tagline {
+        font-size: 26px;
+        color: rgba(255,255,255,0.85);
+        max-width: 900px;
+        line-height: 1.4;
+      }
+
+      .transition-overlay {
+        position: absolute;
+        inset: 0;
+        background: #000;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-root-p" id="root" data-composition-id="main-portrait" data-start="0" data-duration="73.665" data-width="1080" data-height="1920" class="root">
+      <div data-hf-id="hf-pvdu-p" class="transition-overlay" id="transOverlay"></div>
+
+      <audio data-hf-id="hf-bgm-p" id="bgm" class="clip" data-start="0" data-duration="73.665" data-track-index="0" src="assets/bgm.mp3"></audio>
+
+      <section data-hf-id="hf-s1-p" id="s1" class="clip plate" data-start="0" data-duration="8.448" data-track-index="1" style="background: #0b2414">
+        <div data-hf-id="hf-rpnj-p" class="plate-inner">
+          <div data-hf-id="hf-ukjd-p" class="masthead">
+            <div data-hf-id="hf-kjxv-p" class="brand-chip" id="s1-chip">
+              <img data-hf-id="hf-logo1-p" id="logo-s1" class="clip" data-start="0" data-duration="8.448" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+              <span data-hf-id="hf-ul88-p">Finca Tigrillo</span>
+            </div>
+            <div data-hf-id="hf-4zsw-p" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 18px" id="s1-tag">GESTIÓN GANADERA + EDUCACIÓN</div>
+          </div>
+          <div data-hf-id="hf-88jy-p" style="align-self: center">
+            <div data-hf-id="hf-ufkq-p" class="hero-title" id="s1-title">
+              Gestionar una finca y las prácticas académicas
+              <span data-hf-id="hf-xtcq-p" class="hero-accent" id="s1-accent">sin un sistema integral</span>
+              frena el progreso.
+            </div>
+            <div data-hf-id="hf-sl9c-p" class="hero-sub" id="s1-sub">Herramientas dispersas, registros manuales, decisiones tardías.</div>
+            <div data-hf-id="hf-tve6-p" class="pain-pills" id="s1-pills">
+              <div data-hf-id="hf-08r5-p" class="pain-pill">📋 Sin inventario centralizado</div>
+              <div data-hf-id="hf-yxg2-p" class="pain-pill">📅 Sin recordatorios automáticos</div>
+              <div data-hf-id="hf-njs0-p" class="pain-pill">📊 Sin reportes integrados</div>
+              <div data-hf-id="hf-2npf-p" class="pain-pill">🤝 Sin colaboración entre roles</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s2-p" id="s2" class="clip plate" data-start="8.448" data-duration="7.531" data-track-index="1" style="background: #ffffff">
+        <div data-hf-id="hf-ig3n-p" class="brand-center">
+          <div data-hf-id="hf-1lyl-p" class="brand-logo" id="s2-logo-wrap">
+            <div data-hf-id="hf-c6p0-p" class="glow" id="s2-glow"></div>
+            <img data-hf-id="hf-logo2-p" id="logo-s2" class="clip" data-start="8.448" data-duration="7.531" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+          </div>
+          <div data-hf-id="hf-tbkf-p" class="brand-name display" id="s2-name">FINCA TIGRILLO</div>
+          <div data-hf-id="hf-wt93-p" class="brand-sub" id="s2-sub">Un solo ecosistema digital para toda la gestión ganadera, agronómica y educativa.</div>
+          <div data-hf-id="hf-fwlr-p" class="role-chips" id="s2-roles">
+            <div data-hf-id="hf-dko1-p" class="role-chip" id="role1">
+              <span data-hf-id="hf-g34c-p" class="icon">👤</span> Administradores
+            </div>
+            <div data-hf-id="hf-9row-p" class="role-chip" id="role2">
+              <span data-hf-id="hf-rrvo-p" class="icon">📚</span> Docentes
+            </div>
+            <div data-hf-id="hf-qubm-p" class="role-chip" id="role3">
+              <span data-hf-id="hf-qkyl-p" class="icon">🎓</span> Estudiantes
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s3-p" id="s3" class="clip plate" data-start="15.979" data-duration="10.859" data-track-index="1" style="background: #0b2414">
+        <div data-hf-id="hf-u59b-p" class="plate-inner">
+          <div data-hf-id="hf-4thp-p" class="masthead">
+            <div data-hf-id="hf-y3hh-p" class="display" style="font-size: 48px; font-weight: 900; color: var(--white)" id="s3-title">Gestión ganadera integral</div>
+            <div data-hf-id="hf-sowh-p" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 18px" id="s3-sub">Registro · Reproducción · Leche · Camadas</div>
+          </div>
+          <div data-hf-id="hf-altk-p" style="align-self: center; display: grid; gap: 20px">
+            <div data-hf-id="hf-gobt-p" class="kpi-grid" id="s3-kpis">
+              <div data-hf-id="hf-rwnr-p" class="kpi" id="kpi1">
+                <div data-hf-id="hf-pv0r-p" class="kpi-label">Bovinos</div>
+                <div data-hf-id="hf-rtq7-p" class="kpi-value" data-target="48">0</div>
+                <div data-hf-id="hf-ux6l-p" class="kpi-ring"><svg data-hf-id="hf-3io1-p" viewBox="0 0 64 64"><circle data-hf-id="hf-cvph-p" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-k13a-p" class="fill" cx="32" cy="32" r="28" data-pct="0.80" /></svg></div>
+              </div>
+              <div data-hf-id="hf-h164-p" class="kpi" id="kpi2">
+                <div data-hf-id="hf-7hph-p" class="kpi-label">Equinos</div>
+                <div data-hf-id="hf-o5lw-p" class="kpi-value" data-target="12">0</div>
+                <div data-hf-id="hf-m5qp-p" class="kpi-ring"><svg data-hf-id="hf-gwut-p" viewBox="0 0 64 64"><circle data-hf-id="hf-x4gp-p" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-frq9-p" class="fill" cx="32" cy="32" r="28" data-pct="0.45" /></svg></div>
+              </div>
+              <div data-hf-id="hf-hstx-p" class="kpi" id="kpi3">
+                <div data-hf-id="hf-mrmk-p" class="kpi-label">Porcinos</div>
+                <div data-hf-id="hf-uv9w-p" class="kpi-value" data-target="7">0</div>
+                <div data-hf-id="hf-ncns-p" class="kpi-ring"><svg data-hf-id="hf-i3rw-p" viewBox="0 0 64 64"><circle data-hf-id="hf-ybds-p" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od3-p" class="fill" cx="32" cy="32" r="28" data-pct="0.25" /></svg></div>
+              </div>
+            </div>
+            <div data-hf-id="hf-gobt2-p" class="kpi-grid-extra" id="s3-kpis2">
+              <div data-hf-id="hf-hst4-p" class="kpi" id="kpi4">
+                <div data-hf-id="hf-mrm4-p" class="kpi-label">Caprinos</div>
+                <div data-hf-id="hf-uv94-p" class="kpi-value" data-target="15">0</div>
+                <div data-hf-id="hf-ncn4-p" class="kpi-ring"><svg data-hf-id="hf-i3r4-p" viewBox="0 0 64 64"><circle data-hf-id="hf-ybd4-p" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od4-p" class="fill" cx="32" cy="32" r="28" data-pct="0.55" /></svg></div>
+              </div>
+              <div data-hf-id="hf-hst5-p" class="kpi" id="kpi5">
+                <div data-hf-id="hf-mrm5-p" class="kpi-label">Aves</div>
+                <div data-hf-id="hf-uv95-p" class="kpi-value" data-target="120">0</div>
+                <div data-hf-id="hf-ncn5-p" class="kpi-ring"><svg data-hf-id="hf-i3r5-p" viewBox="0 0 64 64"><circle data-hf-id="hf-ybd5-p" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od5-p" class="fill" cx="32" cy="32" r="28" data-pct="0.90" /></svg></div>
+              </div>
+            </div>
+            <div data-hf-id="hf-xtra-p" class="kpi-extra" id="s3-extra">
+              <div data-hf-id="hf-xtr1-p" class="kpi-pill"><span data-hf-id="hf-xtr1d-p" class="dot"></span> Eventos reproductivos</div>
+              <div data-hf-id="hf-xtr2-p" class="kpi-pill"><span data-hf-id="hf-xtr2d-p" class="dot"></span> Producción de leche</div>
+              <div data-hf-id="hf-xtr3-p" class="kpi-pill"><span data-hf-id="hf-xtr3d-p" class="dot"></span> Camadas porcinas</div>
+              <div data-hf-id="hf-xtr4-p" class="kpi-pill"><span data-hf-id="hf-xtr4d-p" class="dot"></span> Historial de pesos</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s4-p" id="s4" class="clip plate" data-start="26.838" data-duration="11.349" data-track-index="1" style="background: #374151">
+        <div data-hf-id="hf-tqya-p" class="plate-inner">
+          <div data-hf-id="hf-60es-p" class="masthead">
+            <div data-hf-id="hf-52i6-p" class="display" style="font-size: 48px; font-weight: 900; color: var(--white)" id="s4-title">Salud animal e inteligencia artificial</div>
+            <div data-hf-id="hf-8qyu-p" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 18px" id="s4-sub">Vacunas · Recordatorios · Predicciones IA</div>
+          </div>
+          <div data-hf-id="hf-be80-p" class="split" id="s4-split">
+            <div data-hf-id="hf-wgbg-p" class="panel" id="vacPanel">
+              <div data-hf-id="hf-pi5w-p" class="panel-header">
+                <div data-hf-id="hf-5ph2-p" class="panel-icon">💉</div>
+                <div data-hf-id="hf-awsf-p" class="panel-title">Catálogo de vacunas</div>
+              </div>
+              <div data-hf-id="hf-844a-p" class="vax-list">
+                <div data-hf-id="hf-a507-p" class="vax-row" id="vac1">
+                  <div data-hf-id="hf-tze7-p" class="vax-badge">V</div>
+                  <div data-hf-id="hf-yeow-p">
+                    <div data-hf-id="hf-e3na-p" class="vax-name">Fiebre aftosa</div>
+                    <div data-hf-id="hf-lv64-p" class="vax-meta">Lote bovinos · 48 animales</div>
+                  </div>
+                  <div data-hf-id="hf-n7rq-p" class="vax-date">2026-06-20</div>
+                </div>
+                <div data-hf-id="hf-1h4c-p" class="vax-row" id="vac2">
+                  <div data-hf-id="hf-3zwv-p" class="vax-badge">V</div>
+                  <div data-hf-id="hf-y7yw-p">
+                    <div data-hf-id="hf-ttg4-p" class="vax-name">Brucelosis</div>
+                    <div data-hf-id="hf-oy87-p" class="vax-meta">Terneras · seguimiento</div>
+                  </div>
+                  <div data-hf-id="hf-8ra2-p" class="vax-date">2026-07-05</div>
+                </div>
+                <div data-hf-id="hf-28s5-p" class="vax-row" id="vac3">
+                  <div data-hf-id="hf-3llu-p" class="vax-badge">V</div>
+                  <div data-hf-id="hf-x11t-p">
+                    <div data-hf-id="hf-pi6m-p" class="vax-name">Clostridiosis</div>
+                    <div data-hf-id="hf-f1p0-p" class="vax-meta">Recordatorio automático</div>
+                  </div>
+                  <div data-hf-id="hf-r874-p" class="vax-date">2026-07-18</div>
+                </div>
+              </div>
+            </div>
+            <div data-hf-id="hf-djjw-p" class="panel" id="aiPanel">
+              <div data-hf-id="hf-4gng-p" class="panel-header">
+                <div data-hf-id="hf-3abs-p" class="panel-icon">🤖</div>
+                <div data-hf-id="hf-ynha-p" class="panel-title">Predicción reproductiva (IA)</div>
+              </div>
+              <div data-hf-id="hf-cpwp-p" class="ai-box" id="aiBox">
+                <div data-hf-id="hf-4e5b-p" class="ai-label">Fecha estimada de parto</div>
+                <div data-hf-id="hf-ti5k-p" class="ai-date" id="aiDate">14 SEP 2026<span data-hf-id="hf-x7yk-p" class="ai-cursor" id="aiCursor"></span></div>
+                <div data-hf-id="hf-5n36-p" class="ai-bar"><div data-hf-id="hf-st7v-p" class="ai-bar-fill" id="aiBar"></div></div>
+                <div data-hf-id="hf-abeu-p" class="ai-note">Progreso de gestación calculado por IA</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s5-p" id="s5" class="clip plate" data-start="38.187" data-duration="10.667" data-track-index="1" style="background: #0b2414">
+        <div data-hf-id="hf-tcn9-p" class="plate-inner">
+          <div data-hf-id="hf-5m3r-p" class="masthead">
+            <div data-hf-id="hf-1uo7-p" class="display" style="font-size: 48px; font-weight: 900; color: var(--white)" id="s5-title">Agronomía y gestión de potreros</div>
+            <div data-hf-id="hf-fadz-p" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 18px" id="s5-sub">Sembríos · Herramientas · Alimentación avícola</div>
+          </div>
+          <div data-hf-id="hf-4ex9-p" class="agro-grid" id="s5-agro">
+            <div data-hf-id="hf-cpka-p" class="agro-card" id="agro1">
+              <div data-hf-id="hf-4ka0-p" class="agro-card-header">
+                <div data-hf-id="hf-o4rk-p" class="agro-icon">🌱</div>
+                <div data-hf-id="hf-q4af-p" class="agro-card-title">Sembríos y potreros</div>
+              </div>
+              <div data-hf-id="hf-wpbp-p" class="agro-row">
+                <span data-hf-id="hf-oa58-p" class="agro-row-label">Potrero Norte</span>
+                <span data-hf-id="hf-r9as-p" class="agro-row-value">Pasto estrella</span>
+              </div>
+              <div data-hf-id="hf-qsqi-p" class="agro-row">
+                <span data-hf-id="hf-qsq1-p" class="agro-row-label">Etapa</span>
+                <span data-hf-id="hf-qsq2-p" class="agro-row-value">Crecimiento</span>
+              </div>
+              <div data-hf-id="hf-stg1-p" class="stage-bar"><div data-hf-id="hf-stg1f-p" class="stage-bar-fill" id="cropBar1"></div></div>
+              <div data-hf-id="hf-stg1l-p" class="stage-label">Etapa asistida por IA</div>
+            </div>
+            <div data-hf-id="hf-ld25-p" class="agro-card" id="agro2">
+              <div data-hf-id="hf-a8vu-p" class="agro-card-header">
+                <div data-hf-id="hf-mxuh-p" class="agro-icon">🔧</div>
+                <div data-hf-id="hf-2p13-p" class="agro-card-title">Herramientas y equipos</div>
+              </div>
+              <div data-hf-id="hf-6t5j-p" class="agro-row">
+                <span data-hf-id="hf-misx-p" class="agro-row-label">Maquinaria</span>
+                <span data-hf-id="hf-qgjj-p" class="agro-row-value">12 items</span>
+              </div>
+              <div data-hf-id="hf-t6ww-p" class="agro-row">
+                <span data-hf-id="hf-t6w1-p" class="agro-row-label">Veterinaria</span>
+                <span data-hf-id="hf-t6w2-p" class="agro-row-value">8 items</span>
+              </div>
+              <div data-hf-id="hf-t6w3-p" class="agro-row">
+                <span data-hf-id="hf-t6w4-p" class="agro-row-label">Stock bajo</span>
+                <span data-hf-id="hf-t6w5-p" class="agro-row-value" style="color: var(--danger)">⚠ 3 alertas</span>
+              </div>
+            </div>
+            <div data-hf-id="hf-mm91-p" class="agro-card" id="agro3">
+              <div data-hf-id="hf-odyq-p" class="agro-card-header">
+                <div data-hf-id="hf-mjl9-p" class="agro-icon">🐔</div>
+                <div data-hf-id="hf-2aq2-p" class="agro-card-title">Alimentación avícola</div>
+              </div>
+              <div data-hf-id="hf-ar9k-p" class="agro-row">
+                <span data-hf-id="hf-bhox-p" class="agro-row-label">Ross 308 AP</span>
+                <span data-hf-id="hf-20v3-p" class="agro-row-value">Día 28</span>
+              </div>
+              <div data-hf-id="hf-zqla-p" class="agro-row">
+                <span data-hf-id="hf-zql1-p" class="agro-row-label">Consumo diario</span>
+                <span data-hf-id="hf-zql2-p" class="agro-row-value">98 g/ave</span>
+              </div>
+              <div data-hf-id="hf-zql3-p" class="agro-row">
+                <span data-hf-id="hf-zql4-p" class="agro-row-label">Proyección semanal</span>
+                <span data-hf-id="hf-zql5-p" class="agro-row-value">Auto</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s6-p" id="s6" class="clip plate" data-start="48.854" data-duration="9.621" data-track-index="1" style="background: #1a2414">
+        <div data-hf-id="hf-tscp6-p" class="plate-inner">
+          <div data-hf-id="hf-mh6-p" class="masthead">
+            <div data-hf-id="hf-tt6-p" class="display" style="font-size: 48px; font-weight: 900; color: var(--white)" id="s6-title">Inteligencia operativa</div>
+            <div data-hf-id="hf-sb6-p" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 18px" id="s6-sub">Reportes · Calculadoras · Asistente IA</div>
+          </div>
+          <div data-hf-id="hf-intel-p" class="intel-grid" id="s6-intel">
+            <div data-hf-id="hf-charts-p" class="chart-panel" id="chartsPanel">
+              <div data-hf-id="hf-ch6h-p" class="panel-header">
+                <div data-hf-id="hf-ch6i-p" class="panel-icon">📊</div>
+                <div data-hf-id="hf-ch6t-p" class="panel-title">Dashboard de reportes</div>
+              </div>
+              <div data-hf-id="hf-mini-p" class="mini-charts">
+                <div data-hf-id="hf-mc1-p" class="mini-chart">
+                  <svg data-hf-id="hf-gauge-p" class="gauge-ring" viewBox="0 0 80 80">
+                    <circle data-hf-id="hf-gbg-p" class="bg" cx="40" cy="40" r="36" />
+                    <circle data-hf-id="hf-gfill-p" id="gaugeFill" class="fill" cx="40" cy="40" r="36" />
+                  </svg>
+                  <div data-hf-id="hf-mc1v-p" class="mini-chart-value" id="gaugeVal">0%</div>
+                  <div data-hf-id="hf-mc1l-p" class="mini-chart-label">Operatividad</div>
+                </div>
+                <div data-hf-id="hf-mc2-p" class="mini-chart">
+                  <div data-hf-id="hf-mc2v-p" class="mini-chart-value" data-target="94" id="vaxPct">0%</div>
+                  <div data-hf-id="hf-mc2l-p" class="mini-chart-label">Vacunación</div>
+                </div>
+                <div data-hf-id="hf-mc3-p" class="mini-chart">
+                  <div data-hf-id="hf-mc3v-p" class="mini-chart-value" data-target="202" id="totalAnimals">0</div>
+                  <div data-hf-id="hf-mc3l-p" class="mini-chart-label">Total animales</div>
+                </div>
+                <div data-hf-id="hf-mc4-p" class="mini-chart">
+                  <div data-hf-id="hf-mc4v-p" class="mini-chart-value">9</div>
+                  <div data-hf-id="hf-mc4l-p" class="mini-chart-label">Calculadoras</div>
+                </div>
+              </div>
+              <div data-hf-id="hf-calcs-p" class="calc-chips" id="calcChips">
+                <div data-hf-id="hf-cc1-p" class="calc-chip">Gestación</div>
+                <div data-hf-id="hf-cc2-p" class="calc-chip">Alimentación</div>
+                <div data-hf-id="hf-cc3-p" class="calc-chip">Conversión</div>
+                <div data-hf-id="hf-cc4-p" class="calc-chip">Intervalo partos</div>
+                <div data-hf-id="hf-cc5-p" class="calc-chip">Tasa preñez</div>
+              </div>
+            </div>
+            <div data-hf-id="hf-chat-p" class="chatbot-panel" id="chatPanel">
+              <div data-hf-id="hf-ch6h2-p" class="panel-header">
+                <div data-hf-id="hf-ch6i2-p" class="panel-icon" style="background: var(--emerald); color: white">🤖</div>
+                <div data-hf-id="hf-ch6t2-p" style="font-weight: 800; font-size: 22px; color: var(--forest)">Asistente IA</div>
+              </div>
+              <div data-hf-id="hf-cb1-p" class="chat-bubble chat-user" id="chatUser">¿Cuántos bovinos necesitan vacuna este mes?</div>
+              <div data-hf-id="hf-cb2-p" class="chat-bubble chat-ai" id="chatAI">12 bovinos del lote Norte tienen fiebre aftosa pendiente para el 20 de junio.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s7-p" id="s7" class="clip plate" data-start="58.475" data-duration="10.091" data-track-index="1" style="background: #f6f7f2">
+        <div data-hf-id="hf-tcn7-p" class="plate-inner">
+          <div data-hf-id="hf-mh7-p" class="masthead">
+            <div data-hf-id="hf-tt7-p" class="display" style="font-size: 48px; font-weight: 900; color: var(--forest)" id="s7-title">Comunidad educativa integrada</div>
+            <div data-hf-id="hf-sb7-p" style="color: rgba(26,36,20,0.6); font-weight: 600; font-size: 18px" id="s7-sub">Actividades · Progreso · Aprobaciones</div>
+          </div>
+          <div data-hf-id="hf-comm-p" class="community-grid" id="s7-comm">
+            <div data-hf-id="hf-cm1-p" class="community-card" id="comm1">
+              <div data-hf-id="hf-cm1i-p" class="community-card-icon">📋</div>
+              <div data-hf-id="hf-cm1t-p" class="community-card-title">Actividades</div>
+              <div data-hf-id="hf-cm1d-p" class="community-card-desc">Coordinación de tareas prácticas entre docentes y estudiantes.</div>
+              <div data-hf-id="hf-cm1items-p" class="community-items">
+                <div data-hf-id="hf-cm1a-p" class="community-item"><span data-hf-id="hf-cm1ac-p" class="check">✓</span> Asignación automática</div>
+                <div data-hf-id="hf-cm1b-p" class="community-item"><span data-hf-id="hf-cm1bc-p" class="check">✓</span> Seguimiento en tiempo real</div>
+              </div>
+            </div>
+            <div data-hf-id="hf-cm2-p" class="community-card" id="comm2">
+              <div data-hf-id="hf-cm2i-p" class="community-card-icon">🎓</div>
+              <div data-hf-id="hf-cm2t-p" class="community-card-title">Progreso estudiantil</div>
+              <div data-hf-id="hf-cm2d-p" class="community-card-desc">Visualización del avance individual y grupal de las prácticas.</div>
+              <div data-hf-id="hf-cm2items-p" class="community-items">
+                <div data-hf-id="hf-cm2a-p" class="community-item"><span data-hf-id="hf-cm2ac-p" class="check">✓</span> Gestión de estudiantes</div>
+                <div data-hf-id="hf-cm2b-p" class="community-item"><span data-hf-id="hf-cm2bc-p" class="check">✓</span> Reportes de avance</div>
+              </div>
+            </div>
+            <div data-hf-id="hf-cm3-p" class="community-card" id="comm3">
+              <div data-hf-id="hf-cm3i-p" class="community-card-icon">🔄</div>
+              <div data-hf-id="hf-cm3t-p" class="community-card-title">Flujos de aprobación</div>
+              <div data-hf-id="hf-cm3d-p" class="community-card-desc">Docentes solicitan cambios, administradores aprueban con control total.</div>
+              <div data-hf-id="hf-cm3items-p" class="community-items">
+                <div data-hf-id="hf-cm3a-p" class="community-item"><span data-hf-id="hf-cm3ac-p" class="check">✓</span> Solicitudes estructuradas</div>
+                <div data-hf-id="hf-cm3b-p" class="community-item"><span data-hf-id="hf-cm3bc-p" class="check">✓</span> Ejecución automática</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-s8-p" id="s8" class="clip plate" data-start="68.566" data-duration="5.099" data-track-index="1" style="background: #16a34a">
+        <div data-hf-id="hf-tscp8-p" class="finale-center">
+          <div data-hf-id="hf-7lvm-p" class="finale-logo" id="s8-logo">
+            <img data-hf-id="hf-logo8-p" id="logo-s8" class="clip" data-start="68.566" data-duration="5.099" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+          </div>
+          <div data-hf-id="hf-ark5-p" class="finale-name display" id="s8-name">FINCA TIGRILLO</div>
+          <div data-hf-id="hf-6ops-p" class="finale-rule" id="s8-rule"></div>
+          <div data-hf-id="hf-i6b3-p" class="finale-tagline" id="s8-tagline">La tecnología al servicio del agro educativo ecuatoriano.</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      const CIRC64 = 2 * Math.PI * 28;
+      const CIRC80 = 2 * Math.PI * 36;
+
+      tl.to("#s1", { opacity: 1, duration: 0.4, ease: "power2.out" }, 0);
+      tl.fromTo("#s1-chip", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.1);
+      tl.fromTo("#s1-tag", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.2);
+      tl.fromTo("#s1-title", { opacity: 0, y: 30, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "power4.out" }, 0.15);
+      tl.fromTo("#s1-accent", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2)" }, 0.5);
+      tl.fromTo("#s1-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.6);
+      tl.fromTo("#s1-pills .pain-pill", { opacity: 0, y: 16, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power3.out", stagger: 0.12 }, 0.85);
+      tl.to("#s1", { opacity: 0, duration: 0.3, ease: "power2.in" }, 8.0);
+
+      const s2 = 8.448;
+      tl.to("#s2", { opacity: 1, duration: 0.4, ease: "power2.out" }, s2);
+      tl.fromTo("#s2-glow", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1.1, duration: 0.7, ease: "power2.out" }, s2 + 0.05);
+      tl.to("#s2-glow", { scale: 1, duration: 1.2, ease: "sine.inOut", yoyo: true, repeat: 2 }, s2 + 0.85);
+      tl.fromTo("#logo-s2", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.5)" }, s2 + 0.1);
+      tl.fromTo("#s2-name", { opacity: 0, y: 24, letterSpacing: "8px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.8, ease: "power3.out" }, s2 + 0.35);
+      tl.fromTo("#s2-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, s2 + 0.6);
+      tl.fromTo(".role-chip", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, s2 + 0.9);
+      tl.to("#s2", { opacity: 0, duration: 0.3, ease: "power2.in" }, s2 + 7.1);
+
+      const s3 = 15.979;
+      tl.to("#s3", { opacity: 1, duration: 0.4, ease: "power2.out" }, s3);
+      tl.fromTo("#s3-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s3 + 0.05);
+      tl.fromTo("#s3-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s3 + 0.15);
+      tl.fromTo(".kpi", { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.3)", stagger: 0.1 }, s3 + 0.3);
+
+      document.querySelectorAll("#s3 .kpi-value").forEach((el) => {
+        const target = parseInt(el.dataset.target, 10);
+        const obj = { v: 0 };
+        tl.to(obj, {
+          v: target,
+          duration: 2.0,
+          ease: "power3.out",
+          onUpdate: () => { el.textContent = Math.round(obj.v); },
+        }, s3 + 0.5);
+      });
+      document.querySelectorAll("#s3 .kpi-ring .fill").forEach((el) => {
+        const pct = parseFloat(el.dataset.pct);
+        tl.to(el, {
+          strokeDashoffset: CIRC64 * (1 - pct),
+          duration: 2.0,
+          ease: "power3.out",
+        }, s3 + 0.5);
+      });
+
+      tl.fromTo(".kpi-pill", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.1 }, s3 + 2.8);
+      tl.to("#s3", { opacity: 0, duration: 0.3, ease: "power2.in" }, s3 + 10.4);
+
+      const s4 = 26.838;
+      tl.to("#s4", { opacity: 1, duration: 0.4, ease: "power2.out" }, s4);
+      tl.fromTo("#s4-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s4 + 0.05);
+      tl.fromTo("#s4-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s4 + 0.15);
+      tl.fromTo("#vacPanel", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, s4 + 0.25);
+      tl.fromTo("#aiPanel", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, s4 + 0.25);
+      tl.fromTo(".vax-row", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, s4 + 0.5);
+      tl.to("#aiBar", { width: "78%", duration: 1.8, ease: "power2.out" }, s4 + 1.2);
+      tl.to("#aiCursor", { opacity: 0, duration: 0.3, ease: "steps(1)", yoyo: true, repeat: 16 }, s4 + 1.2);
+      tl.to("#s4", { opacity: 0, duration: 0.3, ease: "power2.in" }, s4 + 10.9);
+
+      const s5 = 38.187;
+      tl.to("#s5", { opacity: 1, duration: 0.4, ease: "power2.out" }, s5);
+      tl.fromTo("#s5-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s5 + 0.05);
+      tl.fromTo("#s5-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s5 + 0.15);
+      tl.fromTo(".agro-card", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.2)", stagger: 0.15 }, s5 + 0.3);
+      tl.to("#cropBar1", { width: "65%", duration: 1.6, ease: "power2.out" }, s5 + 1.2);
+      tl.to("#s5", { opacity: 0, duration: 0.3, ease: "power2.in" }, s5 + 10.2);
+
+      const s6 = 48.854;
+      tl.to("#s6", { opacity: 1, duration: 0.4, ease: "power2.out" }, s6);
+      tl.fromTo("#s6-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s6 + 0.05);
+      tl.fromTo("#s6-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s6 + 0.15);
+      tl.fromTo("#chartsPanel", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, s6 + 0.25);
+      tl.fromTo("#chatPanel", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, s6 + 0.25);
+
+      const gaugeObj = { v: 0 };
+      tl.to(gaugeObj, {
+        v: 87,
+        duration: 2.0,
+        ease: "power3.out",
+        onUpdate: () => {
+          document.getElementById("gaugeVal").textContent = Math.round(gaugeObj.v) + "%";
+        },
+      }, s6 + 0.6);
+      tl.to("#gaugeFill", {
+        strokeDashoffset: CIRC80 * (1 - 0.87),
+        duration: 2.0,
+        ease: "power3.out",
+      }, s6 + 0.6);
+
+      const vaxObj = { v: 0 };
+      tl.to(vaxObj, {
+        v: 94,
+        duration: 2.0,
+        ease: "power3.out",
+        onUpdate: () => {
+          document.getElementById("vaxPct").textContent = Math.round(vaxObj.v) + "%";
+        },
+      }, s6 + 0.8);
+
+      const animObj = { v: 0 };
+      tl.to(animObj, {
+        v: 202,
+        duration: 2.0,
+        ease: "power3.out",
+        onUpdate: () => {
+          document.getElementById("totalAnimals").textContent = Math.round(animObj.v);
+        },
+      }, s6 + 1.0);
+
+      tl.fromTo(".calc-chip", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out", stagger: 0.08 }, s6 + 2.5);
+      tl.fromTo("#chatUser", { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, s6 + 1.5);
+      tl.fromTo("#chatAI", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, s6 + 2.5);
+      tl.to("#s6", { opacity: 0, duration: 0.3, ease: "power2.in" }, s6 + 9.2);
+
+      const s7 = 58.475;
+      tl.to("#s7", { opacity: 1, duration: 0.4, ease: "power2.out" }, s7);
+      tl.fromTo("#s7-title", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, s7 + 0.05);
+      tl.fromTo("#s7-sub", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, s7 + 0.15);
+      tl.fromTo(".community-card", { opacity: 0, y: 24, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.2)", stagger: 0.15 }, s7 + 0.3);
+      tl.fromTo(".community-item", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.3, ease: "power2.out", stagger: 0.06 }, s7 + 1.2);
+      tl.to("#s7", { opacity: 0, duration: 0.3, ease: "power2.in" }, s7 + 9.7);
+
+      const s8 = 68.566;
+      tl.to("#s8", { opacity: 1, duration: 0.5, ease: "power2.out" }, s8);
+      tl.fromTo("#s8-logo", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.4)" }, s8 + 0.1);
+      tl.fromTo("#s8-name", { opacity: 0, y: 20, letterSpacing: "6px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.7, ease: "power3.out" }, s8 + 0.35);
+      tl.to("#s8-rule", { opacity: 1, width: 120, duration: 0.5, ease: "power2.out" }, s8 + 0.6);
+      tl.fromTo("#s8-tagline", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, s8 + 0.75);
+      tl.to("#s8-logo", { scale: 1.03, duration: 1.0, ease: "sine.inOut", yoyo: true, repeat: 2 }, s8 + 1.2);
+
+      window.__timelines["main-portrait"] = tl;
+    </script>
+  </body>
+</html>

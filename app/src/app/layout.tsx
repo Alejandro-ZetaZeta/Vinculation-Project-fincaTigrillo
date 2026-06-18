@@ -83,6 +83,39 @@ export default function RootLayout({
         />
       </head>
       <body className={`${dmSans.variable} ${syne.variable} min-h-screen bg-background text-foreground antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'Finca Tigrillo',
+                url: appUrl,
+                logo: `${appUrl}/faviconOficial.svg`,
+                description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
+                foundingDate: '2025',
+                areaServed: 'Ecuador',
+              },
+              {
+                '@context': 'https://schema.org',
+                '@type': 'WebApplication',
+                name: 'Finca Tigrillo',
+                url: appUrl,
+                description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
+                applicationCategory: 'BusinessApplication',
+                applicationSubCategory: 'Livestock Management',
+                operatingSystem: 'Web',
+                offers: {
+                  '@type': 'Offer',
+                  price: '0',
+                  priceCurrency: 'USD',
+                },
+                inLanguage: 'es',
+              },
+            ]),
+          }}
+        />
         <ThemeProvider>
           {children}
         </ThemeProvider>

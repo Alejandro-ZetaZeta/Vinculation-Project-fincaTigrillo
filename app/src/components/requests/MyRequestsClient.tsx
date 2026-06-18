@@ -98,7 +98,7 @@ export function MyRequestsClient({ requests }: { requests: Request[] }) {
                     {r.reviewed_at ? ` · Revisada el ${formatDate(r.reviewed_at)}` : ''}
                   </p>
                   {r.status === 'rejected' && r.admin_notes && (
-                    <p className="text-xs text-red-500 mt-1.5 italic">"{r.admin_notes}"</p>
+                    <p className="text-xs text-red-500 mt-1.5 italic">&ldquo;{r.admin_notes}&rdquo;</p>
                   )}
                 </div>
                 <StatusBadge status={r.status} />
