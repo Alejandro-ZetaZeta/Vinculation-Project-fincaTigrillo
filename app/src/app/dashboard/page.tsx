@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getCurrentUser } from '@/lib/auth/actions'
 import { getAccessToken } from '@/lib/auth/cookies'
 import { createInsForgeServerClient } from '@/lib/insforge/server'
-import { PawPrint, CheckCircle, BarChart2, ArrowRight, TrendingUp, Receipt, Sprout, ClipboardList } from 'lucide-react'
+import { PawPrint, CheckCircle, BarChart2, ArrowRight, TrendingUp, Receipt, Sprout, ClipboardList, Fence } from 'lucide-react'
 import { StudentKanban } from '@/components/activities/StudentKanban'
 import { LocalDate } from '@/components/layout/LocalDate'
 
@@ -40,12 +40,14 @@ async function getCachedAnimalStats(accessToken: string | undefined) {
 ───────────────────────────────────────────── */
 async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | undefined, isAdmin: boolean }) {
   const insforge = createInsForgeServerClient(accessToken)
-  const [animals, { categories, types }, sembriosResult] = await Promise.all([
+  const [animals, { categories, types }, sembriosResult, potrerosResult] = await Promise.all([
     getCachedAnimalStats(accessToken),
     getCachedCatalog(accessToken),
     insforge.database.from('sembrios').select('id', { count: 'exact', head: true }),
+    insforge.database.from('potreros').select('id', { count: 'exact', head: true }),
   ])
-  const totalSembrios = (sembriosResult as { count: number | null }).count ?? 0
+  const totalSembrios  = (sembriosResult  as { count: number | null }).count ?? 0
+  const totalPotreros  = (potrerosResult  as { count: number | null }).count ?? 0
 
   const totalAnimals     = animals.length
   const activeAnimals    = animals.filter(a => a.status === 'activo').length
@@ -99,6 +101,17 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
       border: 'border-emerald-300/60',
       stagger: 'stagger-3',
     },
+    {
+      label: 'Potreros Registrados',
+      value: totalPotreros,
+      icon: Fence,
+      color: 'text-orange-600',
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+      iconColor: 'text-orange-600',
+      gradient: 'from-orange-500/10 to-orange-500/5',
+      border: 'border-orange-200/60',
+      stagger: 'stagger-4',
+    },
   ]
 
   /* chart segments — all real statuses */
@@ -116,72 +129,72 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-up stagger-1">
           <Link
             href="/dashboard/events?tab=facturas"
-            className="group flex items-center gap-2.5 px-4 py-3 rounded-xl
+            className="group flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 p-3 sm:px-4 sm:py-3 rounded-xl
                        bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/40
-                       hover:border-amber-400 hover:shadow-sm transition-all duration-200"
+                       hover:border-amber-400 hover:shadow-sm transition-all duration-200 text-center sm:text-left"
           >
             <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
               <Receipt className="w-4.5 h-4.5 text-amber-600" aria-hidden="true" />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[--foreground] truncate">Agregar Factura</p>
-              <p className="text-xs text-[--muted] truncate">Registrar nueva factura</p>
+            <div className="min-w-0 flex-1 w-full">
+              <p className="text-xs sm:text-sm font-semibold text-[--foreground] leading-tight break-words sm:truncate">Agregar Factura</p>
+              <p className="text-xs text-[--muted] truncate hidden sm:block">Registrar nueva factura</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-amber-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true" />
+            <ArrowRight className="w-4 h-4 text-amber-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200 hidden sm:block" aria-hidden="true" />
           </Link>
 
           <Link
             href="/dashboard/sembrios"
-            className="group flex items-center gap-2.5 px-4 py-3 rounded-xl
+            className="group flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 p-3 sm:px-4 sm:py-3 rounded-xl
                        bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/40
-                       hover:border-emerald-400 hover:shadow-sm transition-all duration-200"
+                       hover:border-emerald-400 hover:shadow-sm transition-all duration-200 text-center sm:text-left"
           >
             <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
               <Sprout className="w-4.5 h-4.5 text-emerald-600" aria-hidden="true" />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[--foreground] truncate">Registrar Sembrío</p>
-              <p className="text-xs text-[--muted] truncate">Nuevo cultivo o plantación</p>
+            <div className="min-w-0 flex-1 w-full">
+              <p className="text-xs sm:text-sm font-semibold text-[--foreground] leading-tight break-words sm:truncate">Registrar Sembrío</p>
+              <p className="text-xs text-[--muted] truncate hidden sm:block">Nuevo cultivo o plantación</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-emerald-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true" />
+            <ArrowRight className="w-4 h-4 text-emerald-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200 hidden sm:block" aria-hidden="true" />
           </Link>
 
           <Link
             href="/dashboard/reports"
-            className="group flex items-center gap-2.5 px-4 py-3 rounded-xl
+            className="group flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 p-3 sm:px-4 sm:py-3 rounded-xl
                        bg-sky-50 dark:bg-sky-900/20 border border-sky-200/60 dark:border-sky-800/40
-                       hover:border-sky-400 hover:shadow-sm transition-all duration-200"
+                       hover:border-sky-400 hover:shadow-sm transition-all duration-200 text-center sm:text-left"
           >
             <div className="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center shrink-0">
               <BarChart2 className="w-4.5 h-4.5 text-sky-600" aria-hidden="true" />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[--foreground] truncate">Reportes</p>
-              <p className="text-xs text-[--muted] truncate">Operacionales</p>
+            <div className="min-w-0 flex-1 w-full">
+              <p className="text-xs sm:text-sm font-semibold text-[--foreground] leading-tight break-words sm:truncate">Reportes</p>
+              <p className="text-xs text-[--muted] truncate hidden sm:block">Operacionales</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-sky-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true" />
+            <ArrowRight className="w-4 h-4 text-sky-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200 hidden sm:block" aria-hidden="true" />
           </Link>
 
           <Link
             href="/dashboard/requests"
-            className="group flex items-center gap-2.5 px-4 py-3 rounded-xl
+            className="group flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 p-3 sm:px-4 sm:py-3 rounded-xl
                        bg-violet-50 dark:bg-violet-900/20 border border-violet-200/60 dark:border-violet-800/40
-                       hover:border-violet-400 hover:shadow-sm transition-all duration-200"
+                       hover:border-violet-400 hover:shadow-sm transition-all duration-200 text-center sm:text-left"
           >
             <div className="w-9 h-9 rounded-lg bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center shrink-0">
               <ClipboardList className="w-4.5 h-4.5 text-violet-600" aria-hidden="true" />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[--foreground] truncate">Revisar Solicitudes</p>
-              <p className="text-xs text-[--muted] truncate">Gestionar solicitudes</p>
+            <div className="min-w-0 flex-1 w-full">
+              <p className="text-xs sm:text-sm font-semibold text-[--foreground] leading-tight break-words sm:truncate">Revisar Solicitudes</p>
+              <p className="text-xs text-[--muted] truncate hidden sm:block">Gestionar solicitudes</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-violet-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true" />
+            <ArrowRight className="w-4 h-4 text-violet-400 ml-auto shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200 hidden sm:block" aria-hidden="true" />
           </Link>
         </div>
       )}
 
       {/* ── KPI Cards ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4" role="list" aria-label="Estadísticas principales">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4" role="list" aria-label="Estadísticas principales">
         {stats.map(stat => {
           const Icon = stat.icon
           return (
@@ -190,8 +203,7 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
               role="listitem"
               className={`stat-card card-elevated animate-fade-up ${stat.stagger}
                 bg-gradient-to-br ${stat.gradient}
-                border ${stat.border}
-                last:col-span-2 sm:last:col-span-1`}
+                border ${stat.border}`}
             >
               <div className="p-5">
                 <div className="flex items-start justify-between mb-4">
