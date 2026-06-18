@@ -16,7 +16,9 @@ export function AvatarUploadModal({ onClose, onSuccess }: AvatarUploadModalProps
   const [imgSrc, setImgSrc]       = useState<string | null>(null)
   const [error, setError]         = useState('')
   const [offset, setOffset]       = useState({ x: 0, y: 0 })
-  const [imgDims, setImgDims]     = useState({ w: 0, h: 0 })
+  // useRef so drag handlers always read current dims (avoids stale-closure bug)
+  const imgDimsRef = useRef({ w: 0, h: 0 })
+  const [, forceUpdate]           = useState(0)   // trigger re-render after image loads
 
   const fileRef    = useRef<HTMLInputElement>(null)
   const imgRef     = useRef<HTMLImageElement>(null)
@@ -63,7 +65,8 @@ export function AvatarUploadModal({ onClose, onSuccess }: AvatarUploadModalProps
     const s = DISPLAY_SIZE / Math.min(img.naturalWidth, img.naturalHeight)
     const w = img.naturalWidth  * s
     const h = img.naturalHeight * s
-    setImgDims({ w, h })
+    imgDimsRef.current = { w, h }
+    forceUpdate(n => n + 1)   // re-render so <img> gets correct width/height
     setOffset({ x: (DISPLAY_SIZE - w) / 2, y: (DISPLAY_SIZE - h) / 2 })
   }
 
@@ -75,10 +78,11 @@ export function AvatarUploadModal({ onClose, onSuccess }: AvatarUploadModalProps
 
   function handlePointerMove(e: React.PointerEvent) {
     if (!dragRef.current) return
+    const { w, h } = imgDimsRef.current   // always fresh — no stale closure
     const dx   = e.clientX - dragRef.current.mx
     const dy   = e.clientY - dragRef.current.my
-    const newX = clamp(dragRef.current.ox + dx, DISPLAY_SIZE - imgDims.w, 0)
-    const newY = clamp(dragRef.current.oy + dy, DISPLAY_SIZE - imgDims.h, 0)
+    const newX = clamp(dragRef.current.ox + dx, DISPLAY_SIZE - w, 0)
+    const newY = clamp(dragRef.current.oy + dy, DISPLAY_SIZE - h, 0)
     setOffset({ x: newX, y: newY })
   }
 
@@ -100,8 +104,8 @@ export function AvatarUploadModal({ onClose, onSuccess }: AvatarUploadModalProps
         imgRef.current,
         -offset.x * ratio,
         -offset.y * ratio,
-        imgDims.w * ratio,
-        imgDims.h * ratio
+        imgDimsRef.current.w * ratio,
+        imgDimsRef.current.h * ratio
       )
 
       const blob = await new Promise<Blob>((resolve, reject) =>
@@ -220,8 +224,8 @@ export function AvatarUploadModal({ onClose, onSuccess }: AvatarUploadModalProps
                     position: 'absolute',
                     left: offset.x,
                     top: offset.y,
-                    width:  imgDims.w || 'auto',
-                    height: imgDims.h || 'auto',
+                    width:  imgDimsRef.current.w || 'auto',
+                    height: imgDimsRef.current.h || 'auto',
                     userSelect: 'none',
                     pointerEvents: 'none',
                   }}

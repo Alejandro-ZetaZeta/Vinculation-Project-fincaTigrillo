@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     // Pass the File/Blob directly so the SDK can read .size automatically
     const { error: uploadError } = await client.storage
       .from(BUCKET)
-      .upload(path, file)
+      .upload(path, file, { upsert: true })
 
     if (uploadError) {
       console.error('[avatar] Storage upload error:', uploadError)
