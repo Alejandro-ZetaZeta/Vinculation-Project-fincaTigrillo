@@ -705,6 +705,29 @@
         pointer-events: none;
         z-index: 100;
       }
+
+      .screenshot-frame {
+        width: 100%;
+        height: 100%;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 2px solid rgba(255,255,255,0.12);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        opacity: 0;
+      }
+      .screenshot-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top left;
+      }
+      .screenshot-frame-dark img {
+        /* no extra filter needed for dark bg */
+      }
+      .screenshot-frame-light {
+        border-color: rgba(0,0,0,0.1);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      }
     </style>
   </head>
   <body>
@@ -767,39 +790,9 @@
             <div data-hf-id="hf-y3hh" class="display" style="font-size: 56px; font-weight: 900; color: var(--white)" id="s3-title">Gestión ganadera integral</div>
             <div data-hf-id="hf-sowh" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 20px" id="s3-sub">Registro · Reproducción · Leche · Camadas</div>
           </div>
-          <div data-hf-id="hf-altk" style="align-self: center; display: grid; gap: 24px">
-            <div data-hf-id="hf-gobt" class="kpi-grid" id="s3-kpis">
-              <div data-hf-id="hf-rwnr" class="kpi" id="kpi1">
-                <div data-hf-id="hf-pv0r" class="kpi-label">Bovinos</div>
-                <div data-hf-id="hf-rtq7" class="kpi-value" data-target="48">0</div>
-                <div data-hf-id="hf-ux6l" class="kpi-ring"><svg data-hf-id="hf-3io1" viewBox="0 0 64 64"><circle data-hf-id="hf-cvph" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-k13a" class="fill" cx="32" cy="32" r="28" data-pct="0.80" /></svg></div>
-              </div>
-              <div data-hf-id="hf-h164" class="kpi" id="kpi2">
-                <div data-hf-id="hf-7hph" class="kpi-label">Equinos</div>
-                <div data-hf-id="hf-o5lw" class="kpi-value" data-target="12">0</div>
-                <div data-hf-id="hf-m5qp" class="kpi-ring"><svg data-hf-id="hf-gwut" viewBox="0 0 64 64"><circle data-hf-id="hf-x4gp" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-frq9" class="fill" cx="32" cy="32" r="28" data-pct="0.45" /></svg></div>
-              </div>
-              <div data-hf-id="hf-hstx" class="kpi" id="kpi3">
-                <div data-hf-id="hf-mrmk" class="kpi-label">Porcinos</div>
-                <div data-hf-id="hf-uv9w" class="kpi-value" data-target="7">0</div>
-                <div data-hf-id="hf-ncns" class="kpi-ring"><svg data-hf-id="hf-i3rw" viewBox="0 0 64 64"><circle data-hf-id="hf-ybds" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od3" class="fill" cx="32" cy="32" r="28" data-pct="0.25" /></svg></div>
-              </div>
-              <div data-hf-id="hf-hst4" class="kpi" id="kpi4">
-                <div data-hf-id="hf-mrm4" class="kpi-label">Caprinos</div>
-                <div data-hf-id="hf-uv94" class="kpi-value" data-target="15">0</div>
-                <div data-hf-id="hf-ncn4" class="kpi-ring"><svg data-hf-id="hf-i3r4" viewBox="0 0 64 64"><circle data-hf-id="hf-ybd4" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od4" class="fill" cx="32" cy="32" r="28" data-pct="0.55" /></svg></div>
-              </div>
-              <div data-hf-id="hf-hst5" class="kpi" id="kpi5">
-                <div data-hf-id="hf-mrm5" class="kpi-label">Aves</div>
-                <div data-hf-id="hf-uv95" class="kpi-value" data-target="120">0</div>
-                <div data-hf-id="hf-ncn5" class="kpi-ring"><svg data-hf-id="hf-i3r5" viewBox="0 0 64 64"><circle data-hf-id="hf-ybd5" class="bg" cx="32" cy="32" r="28" /><circle data-hf-id="hf-9od5" class="fill" cx="32" cy="32" r="28" data-pct="0.90" /></svg></div>
-              </div>
-            </div>
-            <div data-hf-id="hf-xtra" class="kpi-extra" id="s3-extra">
-              <div data-hf-id="hf-xtr1" class="kpi-pill"><span data-hf-id="hf-xtr1d" class="dot"></span> Eventos reproductivos</div>
-              <div data-hf-id="hf-xtr2" class="kpi-pill"><span data-hf-id="hf-xtr2d" class="dot"></span> Producción de leche</div>
-              <div data-hf-id="hf-xtr3" class="kpi-pill"><span data-hf-id="hf-xtr3d" class="dot"></span> Camadas porcinas</div>
-              <div data-hf-id="hf-xtr4" class="kpi-pill"><span data-hf-id="hf-xtr4d" class="dot"></span> Historial de pesos</div>
+          <div data-hf-id="hf-altk" style="align-self: center; width: 100%; height: 100%">
+            <div data-hf-id="hf-ss3" class="screenshot-frame" id="s3-ss">
+              <img data-hf-id="hf-ss3i" src="assets/screenshots/animals-list.png" alt="Gestión ganadera">
             </div>
           </div>
         </div>
@@ -811,50 +804,9 @@
             <div data-hf-id="hf-52i6" class="display" style="font-size: 56px; font-weight: 900; color: var(--white)" id="s4-title">Salud animal e inteligencia artificial</div>
             <div data-hf-id="hf-8qyu" style="color: rgba(255,255,255,0.6); font-weight: 600; font-size: 20px" id="s4-sub">Vacunas · Recordatorios · Predicciones IA</div>
           </div>
-          <div data-hf-id="hf-be80" class="split" id="s4-split">
-            <div data-hf-id="hf-wgbg" class="panel" id="vacPanel">
-              <div data-hf-id="hf-pi5w" class="panel-header">
-                <div data-hf-id="hf-5ph2" class="panel-icon">💉</div>
-                <div data-hf-id="hf-awsf" class="panel-title">Catálogo de vacunas</div>
-              </div>
-              <div data-hf-id="hf-844a" class="vax-list">
-                <div data-hf-id="hf-a507" class="vax-row" id="vac1">
-                  <div data-hf-id="hf-tze7" class="vax-badge">V</div>
-                  <div data-hf-id="hf-yeow">
-                    <div data-hf-id="hf-e3na" class="vax-name">Fiebre aftosa</div>
-                    <div data-hf-id="hf-lv64" class="vax-meta">Lote bovinos · 48 animales</div>
-                  </div>
-                  <div data-hf-id="hf-n7rq" class="vax-date">2026-06-20</div>
-                </div>
-                <div data-hf-id="hf-1h4c" class="vax-row" id="vac2">
-                  <div data-hf-id="hf-3zwv" class="vax-badge">V</div>
-                  <div data-hf-id="hf-y7yw">
-                    <div data-hf-id="hf-ttg4" class="vax-name">Brucelosis</div>
-                    <div data-hf-id="hf-oy87" class="vax-meta">Terneras · seguimiento</div>
-                  </div>
-                  <div data-hf-id="hf-8ra2" class="vax-date">2026-07-05</div>
-                </div>
-                <div data-hf-id="hf-28s5" class="vax-row" id="vac3">
-                  <div data-hf-id="hf-3llu" class="vax-badge">V</div>
-                  <div data-hf-id="hf-x11t">
-                    <div data-hf-id="hf-pi6m" class="vax-name">Clostridiosis</div>
-                    <div data-hf-id="hf-f1p0" class="vax-meta">Recordatorio automático</div>
-                  </div>
-                  <div data-hf-id="hf-r874" class="vax-date">2026-07-18</div>
-                </div>
-              </div>
-            </div>
-            <div data-hf-id="hf-djjw" class="panel" id="aiPanel">
-              <div data-hf-id="hf-4gng" class="panel-header">
-                <div data-hf-id="hf-3abs" class="panel-icon">🤖</div>
-                <div data-hf-id="hf-ynha" class="panel-title">Predicción reproductiva (IA)</div>
-              </div>
-              <div data-hf-id="hf-cpwp" class="ai-box" id="aiBox">
-                <div data-hf-id="hf-4e5b" class="ai-label">Fecha estimada de parto</div>
-                <div data-hf-id="hf-ti5k" class="ai-date" id="aiDate">14 SEP 2026<span data-hf-id="hf-x7yk" class="ai-cursor" id="aiCursor"></span></div>
-                <div data-hf-id="hf-5n36" class="ai-bar"><div data-hf-id="hf-st7v" class="ai-bar-fill" id="aiBar"></div></div>
-                <div data-hf-id="hf-abeu" class="ai-note">Progreso de gestación calculado por IA</div>
-              </div>
+          <div data-hf-id="hf-be80" style="width: 100%; height: 100%; align-self: center">
+            <div data-hf-id="hf-ss4" class="screenshot-frame" id="s4-ss">
+              <img data-hf-id="hf-ss4i" src="assets/screenshots/vaccines.png" alt="Vacunas e IA">
             </div>
           </div>
         </div>
