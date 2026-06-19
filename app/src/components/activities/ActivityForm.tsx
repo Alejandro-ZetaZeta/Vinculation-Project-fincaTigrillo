@@ -19,7 +19,7 @@ export function ActivityForm({ onCreated, onClose }: ActivityFormProps) {
   const [dueDate, setDueDate] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [result, setResult] = useState<{ assignedCount: number } | null>(null)
+  const [result, setResult] = useState<{ assignedCount: number; assignWarning?: string } | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -46,7 +46,7 @@ export function ActivityForm({ onCreated, onClose }: ActivityFormProps) {
         setError(data.error || 'Error al crear')
         return
       }
-      setResult({ assignedCount: data.assignedCount })
+      setResult({ assignedCount: data.assignedCount, assignWarning: data.assignWarning })
       setTimeout(() => {
         onCreated()
         onClose()
@@ -68,8 +68,15 @@ export function ActivityForm({ onCreated, onClose }: ActivityFormProps) {
       </div>
 
       {result && (
-        <div className="p-3 bg-success/10 border border-success/20 text-success rounded-xl text-sm">
-          ✓ Actividad creada y asignada a {result.assignedCount} estudiante{result.assignedCount !== 1 ? 's' : ''}
+        <div className={`p-3 rounded-xl text-sm border ${
+          result.assignWarning
+            ? 'bg-warning/10 border-warning/20 text-warning'
+            : 'bg-success/10 border-success/20 text-success'
+        }`}>
+          {result.assignWarning
+            ? `⚠ Actividad creada pero no se pudieron asignar estudiantes: ${result.assignWarning}`
+            : `✓ Actividad creada y asignada a ${result.assignedCount} estudiante${result.assignedCount !== 1 ? 's' : ''}`
+          }
         </div>
       )}
 

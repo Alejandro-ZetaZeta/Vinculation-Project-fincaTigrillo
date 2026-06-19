@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
       .eq('semester', target_semester)
 
     // Create assignments for all matching students
+    let assignWarning: string | undefined
     if (students && students.length > 0) {
       const assignments = students.map((s: { user_id: string }) => ({
         activity_id: activity[0].id,
@@ -88,12 +89,14 @@ export async function POST(request: NextRequest) {
       const { error: assignError } = await client.database.from('activity_assignments').insert(assignments)
       if (assignError) {
         console.error('Error creating assignments for activity', activity[0].id, assignError.message)
+        assignWarning = assignError.message
       }
     }
 
     return NextResponse.json({
       data: activity[0],
-      assignedCount: students?.length || 0
+      assignedCount: assignWarning ? 0 : (students?.length || 0),
+      ...(assignWarning ? { assignWarning } : {})
     })
   } catch {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
