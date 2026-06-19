@@ -19,19 +19,36 @@ export async function GET() {
     const { client } = await getAuthClient()
     if (!client) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-    const { data: activities } = await client.database
+    const { data: activities, error: actError } = await client.database
       .from('activities')
-      .select('*, user_profiles!created_by(full_name), activity_assignments(id, status, student_id)')
+      .select('*, activity_assignments(id, status, student_id)')
       .order('created_at', { ascending: false })
 
-    // Add counts and flatten creator name
+    if (actError) {
+      console.error('GET /api/activities query error:', actError.message)
+      return NextResponse.json({ error: actError.message }, { status: 500 })
+    }
+
+    // Fetch creator names separately (activities.created_by → auth.users.id,
+    // user_profiles.user_id → auth.users.id — no direct FK for PostgREST join)
+    const creatorIds = [...new Set((activities || []).map((a: Record<string, unknown>) => a.created_by as string).filter(Boolean))]
+    let creatorMap: Record<string, string> = {}
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await client.database
+        .from('user_profiles')
+        .select('user_id, full_name')
+        .in('user_id', creatorIds)
+      if (profiles) {
+        creatorMap = Object.fromEntries(profiles.map((p: { user_id: string; full_name: string }) => [p.user_id, p.full_name]))
+      }
+    }
+
+    // Add counts and creator name
     const withCounts = (activities || []).map((a: Record<string, unknown>) => {
       const assignments = (a.activity_assignments || []) as { status: string }[]
-      const profile = a.user_profiles as { full_name?: string } | null
       return {
         ...a,
-        created_by_name: profile?.full_name ?? null,
-        user_profiles: undefined,
+        created_by_name: creatorMap[a.created_by as string] ?? null,
         total: assignments.length,
         todo: assignments.filter(x => x.status === 'todo').length,
         in_progress: assignments.filter(x => x.status === 'in_progress').length,
