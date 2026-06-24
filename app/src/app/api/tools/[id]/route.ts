@@ -46,7 +46,7 @@ export async function GET(
         client.database.from('farm_tools').select('*').eq('id', id).maybeSingle(),
         client.database
           .from('farm_tool_movements')
-          .select('id, delta, reason, notes, created_at, created_by')
+          .select('id, delta, reason, notes, expected_return_date, created_at, created_by')
           .eq('tool_id', id)
           .order('created_at', { ascending: false })
           .limit(30),

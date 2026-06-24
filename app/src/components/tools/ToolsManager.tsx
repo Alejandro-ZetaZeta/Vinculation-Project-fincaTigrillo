@@ -30,10 +30,26 @@ const ADJUST_REASONS = [
   'Daño',
   'Mantenimiento',
   'Ajuste de inventario',
-  'Otro',
 ] as const
 
 type AdjustReason = typeof ADJUST_REASONS[number]
+
+// ── Per-reason rules (mirrors server) ──────────────────────────────────────
+// sign: 'positive' | 'negative' | 'either'
+// notesRequired: notes field becomes mandatory
+// requiresExpectedReturnDate: extra date input appears
+const REASON_RULES: Record<AdjustReason, {
+  sign: 'positive' | 'negative' | 'either'
+  notesRequired?: boolean
+  requiresExpectedReturnDate?: boolean
+}> = {
+  'Compra':               { sign: 'positive' },
+  'Devolución':           { sign: 'negative' },
+  'Pérdida':              { sign: 'negative' },
+  'Daño':                 { sign: 'negative' },
+  'Mantenimiento':        { sign: 'negative', requiresExpectedReturnDate: true },
+  'Ajuste de inventario': { sign: 'either',   notesRequired: true },
+}
 
 interface FarmTool {
   id: string
@@ -52,6 +68,7 @@ interface ToolMovement {
   delta: number
   reason: string
   notes: string | null
+  expected_return_date: string | null
   created_at: string
 }
 
@@ -121,7 +138,12 @@ export function ToolsManager() {
   const [stockDelta, setStockDelta]   = useState('')
   const [stockReason, setStockReason] = useState<AdjustReason>('Compra')
   const [stockNotes, setStockNotes]   = useState('')
+  const [stockReturnDate, setStockReturnDate] = useState('')
   const [stockSaving, setStockSaving] = useState(false)
+
+  // Per-tool "log has been fetched at least once" flag — used to distinguish
+  // "loading" from "empty result" in the movement log panel.
+  const [logLoaded, setLogLoaded]     = useState<Record<string, boolean>>({})
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const fetchTools = useCallback(async () => {
@@ -147,9 +169,31 @@ export function ToolsManager() {
       const res  = await fetch(`/api/tools/${toolId}`)
       const json = await res.json()
       setMovements(prev => ({ ...prev, [toolId]: json.movements || [] }))
+      setLogLoaded(prev => ({ ...prev, [toolId]: true }))
     } finally {
       setLoadingLog(null)
     }
+  }
+
+  // ── Enforce sign of stockDelta when reason changes ─────────────────────
+  // Keeps |value| and re-applies the sign mandated by the selected reason.
+  // User can still type freely, but switching reason snaps the sign in place.
+  function handleReasonChange(next: AdjustReason) {
+    setStockReason(next)
+    const rule = REASON_RULES[next]
+    const parsed = parseInt(stockDelta, 10)
+    if (!Number.isFinite(parsed) || parsed === 0) return
+    const abs = Math.abs(parsed)
+    if (rule.sign === 'positive' && parsed < 0) setStockDelta(String(abs))
+    if (rule.sign === 'negative' && parsed > 0) setStockDelta(String(-abs))
+  }
+
+  function resetStockForm() {
+    setStockOpen(null)
+    setStockDelta('')
+    setStockReason('Compra')
+    setStockNotes('')
+    setStockReturnDate('')
   }
 
   function toggleLog(toolId: string) {
@@ -244,13 +288,40 @@ export function ToolsManager() {
       setError('Ingresa un número válido distinto de cero')
       return
     }
+    const rule = REASON_RULES[stockReason]
+    // Sign pre-check (server is still source of truth)
+    if (rule.sign === 'positive' && delta <= 0) {
+      setError(`La razón "${stockReason}" requiere una cantidad positiva.`)
+      return
+    }
+    if (rule.sign === 'negative' && delta >= 0) {
+      setError(`La razón "${stockReason}" requiere una cantidad negativa.`)
+      return
+    }
+    const trimmedNotes = stockNotes.trim()
+    if (rule.notesRequired && trimmedNotes.length === 0) {
+      setError(`La razón "${stockReason}" requiere notas que expliquen el ajuste.`)
+      return
+    }
+    if (rule.requiresExpectedReturnDate && stockReturnDate.length === 0) {
+      setError('Mantenimiento requiere una fecha de regreso esperada.')
+      return
+    }
     setError('')
     setStockSaving(true)
     try {
+      const body: Record<string, unknown> = {
+        delta,
+        reason:   stockReason,
+        notes:    trimmedNotes.length > 0 ? trimmedNotes : null,
+      }
+      if (rule.requiresExpectedReturnDate) {
+        body.expected_return_date = stockReturnDate
+      }
       const res = await fetch(`/api/tools/${toolId}/stock`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delta, reason: stockReason, notes: stockNotes || null }),
+        body: JSON.stringify(body),
       })
       const json = await res.json()
       if (!res.ok) { setError(json?.error || 'Error al ajustar stock'); return }
@@ -265,10 +336,8 @@ export function ToolsManager() {
       }
       // Invalidate cached log so it re-fetches fresh on next open
       setMovements(prev => { const n = { ...prev }; delete n[toolId]; return n })
-      setStockOpen(null)
-      setStockDelta('')
-      setStockReason('Compra')
-      setStockNotes('')
+      setLogLoaded(prev => { const n = { ...prev }; n[toolId] = false; return n })
+      resetStockForm()
     } catch {
       setError('Error de conexión')
     } finally {
@@ -611,25 +680,50 @@ export function ToolsManager() {
                               <select
                                 id={`reason-${tool.id}`}
                                 value={stockReason}
-                                onChange={e => setStockReason(e.target.value as AdjustReason)}
+                                onChange={e => handleReasonChange(e.target.value as AdjustReason)}
                                 className="w-full px-3 py-2 rounded-xl bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                               >
-                                {ADJUST_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+                                {ADJUST_REASONS.map(r => {
+                                  const r0 = REASON_RULES[r]
+                                  const signLabel = r0.sign === 'positive' ? ' (+)' : r0.sign === 'negative' ? ' (−)' : ''
+                                  return <option key={r} value={r}>{r}{signLabel}</option>
+                                })}
                               </select>
                             </div>
                             {/* Notes */}
                             <div className="space-y-1">
-                              <label className="text-xs font-medium text-muted" htmlFor={`notes-${tool.id}`}>Notas</label>
+                              <label className="text-xs font-medium text-muted" htmlFor={`notes-${tool.id}`}>
+                                Notas {REASON_RULES[stockReason].notesRequired && <span className="text-danger">*</span>}
+                              </label>
                               <input
                                 id={`notes-${tool.id}`}
                                 type="text"
                                 value={stockNotes}
                                 onChange={e => setStockNotes(e.target.value)}
-                                placeholder="(opcional)"
+                                placeholder={REASON_RULES[stockReason].notesRequired ? 'Obligatorio: explica el motivo' : '(opcional)'}
                                 className="w-full px-3 py-2 rounded-xl bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                               />
                             </div>
                           </div>
+                          {/* Maintenance-only: expected return date */}
+                          {REASON_RULES[stockReason].requiresExpectedReturnDate && (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              <div className="space-y-1 sm:col-span-1">
+                                <label className="text-xs font-medium text-muted" htmlFor={`return-${tool.id}`}>
+                                  Fecha de regreso esperada <span className="text-danger">*</span>
+                                </label>
+                                <input
+                                  id={`return-${tool.id}`}
+                                  type="date"
+                                  value={stockReturnDate}
+                                  min={new Date().toISOString().slice(0, 10)}
+                                  onChange={e => setStockReturnDate(e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                                <p className="text-[10px] text-muted">Temporal — la herramienta vuelve al inventario.</p>
+                              </div>
+                            </div>
+                          )}
                           <div className="flex gap-2">
                             <button
                               type="button"
@@ -642,7 +736,7 @@ export function ToolsManager() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => { setStockOpen(null); setStockDelta(''); setStockReason('Compra'); setStockNotes('') }}
+                              onClick={resetStockForm}
                               className="px-3 py-2 rounded-xl border border-border hover:bg-surface-hover text-muted text-xs"
                               aria-label="Cancelar ajuste"
                             >
@@ -660,7 +754,7 @@ export function ToolsManager() {
                         type="button"
                         onClick={() => {
                           if (isStockOpen) {
-                            setStockOpen(null); setStockDelta(''); setStockReason('Compra'); setStockNotes('')
+                            resetStockForm()
                           } else {
                             setStockOpen(tool.id); setEditing(null)
                           }
@@ -742,7 +836,12 @@ export function ToolsManager() {
                 {/* ── Movement log panel ────────────────────────────── */}
                 {isLogOpen && (
                   <div id={`log-${tool.id}`} className="border-t border-border/60 bg-background px-5 py-4">
-                    {(movements[tool.id] || []).length === 0 ? (
+                    {loadingLog === tool.id || !logLoaded[tool.id] ? (
+                      <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                        Cargando movimientos…
+                      </div>
+                    ) : (movements[tool.id] || []).length === 0 ? (
                       <p className="text-xs text-muted text-center py-2">Sin movimientos registrados</p>
                     ) : (
                       <ul className="space-y-2" aria-label={`Historial de ${tool.name}`}>
@@ -761,6 +860,11 @@ export function ToolsManager() {
                                     {m.delta > 0 ? `+${m.delta}` : m.delta} {tool.unit}
                                   </span>
                                   {' '}— {m.reason}
+                                  {m.expected_return_date && (
+                                    <span className="ml-1.5 text-[10px] font-normal text-yellow-700 dark:text-yellow-400">
+                                      · regreso: {new Date(m.expected_return_date + 'T00:00:00').toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                    </span>
+                                  )}
                                 </p>
                                 {m.notes && <p className="text-[11px] text-muted">{m.notes}</p>}
                               </div>

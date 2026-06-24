@@ -27,30 +27,41 @@ async function getAdminClient() {
   return { client: insforge, userId: userData.user.id, error: null as string | null, status: 200 }
 }
 
-// Valid reasons for stock adjustments (enforced server-side as well as UI)
-const VALID_REASONS = [
-  'Compra',
-  'Devolución',
-  'Pérdida',
-  'Daño',
-  'Mantenimiento',
-  'Ajuste de inventario',
-  'Otro',
-] as const
+// ── Per-reason rules ──────────────────────────────────────────────────────
+// Every reason enforces a delta sign and (optionally) required fields.
+// Sign values: 'positive' | 'negative' | 'either'
+type ReasonRule = {
+  sign: 'positive' | 'negative' | 'either'
+  notesRequired?: boolean
+  requiresExpectedReturnDate?: boolean
+}
 
-type AdjustReason = typeof VALID_REASONS[number]
+const REASON_RULES: Record<string, ReasonRule> = {
+  'Compra':               { sign: 'positive' },
+  'Devolución':           { sign: 'negative' },
+  'Pérdida':              { sign: 'negative' },
+  'Daño':                 { sign: 'negative' },
+  'Mantenimiento':        { sign: 'negative', requiresExpectedReturnDate: true },
+  'Ajuste de inventario': { sign: 'either',   notesRequired: true },
+}
+
+const VALID_REASONS = Object.keys(REASON_RULES) as Array<keyof typeof REASON_RULES>
+
+type AdjustReason = keyof typeof REASON_RULES
 
 function isValidReason(v: unknown): v is AdjustReason {
-  return typeof v === 'string' && (VALID_REASONS as readonly string[]).includes(v)
+  return typeof v === 'string' && v in REASON_RULES
 }
 
 // ────────────────────────────────────────────────────────────────────────────
 // PATCH /api/tools/[id]/stock
 // Body: {
-//   delta:   number  — positive = add stock, negative = remove stock (required, non-zero integer)
-//   reason:  string  — must match VALID_REASONS (required)
-//   notes:   string  — optional free text
+//   delta:                 number — non-zero integer; sign must match reason rule
+//   reason:                string — one of REASON_RULES keys
+//   notes:                 string — required when reason = 'Ajuste de inventario'
+//   expected_return_date:  string — YYYY-MM-DD; required when reason = 'Mantenimiento'
 // }
+//
 // Validates that resulting stock will not go below 0.
 // Atomically updates farm_tools.stock and inserts a farm_tool_movements row.
 // Admin-only.
@@ -65,7 +76,7 @@ export async function PATCH(
     if (!client) return NextResponse.json({ error }, { status })
 
     const body = await request.json()
-    const { delta, reason, notes } = body
+    const { delta, reason, notes, expected_return_date } = body
 
     // ── Validate delta ───────────────────────────────────────────────────
     if (
@@ -85,6 +96,58 @@ export async function PATCH(
         { error: `Razón inválida. Valores permitidos: ${VALID_REASONS.join(', ')}` },
         { status: 400 },
       )
+    }
+
+    const rule = REASON_RULES[reason]
+
+    // ── Enforce sign of delta per reason ─────────────────────────────────
+    if (rule.sign === 'positive' && delta <= 0) {
+      return NextResponse.json(
+        { error: `La razón "${reason}" requiere una cantidad positiva (delta > 0).` },
+        { status: 400 },
+      )
+    }
+    if (rule.sign === 'negative' && delta >= 0) {
+      return NextResponse.json(
+        { error: `La razón "${reason}" requiere una cantidad negativa (delta < 0).` },
+        { status: 400 },
+      )
+    }
+
+    // ── Normalize and validate notes (when required) ─────────────────────
+    const trimmedNotes = typeof notes === 'string' ? notes.trim() : ''
+    if (rule.notesRequired && trimmedNotes.length === 0) {
+      return NextResponse.json(
+        { error: `La razón "${reason}" requiere notas que expliquen el ajuste.` },
+        { status: 400 },
+      )
+    }
+
+    // ── Validate expected_return_date (when required) ────────────────────
+    let parsedReturnDate: string | null = null
+    if (rule.requiresExpectedReturnDate) {
+      if (typeof expected_return_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(expected_return_date)) {
+        return NextResponse.json(
+          { error: 'Mantenimiento requiere una fecha de regreso esperada (YYYY-MM-DD).' },
+          { status: 400 },
+        )
+      }
+      const d = new Date(expected_return_date + 'T00:00:00Z')
+      if (Number.isNaN(d.getTime())) {
+        return NextResponse.json(
+          { error: 'Fecha de regreso inválida.' },
+          { status: 400 },
+        )
+      }
+      const today = new Date()
+      today.setUTCHours(0, 0, 0, 0)
+      if (d.getTime() < today.getTime()) {
+        return NextResponse.json(
+          { error: 'La fecha de regreso no puede ser en el pasado.' },
+          { status: 400 },
+        )
+      }
+      parsedReturnDate = expected_return_date
     }
 
     // ── Fetch current stock ──────────────────────────────────────────────
@@ -115,15 +178,18 @@ export async function PATCH(
     if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 400 })
 
     // 2. Insert movement record
+    const movementRow: Record<string, unknown> = {
+      tool_id:    id,
+      delta,
+      reason,
+      notes:      trimmedNotes.length > 0 ? trimmedNotes : null,
+      created_by: userId,
+    }
+    if (parsedReturnDate) movementRow.expected_return_date = parsedReturnDate
+
     const { data: movement, error: movErr } = await client.database
       .from('farm_tool_movements')
-      .insert([{
-        tool_id:    id,
-        delta,
-        reason,
-        notes:      notes ? String(notes).trim() : null,
-        created_by: userId,
-      }])
+      .insert([movementRow])
       .select()
 
     if (movErr) return NextResponse.json({ error: movErr.message }, { status: 400 })
