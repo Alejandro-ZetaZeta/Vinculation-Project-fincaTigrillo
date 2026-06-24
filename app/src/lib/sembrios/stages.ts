@@ -14,8 +14,17 @@ export const DEFAULT_STAGES: StageDefinition[] = [
   { key: 'cosecha', label: 'Cosecha', order: 6, duration_days: 0 },
 ]
 
+function parseLocalDate(dateStr: string): Date {
+  if (dateStr.includes('T')) {
+    const d = new Date(dateStr)
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  }
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, (m ?? 1) - 1, d ?? 1)
+}
+
 export function getDaysSince(dateStr: string): number {
-  const base = new Date(dateStr + 'T00:00:00')
+  const base = parseLocalDate(dateStr)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return Math.floor((today.getTime() - base.getTime()) / 86_400_000)
@@ -97,8 +106,18 @@ export function shouldSuggestStage(
 export function buildTimeline(
   stages: StageDefinition[],
   currentStage: string | null,
-  stageLogs: SembrioStageLog[]
+  stageLogs: SembrioStageLog[],
+  referenceDate?: string | null
 ): StageTimelineEntry[] {
+  const emptyExtras: Pick<StageTimelineEntry, 'days_in_current' | 'is_overdue' | 'days_overdue' | 'progress_pct' | 'reference_date' | 'projected_end_date'> = {
+    days_in_current: null,
+    is_overdue: false,
+    days_overdue: 0,
+    progress_pct: 0,
+    reference_date: null,
+    projected_end_date: null,
+  }
+
   if (!currentStage || stages.length === 0) {
     return stages.map(s => ({
       key: s.key,
@@ -107,6 +126,7 @@ export function buildTimeline(
       status: 'future' as const,
       entered_at: null,
       duration_days: s.duration_days,
+      ...emptyExtras,
     }))
   }
 
@@ -119,6 +139,7 @@ export function buildTimeline(
       status: 'future' as const,
       entered_at: null,
       duration_days: s.duration_days,
+      ...emptyExtras,
     }))
   }
 
@@ -126,6 +147,36 @@ export function buildTimeline(
   for (const log of stageLogs) {
     if (!logMap.has(log.to_stage)) {
       logMap.set(log.to_stage, log.created_at)
+    }
+  }
+
+  let currentExtras = { ...emptyExtras }
+  if (referenceDate) {
+    const daysIn = getDaysSince(referenceDate)
+    const dur = currentDef.duration_days
+    if (dur > 0) {
+      const pct = Math.min(100, Math.round((daysIn / dur) * 100))
+      const overdue = daysIn > dur
+      const daysOver = overdue ? daysIn - dur : 0
+      const projectedEnd = parseLocalDate(referenceDate)
+      projectedEnd.setDate(projectedEnd.getDate() + dur)
+      currentExtras = {
+        days_in_current: daysIn,
+        is_overdue: overdue,
+        days_overdue: daysOver,
+        progress_pct: pct,
+        reference_date: referenceDate,
+        projected_end_date: projectedEnd.toISOString().slice(0, 10),
+      }
+    } else {
+      currentExtras = {
+        days_in_current: daysIn,
+        is_overdue: false,
+        days_overdue: 0,
+        progress_pct: 0,
+        reference_date: referenceDate,
+        projected_end_date: null,
+      }
     }
   }
 
@@ -146,6 +197,7 @@ export function buildTimeline(
       status,
       entered_at: logMap.get(s.key) || null,
       duration_days: s.duration_days,
+      ...(s.order === currentDef.order ? currentExtras : emptyExtras),
     }
   })
 }
