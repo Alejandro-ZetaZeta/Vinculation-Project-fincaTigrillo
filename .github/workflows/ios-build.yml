@@ -5,10 +5,10 @@ name: iOS Shell Build (Debug Verification)
 # NO archive, NO TestFlight upload — the ULEAM IT Matrix Team handles that on
 # their institutional Mac with their own Apple Developer account.
 #
-# xcodebuild runs with `-dry-run` only: validates the project + resolves the
-# SPM package graph WITHOUT downloading or compiling anything. This avoids
-# the macOS runner "stuck in Resolve Package Graph" issue that occurs when
-# attempting a full build from a fresh CI environment.
+# xcodebuild runs with `-resolvePackageDependencies` only: validates the
+# project + resolves the SPM package graph WITHOUT downloading or compiling
+# anything. This avoids the macOS runner "stuck in Resolve Package Graph"
+# issue that occurs when attempting a full build from a fresh CI environment.
 #
 # This workflow is intentionally read-only against the Apple ecosystem.
 # No .p12, no .p8, no .mobileprovision, no App Store Connect secrets.
@@ -31,7 +31,7 @@ concurrency:
 
 jobs:
   build-ios-shell:
-    name: Scaffold + xcodebuild -dry-run (iphonesimulator, Debug)
+    name: Scaffold + xcodebuild resolvePackageDependencies (iphonesimulator, Debug)
     runs-on: macos-latest
     timeout-minutes: 30
 
@@ -98,10 +98,11 @@ jobs:
 
       - name: xcodebuild Dependency Verification (SPM)
         # SPM-native invocation: target the .xcodeproj (NOT a workspace).
-        # `-dry-run` validates the project + resolves the SPM package graph
-        # WITHOUT downloading or compiling anything. Avoids the macOS runner
-        # "stuck in Resolve Package Graph" issue that occurs when attempting
-        # a full build from a fresh CI environment.
+        # `-resolvePackageDependencies` resolves the SPM package graph and
+        # exits WITHOUT compiling. Equivalent to a "dry run" but uses a flag
+        # that actually exists (xcodebuild has no `-dry-run` — using it
+        # yields exit code 64 / EX_USAGE). Avoids the macOS runner
+        # "stuck in Resolve Package Graph" issue from a fresh CI env.
         #
         # No code signing: iphonesimulator SDK does not require it.
         working-directory: ios-shell
@@ -118,8 +119,7 @@ jobs:
             -resolvePackageDependencies \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            -dry-run
+            CODE_SIGN_IDENTITY=""
 
       - name: Summary
         if: always()

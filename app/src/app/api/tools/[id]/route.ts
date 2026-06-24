@@ -46,7 +46,7 @@ export async function GET(
         client.database.from('farm_tools').select('*').eq('id', id).maybeSingle(),
         client.database
           .from('farm_tool_movements')
-          .select('id, delta, reason, notes, created_at, created_by')
+          .select('id, delta, reason, notes, expected_return_date, created_at, created_by')
           .eq('tool_id', id)
           .order('created_at', { ascending: false })
           .limit(30),
@@ -106,11 +106,78 @@ export async function PUT(
 
 // ────────────────────────────────────────────────────────────────────────────
 // DELETE /api/tools/[id]
-// Soft-delete (sets is_active = false) when movement history exists.
-// Hard-delete only when the tool has never had any stock movement.
+// Default: soft-delete (sets is_active = false) when movement history exists;
+//          hard-delete only when the tool has never had any stock movement.
+// ?force=true: ALWAYS hard-delete, cascading all movements (irreversible).
 // Admin-only.
 // ────────────────────────────────────────────────────────────────────────────
 export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params
+    const { client, error, status } = await getAdminClient()
+    if (!client) return NextResponse.json({ error }, { status })
+
+    const force = new URL(request.url).searchParams.get('force') === 'true'
+
+    // Check current state + movement count
+    const [{ data: tool, error: toolErr }, { count, error: countErr }] =
+      await Promise.all([
+        client.database.from('farm_tools').select('is_active').eq('id', id).maybeSingle(),
+        client.database
+          .from('farm_tool_movements')
+          .select('id', { count: 'exact', head: true })
+          .eq('tool_id', id),
+      ])
+
+    if (toolErr)  return NextResponse.json({ error: toolErr.message  }, { status: 400 })
+    if (countErr) return NextResponse.json({ error: countErr.message }, { status: 400 })
+    if (!tool)    return NextResponse.json({ error: 'Herramienta no encontrada' }, { status: 404 })
+
+    const movementCount = count ?? 0
+
+    // Hard-delete path
+    if (force || movementCount === 0) {
+      const { error: deleteErr } = await client.database
+        .from('farm_tools')
+        .delete()
+        .eq('id', id)
+
+      if (deleteErr) return NextResponse.json({ error: deleteErr.message }, { status: 400 })
+      return NextResponse.json({
+        success:      true,
+        soft:         false,
+        deleted:      true,
+        movementsLost: movementCount,
+      })
+    }
+
+    // Soft-delete path (tool has history)
+    if (tool.is_active === false) {
+      // Already inactive — no-op, just confirm.
+      return NextResponse.json({ success: true, soft: true, alreadyInactive: true })
+    }
+
+    const { error: updateErr } = await client.database
+      .from('farm_tools')
+      .update({ is_active: false })
+      .eq('id', id)
+
+    if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 400 })
+    return NextResponse.json({ success: true, soft: true })
+  } catch {
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// POST /api/tools/[id]/reactivate
+// Reactivates a soft-deleted tool (sets is_active = true).
+// Admin-only.
+// ────────────────────────────────────────────────────────────────────────────
+export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -119,33 +186,27 @@ export async function DELETE(
     const { client, error, status } = await getAdminClient()
     if (!client) return NextResponse.json({ error }, { status })
 
-    // Check if any movements exist
-    const { count, error: countErr } = await client.database
-      .from('farm_tool_movements')
-      .select('id', { count: 'exact', head: true })
-      .eq('tool_id', id)
+    const { data: current, error: fetchErr } = await client.database
+      .from('farm_tools')
+      .select('is_active')
+      .eq('id', id)
+      .maybeSingle()
 
-    if (countErr) return NextResponse.json({ error: countErr.message }, { status: 400 })
+    if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 400 })
+    if (!current) return NextResponse.json({ error: 'Herramienta no encontrada' }, { status: 404 })
 
-    if ((count ?? 0) > 0) {
-      // Has history → soft-delete only
-      const { error: updateErr } = await client.database
-        .from('farm_tools')
-        .update({ is_active: false })
-        .eq('id', id)
-
-      if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 400 })
-      return NextResponse.json({ success: true, soft: true })
+    if (current.is_active === true) {
+      return NextResponse.json({ success: true, alreadyActive: true })
     }
 
-    // No history → hard-delete
-    const { error: deleteErr } = await client.database
+    const { data, error: updateErr } = await client.database
       .from('farm_tools')
-      .delete()
+      .update({ is_active: true })
       .eq('id', id)
+      .select()
 
-    if (deleteErr) return NextResponse.json({ error: deleteErr.message }, { status: 400 })
-    return NextResponse.json({ success: true, soft: false })
+    if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 400 })
+    return NextResponse.json({ success: true, data: data?.[0] })
   } catch {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

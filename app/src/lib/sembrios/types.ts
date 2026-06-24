@@ -65,6 +65,12 @@ export interface StageTimelineEntry {
   status: 'completed' | 'current' | 'future'
   entered_at: string | null
   duration_days: number
+  days_in_current?: number | null
+  is_overdue?: boolean
+  days_overdue?: number
+  progress_pct?: number
+  reference_date?: string | null
+  projected_end_date?: string | null
 }
 
 export interface SuggestionResult {

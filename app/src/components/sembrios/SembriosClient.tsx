@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sprout, Plus, MapPin, Ruler, Trash2, X, ChevronRight, Leaf, TreePine, Calendar, Edit, Check, AlertTriangle, Clock, Settings, FileText } from 'lucide-react'
+import { Sprout, Plus, MapPin, Ruler, Trash2, X, ChevronRight, Leaf, TreePine, Calendar, Edit, Check, AlertTriangle, Clock, Settings, FileText, Info, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import { shouldSuggestStage, buildTimeline, getStageByKey, DEFAULT_STAGES } from '@/lib/sembrios/stages'
 import type { StageDefinition, StageSuggestion, SembrioStageConfig, SembrioStageLog } from '@/lib/sembrios/types'
@@ -295,9 +295,8 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
           .semb-detail-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .semb-suggestion-btns { flex-direction: column !important; }
           .semb-suggestion-btns button { min-width: 0 !important; width: 100% !important; justify-content: center !important; }
-          .semb-timeline { flex-direction: column !important; align-items: stretch !important; gap: 1rem !important; }
-          .semb-timeline > div { flex: 0 0 100% !important; min-width: 0 !important; }
-          .semb-timeline-connector { display: none !important; }
+          .semb-timeline-desktop { display: none !important; }
+          .semb-timeline-mobile { display: block !important; }
           .semb-potrero-grid { grid-template-columns: 1fr !important; }
           .semb-form-grid { grid-template-columns: 1fr !important; }
         }
@@ -548,7 +547,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                         {pendingSuggestion.message || `Basado en ${pendingSuggestion.days_in_current} días desde la última actualización, el ${selectedSembrio.tipo_cultivo} (${selectedSembrio.potreros?.nombre}) ha completado teóricamente '${getStageByKey(stageConfig?.stages || DEFAULT_STAGES, pendingSuggestion.current_stage)?.label || pendingSuggestion.current_stage}' (${pendingSuggestion.theoretical_days} días) y debería pasar a '${getStageByKey(stageConfig?.stages || DEFAULT_STAGES, pendingSuggestion.suggested_stage)?.label || pendingSuggestion.suggested_stage}'. Por favor confirme las condiciones reales en campo.`}
                       </p>
                       {stageConfig && (
-                        <TimelineView stages={stageConfig.stages} currentStage={pendingSuggestion.suggested_stage} logs={stageLogs} highlightStage={pendingSuggestion.suggested_stage} />
+                        <TimelineView stages={stageConfig.stages} currentStage={pendingSuggestion.suggested_stage} logs={stageLogs} highlightStage={pendingSuggestion.suggested_stage} referenceDate={selectedSembrio.stage_updated_at} fechaSiembra={selectedSembrio.fecha_siembra} />
                       )}
                       {isAdmin && (
                         <div className="semb-suggestion-btns" style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
@@ -634,7 +633,7 @@ export function SembriosClient({ userRole }: SembriosClientProps) {
                           <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <Calendar size={16} /> Línea de Tiempo de Etapas
                           </div>
-                          <TimelineView stages={stageConfig.stages} currentStage={selectedSembrio.current_stage || null} logs={stageLogs} />
+                          <TimelineView stages={stageConfig.stages} currentStage={selectedSembrio.current_stage || null} logs={stageLogs} referenceDate={selectedSembrio.stage_updated_at} fechaSiembra={selectedSembrio.fecha_siembra} />
                         </div>
 
                         {!pendingSuggestion && isAdmin && (selectedSembrio.estado === 'en_crecimiento' || selectedSembrio.estado === 'en_preparacion') && (
@@ -829,62 +828,218 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   )
 }
 
-function TimelineView({ stages, currentStage, logs, highlightStage }: { stages: StageDefinition[]; currentStage: string | null; logs: SembrioStageLog[]; highlightStage?: string }) {
-  const timeline = buildTimeline(stages, currentStage, logs)
+function TimelineView({ stages, currentStage, logs, highlightStage, referenceDate, fechaSiembra }: { stages: StageDefinition[]; currentStage: string | null; logs: SembrioStageLog[]; highlightStage?: string; referenceDate?: string | null; fechaSiembra?: string | null }) {
+  const resolvedRef = (() => {
+    if (referenceDate) return referenceDate
+    if (!fechaSiembra || stages.length === 0) return null
+    const sorted = [...stages].sort((a, b) => a.order - b.order)
+    const first = sorted[0]
+    if (!first) return null
+    if (!currentStage || currentStage === first.key) return fechaSiembra
+    return null
+  })()
 
-  return (
-    <div className="semb-timeline" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', overflowX: 'auto', padding: '1rem 0' }}>
+  const timeline = buildTimeline(stages, currentStage, logs, resolvedRef)
+  const tooltipText = 'El conteo de días inicia cuando se confirma el cambio de etapa. En la primera etapa, si aún no hay cambio, se usa la fecha de siembra como referencia.'
+
+  const fmtDate = (d: string | null | undefined) => {
+    if (!d) return null
+    try { return new Date(d + 'T00:00:00').toLocaleDateString('es-EC', { day: '2-digit', month: 'short' }) } catch { return null }
+  }
+
+  const renderDesktop = () => (
+    <div className="semb-timeline-desktop" style={{ display: 'flex', alignItems: 'stretch', gap: '0.4rem', overflowX: 'auto', padding: '0.75rem 0' }}>
       {timeline.map((entry, idx) => {
         const isHighlighted = highlightStage === entry.key
         const isCurrent = entry.status === 'current'
         const isCompleted = entry.status === 'completed'
 
-        const bgColor = isCompleted
-          ? 'rgba(16, 185, 129, 0.15)'
-          : isHighlighted
-          ? 'rgba(251, 191, 36, 0.2)'
-          : isCurrent
-          ? 'rgba(59, 130, 246, 0.15)'
-          : 'color-mix(in srgb, currentColor 5%, transparent)'
-
         const borderColor = isCompleted
-          ? 'rgba(16, 185, 129, 0.4)'
+          ? 'rgba(16, 185, 129, 0.5)'
           : isHighlighted
-          ? 'rgba(251, 191, 36, 0.5)'
+          ? 'rgba(251, 191, 36, 0.6)'
           : isCurrent
-          ? 'rgba(59, 130, 246, 0.4)'
-          : 'color-mix(in srgb, currentColor 10%, transparent)'
+          ? 'rgba(45, 90, 61, 0.55)'
+          : 'color-mix(in srgb, currentColor 12%, transparent)'
 
-        const textColor = isCompleted
-          ? '#059669'
+        const bg = isCompleted
+          ? 'rgba(16, 185, 129, 0.08)'
           : isHighlighted
-          ? '#92400e'
+          ? 'rgba(251, 191, 36, 0.12)'
           : isCurrent
-          ? '#1e40af'
-          : 'inherit'
+          ? 'linear-gradient(160deg, rgba(45, 90, 61, 0.10), rgba(45, 90, 61, 0.04))'
+          : 'color-mix(in srgb, currentColor 4%, transparent)'
+
+        const pct = entry.progress_pct ?? 0
+        const isOverdue = !!entry.is_overdue
+        const barColor = isOverdue
+          ? 'linear-gradient(90deg, #dc2626, #b91c1c)'
+          : isCurrent
+          ? 'linear-gradient(90deg, #2d5a3d, #5a8a4d)'
+          : 'rgba(16, 185, 129, 0.5)'
 
         return (
-          <div key={entry.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-            <div style={{ flex: 1, minWidth: 80, padding: '0.75rem', borderRadius: 12, background: bgColor, border: `2px solid ${borderColor}`, textAlign: 'center', transition: 'all 0.3s' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+          <div key={entry.key} style={{ display: 'flex', alignItems: 'stretch', flex: 1, minWidth: 140 }}>
+            <div style={{ flex: 1, padding: '0.75rem', borderRadius: 12, background: bg, border: `2px solid ${borderColor}`, display: 'flex', flexDirection: 'column', gap: '0.4rem', transition: 'all 0.3s', boxShadow: isCurrent ? '0 4px 16px rgba(45, 90, 61, 0.10)' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 {isCompleted && <Check size={14} color="#059669" />}
                 {isHighlighted && <AlertTriangle size={14} color="#f59e0b" />}
-                {isCurrent && !isHighlighted && <Clock size={14} color="#3b82f6" />}
+                {isCurrent && !isHighlighted && <Clock size={14} color="#2d5a3d" />}
+                <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>{entry.label}</div>
               </div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: textColor }}>{entry.label}</div>
-              <div style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: '0.15rem' }}>
-                {isCompleted ? 'Completado' : isHighlighted ? 'Pendiente' : isCurrent ? 'Actual' : 'Futuro'}
-              </div>
-              {entry.duration_days > 0 && (
-                <div style={{ fontSize: '0.6rem', opacity: 0.5, marginTop: '0.1rem' }}>{entry.duration_days} días</div>
+              {isCurrent && entry.days_in_current != null && entry.duration_days > 0 && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                    <span style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '1.05rem', fontWeight: 700, color: 'var(--foreground)' }}>
+                      Día {entry.days_in_current}
+                      <span style={{ fontSize: '0.75rem', opacity: 0.55, fontWeight: 500 }}> de {entry.duration_days}</span>
+                    </span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: isOverdue ? '#b91c1c' : 'var(--primary)' }}>{pct}%</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: 'color-mix(in srgb, currentColor 8%, transparent)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: barColor, borderRadius: 99, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                  </div>
+                </div>
               )}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '0.62rem', opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                  {isCompleted ? 'Completado' : isHighlighted ? 'Pendiente' : isCurrent ? 'En curso' : 'Próxima'}
+                </div>
+                {isOverdue && (
+                  <span style={{ fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: 'rgba(220, 38, 38, 0.12)', color: '#b91c1c', border: '1px solid rgba(220, 38, 38, 0.3)' }}>
+                    +{entry.days_overdue} días vencidos
+                  </span>
+                )}
+                {!isCurrent && entry.duration_days > 0 && (
+                  <span style={{ fontSize: '0.6rem', opacity: 0.55 }}>{entry.duration_days} días</span>
+                )}
+              </div>
             </div>
             {idx < timeline.length - 1 && (
-              <div className="semb-timeline-connector" style={{ width: 20, height: 2, background: isCompleted ? 'rgba(16, 185, 129, 0.4)' : 'color-mix(in srgb, currentColor 15%, transparent)', flexShrink: 0 }} />
+              <div style={{ width: 16, alignSelf: 'center', height: 2, background: isCompleted ? 'rgba(16, 185, 129, 0.4)' : 'color-mix(in srgb, currentColor 12%, transparent)', flexShrink: 0, position: 'relative' }}>
+                <ArrowRight size={10} style={{ position: 'absolute', right: -4, top: -4, opacity: isCompleted ? 0.8 : 0.3, color: isCompleted ? '#059669' : 'currentColor' }} />
+              </div>
             )}
           </div>
         )
       })}
+    </div>
+  )
+
+  const renderMobile = () => (
+    <div className="semb-timeline-mobile" style={{ display: 'none', position: 'relative', padding: '0.5rem 0 0.5rem 0' }}>
+      {timeline.map((entry, idx) => {
+        const isHighlighted = highlightStage === entry.key
+        const isCurrent = entry.status === 'current'
+        const isCompleted = entry.status === 'completed'
+        const isFuture = entry.status === 'future'
+        const isLast = idx === timeline.length - 1
+
+        const dotBg = isCompleted ? '#059669' : isHighlighted ? '#f59e0b' : isCurrent ? '#2d5a3d' : 'color-mix(in srgb, currentColor 25%, transparent)'
+        const dotRing = isCurrent ? '0 0 0 4px rgba(45, 90, 61, 0.18)' : isCompleted ? '0 0 0 3px rgba(16, 185, 129, 0.18)' : 'none'
+
+        const cardBg = isCompleted
+          ? 'rgba(16, 185, 129, 0.06)'
+          : isHighlighted
+          ? 'rgba(251, 191, 36, 0.10)'
+          : isCurrent
+          ? 'linear-gradient(160deg, var(--surface), color-mix(in srgb, var(--primary) 5%, var(--surface)))'
+          : 'color-mix(in srgb, currentColor 3%, transparent)'
+
+        const cardBorder = isCompleted
+          ? 'rgba(16, 185, 129, 0.35)'
+          : isHighlighted
+          ? 'rgba(251, 191, 36, 0.5)'
+          : isCurrent
+          ? 'rgba(45, 90, 61, 0.4)'
+          : 'color-mix(in srgb, currentColor 10%, transparent)'
+
+        const pct = entry.progress_pct ?? 0
+        const isOverdue = !!entry.is_overdue
+        const barColor = isOverdue
+          ? 'linear-gradient(90deg, #dc2626, #b91c1c)'
+          : isCurrent
+          ? 'linear-gradient(90deg, #2d5a3d, #5a8a4d)'
+          : 'rgba(16, 185, 129, 0.4)'
+
+        const refLabel = entry.reference_date ? fmtDate(entry.reference_date) : null
+        const projLabel = fmtDate(entry.projected_end_date)
+        const enteredLabel = fmtDate(entry.entered_at)
+
+        return (
+          <div key={entry.key} style={{ position: 'relative', display: 'flex', gap: '0.85rem', alignItems: 'stretch', paddingBottom: isLast ? 0 : '1rem' }}>
+            {!isLast && (
+              <div style={{ position: 'absolute', left: 11, top: 26, bottom: 4, width: 2, background: isCompleted ? 'rgba(16, 185, 129, 0.35)' : 'color-mix(in srgb, currentColor 10%, transparent)' }} />
+            )}
+            <div style={{ position: 'relative', flexShrink: 0, paddingTop: isCurrent ? 14 : 18, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', background: dotBg, boxShadow: dotRing, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                {isCompleted ? <Check size={12} /> : isCurrent ? <Clock size={12} /> : isHighlighted ? <AlertTriangle size={12} /> : <div style={{ width: 6, height: 6, borderRadius: '50%', background: isFuture ? 'currentColor' : 'transparent', opacity: 0.4 }} />}
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0, padding: isCurrent ? '0.85rem' : '0.65rem 0.85rem', borderRadius: 14, background: cardBg, border: `1.5px solid ${cardBorder}`, boxShadow: isCurrent ? '0 6px 20px rgba(45, 90, 61, 0.10)' : 'none', transition: 'all 0.3s' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: isCurrent ? '0.6rem' : 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0 }}>
+                  <div style={{ fontSize: isCurrent ? '0.95rem' : '0.85rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.label}</div>
+                </div>
+                <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '3px 8px', borderRadius: 99, background: isCompleted ? 'rgba(16, 185, 129, 0.15)' : isHighlighted ? 'rgba(251, 191, 36, 0.18)' : isCurrent ? 'rgba(45, 90, 61, 0.15)' : 'color-mix(in srgb, currentColor 6%, transparent)', color: isCompleted ? '#059669' : isHighlighted ? '#92400e' : isCurrent ? '#2d5a3d' : 'inherit', opacity: isFuture ? 0.6 : 1, flexShrink: 0 }}>
+                  {isCompleted ? 'Listo' : isHighlighted ? 'Atención' : isCurrent ? 'En curso' : 'Próxima'}
+                </div>
+              </div>
+              {isCurrent && entry.days_in_current != null && entry.duration_days > 0 && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                    <span style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '1.5rem', fontWeight: 700, lineHeight: 1, color: 'var(--foreground)' }}>
+                      Día {entry.days_in_current}
+                      <span style={{ fontSize: '0.95rem', opacity: 0.5, fontWeight: 500 }}> de {entry.duration_days}</span>
+                    </span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: isOverdue ? '#b91c1c' : 'var(--primary)' }}>{pct}%</span>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 99, background: 'color-mix(in srgb, currentColor 8%, transparent)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: barColor, borderRadius: 99, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                  </div>
+                  {isOverdue && (
+                    <div style={{ marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px', borderRadius: 99, background: 'rgba(220, 38, 38, 0.12)', color: '#b91c1c', border: '1px solid rgba(220, 38, 38, 0.3)' }}>
+                      <AlertTriangle size={11} /> +{entry.days_overdue} días vencidos
+                    </div>
+                  )}
+                  <div style={{ marginTop: '0.6rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', fontSize: '0.7rem' }}>
+                    {refLabel && (
+                      <div>
+                        <div style={{ opacity: 0.55, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.6rem' }}>Inicio</div>
+                        <div style={{ fontWeight: 600, marginTop: 2 }}>{refLabel}</div>
+                      </div>
+                    )}
+                    {projLabel && (
+                      <div>
+                        <div style={{ opacity: 0.55, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.6rem' }}>Fin est.</div>
+                        <div style={{ fontWeight: 600, marginTop: 2 }}>{projLabel}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {!isCurrent && (enteredLabel || entry.duration_days > 0) && (
+                <div style={{ fontSize: '0.7rem', opacity: 0.6, marginTop: 2 }}>
+                  {enteredLabel ? <>Inició {enteredLabel}</> : null}
+                  {enteredLabel && entry.duration_days > 0 ? ' · ' : null}
+                  {entry.duration_days > 0 ? <>{entry.duration_days} días</> : null}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })}
+      <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', opacity: 0.55, padding: '0.5rem 0.85rem', background: 'color-mix(in srgb, currentColor 3%, transparent)', borderRadius: 10 }}>
+        <Info size={12} />
+        <span>{tooltipText}</span>
+      </div>
+    </div>
+  )
+
+  return (
+    <div>
+      {renderMobile()}
+      {renderDesktop()}
     </div>
   )
 }

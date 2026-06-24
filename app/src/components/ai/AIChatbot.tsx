@@ -16,6 +16,7 @@ interface ChatMessage {
   content: string
   timestamp: Date
   hasAnimalContext?: boolean
+  hasVaccineContext?: boolean
 }
 
 /* ─────────────────────────────────────────────
@@ -111,6 +112,7 @@ export function AIChatbot() {
         content: data.message,
         timestamp: new Date(),
         hasAnimalContext: data.meta?.has_animal_context,
+        hasVaccineContext: data.meta?.has_vaccine_context,
       }
 
       setMessages(prev => [...prev, aiMessage])
@@ -121,58 +123,82 @@ export function AIChatbot() {
     }
   }, [input, isLoading, messages])
 
-  // ── Format AI text with basic markdown ────
+  // ── Format AI text — strips markdown symbols and renders cleanly ──
   function formatText(text: string) {
-    // Split by lines and process
-    const lines = text.split('\n')
+    // Pre-process: strip code fences and inline code backticks
+    const cleaned = text
+      .replace(/```[\s\S]*?```/g, '') // remove code blocks
+      .replace(/`([^`]+)`/g, '$1')    // remove inline code backticks
+
+    const lines = cleaned.split('\n')
     const elements: React.ReactNode[] = []
     let key = 0
 
-    for (const line of lines) {
+    for (const rawLine of lines) {
       key++
-      if (line.trim() === '') {
+      const trimmed = rawLine.trim()
+
+      if (trimmed === '') {
         elements.push(<br key={key} />)
         continue
       }
 
-      // Bold text
-      let processed: React.ReactNode = line
-      if (line.includes('**')) {
-        const parts = line.split(/\*\*(.*?)\*\*/g)
-        processed = parts.map((part, i) =>
-          i % 2 === 1
-            ? <strong key={`${key}-${i}`} className="font-semibold text-foreground">{part}</strong>
-            : part
+      // Strip markdown heading symbols (# ## ###) → treat as bold paragraph
+      const headingMatch = trimmed.match(/^#{1,3}\s+(.+)$/)
+      if (headingMatch) {
+        elements.push(
+          <p key={key} className="my-1 font-semibold text-foreground text-[13px]">
+            {stripInlineMarkdown(headingMatch[1])}
+          </p>
         )
+        continue
       }
 
-      // List items
-      if (line.trim().startsWith('- ') || line.trim().startsWith('• ')) {
+      // List items (- or •)
+      if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
         elements.push(
           <div key={key} className="flex gap-2 pl-1 my-0.5">
             <span className="text-primary shrink-0 mt-0.5">•</span>
-            <span>{typeof processed === 'string' ? processed.replace(/^[-•]\s*/, '') : processed}</span>
+            <span>{stripInlineMarkdown(trimmed.replace(/^[-•]\s*/, ''))}</span>
           </div>
         )
         continue
       }
 
       // Numbered items
-      if (/^\d+\.\s/.test(line.trim())) {
-        const num = line.trim().match(/^(\d+)\./)?.[1]
+      if (/^\d+\.\s/.test(trimmed)) {
+        const num = trimmed.match(/^(\d+)\./)?.[1]
         elements.push(
           <div key={key} className="flex gap-2 pl-1 my-0.5">
             <span className="text-primary font-bold shrink-0 mt-0.5 text-[11px]">{num}.</span>
-            <span>{typeof processed === 'string' ? processed.replace(/^\d+\.\s*/, '') : processed}</span>
+            <span>{stripInlineMarkdown(trimmed.replace(/^\d+\.\s*/, ''))}</span>
           </div>
         )
         continue
       }
 
-      elements.push(<p key={key} className="my-0.5">{processed}</p>)
+      elements.push(<p key={key} className="my-0.5">{stripInlineMarkdown(trimmed)}</p>)
     }
 
     return elements
+  }
+
+  // Converts **bold**, *italic*, __bold__, _italic_ to React nodes
+  function stripInlineMarkdown(line: string): React.ReactNode {
+    // Split on **text** or *text* or __text__ or _text_
+    const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_)/g)
+    if (parts.length === 1) return line // no markdown found
+    return parts.map((part, i) => {
+      if (/^\*\*(.+)\*\*$/.test(part) || /^__(.+)__$/.test(part)) {
+        const inner = part.replace(/^\*\*|^__|__$|\*\*$/g, '')
+        return <strong key={i} className="font-semibold text-foreground">{inner}</strong>
+      }
+      if (/^\*(.+)\*$/.test(part) || /^_(.+)_$/.test(part)) {
+        const inner = part.replace(/^\*|^_|_$|\*$/g, '')
+        return <em key={i}>{inner}</em>
+      }
+      return part
+    })
   }
 
   return (
@@ -236,8 +262,8 @@ export function AIChatbot() {
             <Sparkles className="w-4.5 h-4.5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm text-foreground">Asistente IA</h3>
-            <p className="text-[10px] text-muted font-medium">Finca Tigrillo · Pregunta sobre cualquier animal</p>
+            <h3 className="font-bold text-sm text-foreground">TigriA</h3>
+            <p className="text-[10px] text-muted font-medium">Finca Tigrillo · Asistente veterinario</p>
           </div>
           <button
             onClick={() => setIsOpen(false)}
@@ -260,9 +286,9 @@ export function AIChatbot() {
                 <Bot className="w-8 h-8 text-violet-500/50" />
               </div>
               <div>
-                <p className="font-semibold text-foreground text-sm mb-1">¡Hola! Soy tu asistente de la finca</p>
+                <p className="font-semibold text-foreground text-sm mb-1">Hola, soy TigriA</p>
                 <p className="text-xs text-muted max-w-xs leading-relaxed">
-                  Pregúntame sobre cualquier animal por su nombre. Puedo decirte sobre sus vacunas, estado reproductivo, peso y más.
+                  Tu asistente veterinario de la Finca Tigrillo. Preguntame sobre animales, vacunas, dosis, stock o estadisticas del hato.
                 </p>
               </div>
 
@@ -319,6 +345,12 @@ export function AIChatbot() {
                       <div className="flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 font-bold uppercase tracking-wider mb-1.5 pb-1.5 border-b border-border/50">
                         <Sparkles className="w-3 h-3" />
                         Datos del animal encontrados
+                      </div>
+                    )}
+                    {msg.hasVaccineContext && (
+                      <div className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mb-1.5 pb-1.5 border-b border-border/50">
+                        <Sparkles className="w-3 h-3" />
+                        Inventario de vacunas consultado
                       </div>
                     )}
                     {formatText(msg.content)}
