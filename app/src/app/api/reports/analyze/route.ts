@@ -7,7 +7,7 @@ import { aiChat } from '@/lib/ai/factory'
 export const maxDuration = 300
 
 // ─── Sistema prompt para informes operativos ─────────────────────────────────
-const REPORTS_SYSTEM_PROMPT = `Eres un asesor experto en gestión ganadera para la Finca Tigrillo, ubicada en Colombia.
+const REPORTS_SYSTEM_PROMPT = `Eres un asesor experto en gestión ganadera para la Finca Tigrillo, ubicada en Chone, Ecuador.
 Tu función es analizar datos operativos del inventario animal, actividades y eventos reproductivos, y generar informes profesionales en español.
 
 REGLAS:

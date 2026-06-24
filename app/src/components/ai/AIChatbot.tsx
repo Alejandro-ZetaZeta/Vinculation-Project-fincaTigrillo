@@ -262,7 +262,7 @@ export function AIChatbot() {
             <Sparkles className="w-4.5 h-4.5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm text-foreground">Vaquero</h3>
+            <h3 className="font-bold text-sm text-foreground">TigriA</h3>
             <p className="text-[10px] text-muted font-medium">Finca Tigrillo · Asistente veterinario</p>
           </div>
           <button
@@ -286,7 +286,7 @@ export function AIChatbot() {
                 <Bot className="w-8 h-8 text-violet-500/50" />
               </div>
               <div>
-                <p className="font-semibold text-foreground text-sm mb-1">Hola, soy Vaquero</p>
+                <p className="font-semibold text-foreground text-sm mb-1">Hola, soy TigriA</p>
                 <p className="text-xs text-muted max-w-xs leading-relaxed">
                   Tu asistente veterinario de la Finca Tigrillo. Preguntame sobre animales, vacunas, dosis, stock o estadisticas del hato.
                 </p>

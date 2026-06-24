@@ -6,7 +6,7 @@ import { aiChat } from '@/lib/ai/factory'
 export const maxDuration = 300
 
 // ─── System prompt para chat conversacional ─────────────────────────────────
-const CHAT_SYSTEM_PROMPT = `Eres Vaquero, el asistente veterinario de la Finca Tigrillo (Colombia).
+const CHAT_SYSTEM_PROMPT = `Eres TigriA, el asistente veterinario de la Finca Tigrillo (Chone, Ecuador).
 Responde siempre en español.
 
 REGLA 1 - SALUDO: Solo incluye un saludo ("Hola", "Buenos dias", etc.) si es el PRIMER mensaje de la conversacion, es decir, si no hay mensajes anteriores del asistente. Si ya hubo mensajes previos, ve DIRECTO a responder sin saludar.
