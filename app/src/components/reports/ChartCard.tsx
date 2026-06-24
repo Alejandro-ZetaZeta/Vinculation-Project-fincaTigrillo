@@ -59,9 +59,9 @@ export function ChartCard({ title, icon, children, className = '' }: ChartCardPr
       </div>
 
       {/* Chart content */}
-      <div className="relative flex-1 px-3 pb-3 sm:px-4 sm:pb-4 print:min-h-[200px] print:relative print:overflow-visible"
+      <div className="relative flex-1 px-3 pb-3 sm:px-4 sm:pb-4"
            style={{ minHeight: 220 }}>
-        <div className="chart-content-transition absolute inset-x-3 inset-y-0 sm:inset-x-4 print:static print:inset-auto print:w-full print:h-[200px]">
+        <div className="chart-content-transition absolute inset-x-3 inset-y-0 sm:inset-x-4">
           {children(period)}
         </div>
       </div>

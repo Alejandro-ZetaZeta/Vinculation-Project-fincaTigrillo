@@ -623,14 +623,14 @@ select.input-calc {
    Works for A4, Letter, Legal, and mobile print
 ───────────────────────────────────────────── */
 
-/* ── Page setup: auto margins that work on any paper size ── */
+/* ── Page setup: uniform margins on any paper size ── */
 @page {
   margin: 12mm 10mm 14mm 10mm;
   size: auto;
 }
 
 @media print {
-  /* ── Hide chrome elements ── */
+  /* ── 1. Hide navigation chrome ── */
   aside,
   header,
   .no-print,
@@ -639,7 +639,7 @@ select.input-calc {
     display: none !important;
   }
 
-  /* ── Reset root layout to flat print canvas ── */
+  /* ── 2. Root canvas reset ── */
   html,
   body {
     background: #ffffff !important;
@@ -655,10 +655,9 @@ select.input-calc {
     padding: 0 !important;
   }
 
-  /* ── Remove dashboard shell padding ── */
+  /* ── 3. Strip dashboard shell padding ── */
   main,
-  [role="main"],
-  .dashboard-content {
+  [role="main"] {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
@@ -666,212 +665,124 @@ select.input-calc {
     overflow: visible !important;
   }
 
-  /* ── Root report wrapper ── */
-  .print-area,
-  .print-area * {
-    overflow: visible !important;
-  }
-
-  /* ── KPI grid: 4 columns on paper, auto on small ── */
-  .kpi-grid-print,
-  [class*="grid-cols-"][class*="lg:grid-cols-7"] {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 6pt !important;
-    width: 100% !important;
-  }
-
-  /* ── Charts grid: 2 columns balanced ── */
-  [class*="grid-cols-1"][class*="sm:grid-cols-2"][class*="lg:grid-cols-3"] {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8pt !important;
-    width: 100% !important;
-  }
-
-  /* ── Chart cards: prevent overflow, fixed height ── */
-  .chart-card {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    box-shadow: none !important;
-    border: 1px solid #d1fae5 !important;
-    border-radius: 8pt !important;
-    overflow: hidden !important;
-    width: 100% !important;
-    min-height: 0 !important;
-  }
-
-  /* ── Make Recharts SVG & ResponsiveContainer scale to parent ── */
-  .recharts-wrapper,
-  .recharts-surface,
-  .recharts-responsive-container {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
-  }
-
-  /* SVG fills its container without fixed pixel width ── */
-  .recharts-wrapper svg {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 220pt !important;
-  }
-
-  /* ── Fix chart inner wrapper that uses absolute positioning ── */
-  [class*="chart-content-transition"] {
-    position: relative !important;
-    inset: auto !important;
-    width: 100% !important;
-    height: auto !important;
-  }
-
-  /* Chart content container ── */
-  .chart-card > div:last-child {
-    position: relative !important;
-    min-height: 0 !important;
-    height: auto !important;
-  }
-
-  /* ── KPI cards: compact for print ── */
-  .kpi-card {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    box-shadow: none !important;
-    border-radius: 6pt !important;
-    padding: 6pt !important;
-    animation: none !important;
-    transform: none !important;
-  }
-
-  /* ── Tables: full width, legible ── */
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    font-size: 8pt !important;
-  }
-
-  th,
-  td {
-    padding: 4pt 6pt !important;
-    border-bottom: 1px solid #e5e7eb !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-  }
-
-  thead {
-    display: table-header-group !important;
-  }
-
-  /* ── Table row: never split across pages ── */
-  tr {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-
-  /* ── Section cards: proper page breaks ── */
-  [class*="rounded-3xl"],
-  [class*="rounded-2xl"] {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    border-radius: 6pt !important;
-    box-shadow: none !important;
-    border-width: 1px !important;
-    border-color: #d1d5db !important;
-    border-style: solid !important;
-    background: #ffffff !important;
-    overflow: visible !important;
-    width: 100% !important;
-  }
-
-  /* ── Force break BEFORE heavy sections, not inside ── */
-  [class*="print:break-inside-avoid"] {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-
-  [class*="print:mt-8"] {
-    margin-top: 12pt !important;
-  }
-
-  /* ── Remove overflows that cut content ── */
-  [class*="overflow-x-auto"],
-  [class*="overflow-hidden"] {
-    overflow: visible !important;
-  }
-
-  /* ── Animations: off for print ── */
+  /* ── 4. Disable all animations / transitions ── */
   *,
   *::before,
   *::after {
     animation: none !important;
     transition: none !important;
     transform: none !important;
-  }
-
-  /* ── Colors: force print-safe ── */
-  [style*="color"],
-  [class*="text-"] {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* ── Print header: always show at top ── */
-  .print-area {
+  /* ── 5. KPI grid — 4 balanced columns ── */
+  .kpi-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    padding: 6pt !important;
+  }
+
+  /* ── 6. Charts grid: Tailwind print:grid-cols-2 already handles the 2-col layout.
+     We enforce gap and ensure no overflow clips the charts. */
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 {
+    gap: 8pt !important;
     width: 100% !important;
-    display: block !important;
+    overflow: visible !important;
   }
 
-  /* ── Space adjustments ── */
-  .space-y-6 > * + *,
-  [class*="space-y-"] > * + * {
-    margin-top: 10pt !important;
+  /* ── 7. Chart card shell ── */
+  .chart-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    width: 100% !important;
   }
 
-  /* ── Footer URL link ── */
+  /* ── 8. Chart card inner flex area: give it a fixed pixel height.
+     The absolute-positioned child (inset-y-0) will stretch to fill it.
+     Recharts ResponsiveContainer then measures this height via ResizeObserver
+     snapshot already taken at screen render time.  ── */
+  .chart-card > div:last-child {
+    height: 220px !important;
+    min-height: 220px !important;
+    max-height: 220px !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  /* ── 9. Recharts: force SVG to fill the container.
+     By the time print dialog opens, Recharts has already rendered the SVG
+     with explicit width/height px attributes. We override those with CSS
+     so the chart scales to 100% of the card width. ── */
+  .recharts-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .recharts-wrapper svg {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* ── 10. Tables — full width, compact, no split rows ── */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8pt !important;
+  }
+  th, td {
+    padding: 4pt 6pt !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+  thead {
+    display: table-header-group !important;
+  }
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* ── 11. Scrollable table containers open up ── */
+  .overflow-x-auto,
+  [class~="overflow-x-auto"] {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
+  /* ── 12. Section wrappers — Tailwind print:break-inside-avoid already handles
+     page breaks. We also target the bg-surface border rounded-3xl pattern
+     used for the Analytical Breakdown and other big sections. ── */
+  .bg-surface.border.border-border.rounded-3xl,
+  .bg-surface.border.border-border.rounded-2xl {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* ── 14. Suppress link URL decoration ── */
   a[href]::after {
     content: none !important;
   }
-
-  /* ── Scrollable containers inside report ── */
-  [class*="overflow-x-auto"] {
-    overflow-x: visible !important;
-  }
-
-  /* ── Recharts: give ResponsiveContainer an explicit pixel height ──
-     ResponsiveContainer reads clientHeight from its parent; in print
-     mode 'height: 100%' on the child resolves to 0 when the parent
-     has no fixed height. We set a concrete height so charts render. ── */
-  .recharts-responsive-container {
-    height: 200px !important;
-    min-height: 180px !important;
-  }
-
-  /* ── Chart wrapper in print must not collapse ── */
-  .chart-card .relative.flex-1 {
-    height: 200px !important;
-    min-height: 200px !important;
-    flex: none !important;
-    position: relative !important;
-    overflow: visible !important;
-  }
 }
 
-/* ── Mobile print: narrower screens print single column ── */
+/* ── Mobile print: single column layout for narrow screens ── */
 @media print and (max-width: 600px) {
-  [class*="grid-cols-1"][class*="sm:grid-cols-2"][class*="lg:grid-cols-3"] {
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 {
     grid-template-columns: 1fr !important;
   }
-  [class*="lg:grid-cols-7"] {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .recharts-responsive-container {
-    height: 160px !important;
-    min-height: 140px !important;
-  }
-  .chart-card .relative.flex-1 {
-    height: 160px !important;
-    min-height: 160px !important;
+  .chart-card > div:last-child {
+    height: 180px !important;
+    min-height: 180px !important;
+    max-height: 180px !important;
   }
 }
 
