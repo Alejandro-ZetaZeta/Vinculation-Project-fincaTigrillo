@@ -23,7 +23,7 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
   const [cooldown, setCooldown]       = useState<{ can_change: boolean; days_until_change: number } | null>(null)
   const [cooldownLoading, setCooldownLoading] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, toggleTheme } = useTheme()
 
   const isViewer  = userRole === 'viewer'
   const roleLabel = userRole === 'admin' ? 'Administrador'

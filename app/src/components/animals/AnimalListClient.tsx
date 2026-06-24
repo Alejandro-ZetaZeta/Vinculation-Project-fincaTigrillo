@@ -9,6 +9,7 @@ import {
   Scale, History, TrendingUp, Loader2, Plus, CheckCircle, Loader
 } from 'lucide-react'
 import { Chart, registerables } from 'chart.js'
+import { useTheme } from '@/components/ThemeProvider'
 import { AnimalVaccinationProfile } from '@/components/vaccines/AnimalVaccinationProfile'
 import { AssignVaccineModal } from '@/components/vaccines/AssignVaccineModal'
 import { usePoultryStageSync } from '@/hooks/usePoultryStageSync'
@@ -1125,6 +1126,8 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
   const [newNotes, setNewNotes] = useState('')
   const chartRef = useRef<HTMLCanvasElement>(null)
   const chartInstance = useRef<Chart | null>(null)
+  const { theme } = useTheme()
+  const isDark = theme === 'dark' || theme === 'uleam-dark'
 
   const isGrams = isPoultry && poultryEtapa === 'pollitos'
   const isLbs = isPoultry && !!poultryEtapa && poultryEtapa !== 'pollitos'
@@ -1177,8 +1180,15 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
         animation: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: false, grid: { color: '#e2e8f033' } },
-          x: { grid: { display: false } }
+          y: { 
+            beginAtZero: false, 
+            grid: { color: isDark ? '#353e47' : '#dcd3c4' },
+            ticks: { color: isDark ? '#a5b3c2' : '#696152' }
+          },
+          x: { 
+            grid: { display: false },
+            ticks: { color: isDark ? '#a5b3c2' : '#696152' }
+          }
         }
       }
     })
@@ -1189,7 +1199,7 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
     canvas.classList.add('animate-chart-reveal')
     return () => chartInstance.current?.destroy()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weights, weightUnit, baselineDate])
+  }, [weights, weightUnit, baselineDate, isDark])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

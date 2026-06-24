@@ -201,14 +201,14 @@ async function DashboardStats({ accessToken, isAdmin }: { accessToken: string | 
             <div
               key={stat.label}
               role="listitem"
-              className={`stat-card card-elevated animate-fade-up ${stat.stagger}
+              className={`stat-card card-elevated card-animate animate-fade-up ${stat.stagger}
                 bg-gradient-to-br ${stat.gradient}
-                border ${stat.border}`}
+                border ${stat.border} group`}
             >
               <div className="p-5">
                 <div className="flex items-start justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-2xl ${stat.bg} flex items-center justify-center shadow-sm`}>
-                    <Icon className={`w-5 h-5 ${stat.iconColor}`} aria-hidden="true" />
+                  <div className={`w-11 h-11 rounded-2xl ${stat.bg} flex items-center justify-center shadow-sm transition-all duration-300 group-hover:scale-110`}>
+                    <Icon className={`w-5 h-5 ${stat.iconColor} transition-transform duration-300 group-hover:rotate-6`} aria-hidden="true" />
                   </div>
                   <TrendingUp className="w-3.5 h-3.5 text-emerald-500 opacity-60 mt-1" aria-hidden="true" />
                 </div>

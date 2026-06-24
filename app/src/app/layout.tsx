@@ -76,7 +76,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 var t = localStorage.getItem('ft-theme');
-                document.documentElement.setAttribute('data-theme', (t === 'dark' || t === 'light') ? t : 'light');
+                document.documentElement.setAttribute('data-theme', (t === 'dark' || t === 'light' || t === 'uleam' || t === 'uleam-dark') ? t : 'light');
               })();
             `,
           }}

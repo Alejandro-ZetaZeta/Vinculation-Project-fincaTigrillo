@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark' | 'uleam'
+type Theme = 'light' | 'dark' | 'uleam' | 'uleam-dark'
 
 const ThemeContext = createContext<{
   theme: Theme
@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('ft-theme') as Theme | null
-    if (stored === 'dark' || stored === 'light' || stored === 'uleam') {
+    if (stored === 'dark' || stored === 'light' || stored === 'uleam' || stored === 'uleam-dark') {
       setTheme(stored)
     }
     setMounted(true)
@@ -38,7 +38,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme, mounted])
 
   function toggleTheme() {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+    setTheme(prev => {
+      if (prev === 'light') return 'dark'
+      if (prev === 'dark') return 'light'
+      if (prev === 'uleam') return 'uleam-dark'
+      if (prev === 'uleam-dark') return 'uleam'
+      return 'light'
+    })
   }
 
   // Prevent flash of wrong theme

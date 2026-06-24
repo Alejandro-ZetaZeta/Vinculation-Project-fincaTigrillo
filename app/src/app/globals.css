@@ -136,6 +136,77 @@
 }
 
 /* ─────────────────────────────────────────────
+   ANIMACIONES PERSONALIZADAS DEL MENÚ LATERAL
+   ───────────────────────────────────────────── */
+.sidebar-link-animate {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              background-color 0.2s ease, 
+              box-shadow 0.2s ease, 
+              color 0.2s ease !important;
+  transform-origin: center left;
+}
+
+.sidebar-link-animate:hover {
+  transform: translateX(4px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-link-animate:active {
+  transform: translateX(2px) scale(0.97);
+}
+
+/* Micro-animación para el icono */
+.sidebar-link-animate .sidebar-icon {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sidebar-link-animate:hover .sidebar-icon {
+  transform: scale(1.15) rotate(6deg);
+}
+
+.sidebar-panel.is-collapsed .sidebar-link-animate:hover {
+  transform: scale(1.08);
+}
+
+/* ── Custom transitions and animations ── */
+.sidebar-text-transition {
+  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown {
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+}
+
+@keyframes pulseSubtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.92;
+    transform: scale(0.97);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────────
    BASE
 ───────────────────────────────────────────── */
 *, *::before, *::after {
@@ -308,6 +379,28 @@ select {
 }
 [data-theme="dark"] select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+/* ─────────────────────────────────────────────
+   EFECTO HOVER FLOTANTE PARA TARJETAS
+───────────────────────────────────────────── */
+.card-animate {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease !important;
+}
+
+.card-animate:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05),
+              0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border-color: var(--primary-light) !important;
+}
+
+/* Efecto de brillo de borde dorado/azul en modo oscuro */
+[data-theme$="dark"] .card-animate:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.12);
+  border-color: var(--primary) !important;
 }
 
 /* ─────────────────────────────────────────────
@@ -526,13 +619,260 @@ select.input-calc {
 }
 
 /* ─────────────────────────────────────────────
-   PRINT
+   PRINT — Responsive to any paper size & scale
+   Works for A4, Letter, Legal, and mobile print
 ───────────────────────────────────────────── */
+
+/* ── Page setup: auto margins that work on any paper size ── */
+@page {
+  margin: 12mm 10mm 14mm 10mm;
+  size: auto;
+}
+
 @media print {
-  aside, header, .no-print { display: none !important; }
-  body { background: white !important; }
-  main { margin: 0 !important; padding: 0 !important; }
-  .print-area { width: 100%; }
+  /* ── Hide chrome elements ── */
+  aside,
+  header,
+  .no-print,
+  nav,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  /* ── Reset root layout to flat print canvas ── */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #1a2414 !important;
+    font-size: 10pt !important;
+    line-height: 1.5 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ── Remove dashboard shell padding ── */
+  main,
+  [role="main"],
+  .dashboard-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* ── Root report wrapper ── */
+  .print-area,
+  .print-area * {
+    overflow: visible !important;
+  }
+
+  /* ── KPI grid: 4 columns on paper, auto on small ── */
+  .kpi-grid-print,
+  [class*="grid-cols-"][class*="lg:grid-cols-7"] {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6pt !important;
+    width: 100% !important;
+  }
+
+  /* ── Charts grid: 2 columns balanced ── */
+  [class*="grid-cols-1"][class*="sm:grid-cols-2"][class*="lg:grid-cols-3"] {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8pt !important;
+    width: 100% !important;
+  }
+
+  /* ── Chart cards: prevent overflow, fixed height ── */
+  .chart-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px solid #d1fae5 !important;
+    border-radius: 8pt !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* ── Make Recharts SVG & ResponsiveContainer scale to parent ── */
+  .recharts-wrapper,
+  .recharts-surface,
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* SVG fills its container without fixed pixel width ── */
+  .recharts-wrapper svg {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 220pt !important;
+  }
+
+  /* ── Fix chart inner wrapper that uses absolute positioning ── */
+  [class*="chart-content-transition"] {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Chart content container ── */
+  .chart-card > div:last-child {
+    position: relative !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  /* ── KPI cards: compact for print ── */
+  .kpi-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border-radius: 6pt !important;
+    padding: 6pt !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* ── Tables: full width, legible ── */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8pt !important;
+  }
+
+  th,
+  td {
+    padding: 4pt 6pt !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  /* ── Table row: never split across pages ── */
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* ── Section cards: proper page breaks ── */
+  [class*="rounded-3xl"],
+  [class*="rounded-2xl"] {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border-radius: 6pt !important;
+    box-shadow: none !important;
+    border-width: 1px !important;
+    border-color: #d1d5db !important;
+    border-style: solid !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  /* ── Force break BEFORE heavy sections, not inside ── */
+  [class*="print:break-inside-avoid"] {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  [class*="print:mt-8"] {
+    margin-top: 12pt !important;
+  }
+
+  /* ── Remove overflows that cut content ── */
+  [class*="overflow-x-auto"],
+  [class*="overflow-hidden"] {
+    overflow: visible !important;
+  }
+
+  /* ── Animations: off for print ── */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  /* ── Colors: force print-safe ── */
+  [style*="color"],
+  [class*="text-"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ── Print header: always show at top ── */
+  .print-area {
+    width: 100% !important;
+    display: block !important;
+  }
+
+  /* ── Space adjustments ── */
+  .space-y-6 > * + *,
+  [class*="space-y-"] > * + * {
+    margin-top: 10pt !important;
+  }
+
+  /* ── Footer URL link ── */
+  a[href]::after {
+    content: none !important;
+  }
+
+  /* ── Scrollable containers inside report ── */
+  [class*="overflow-x-auto"] {
+    overflow-x: visible !important;
+  }
+
+  /* ── Recharts: give ResponsiveContainer an explicit pixel height ──
+     ResponsiveContainer reads clientHeight from its parent; in print
+     mode 'height: 100%' on the child resolves to 0 when the parent
+     has no fixed height. We set a concrete height so charts render. ── */
+  .recharts-responsive-container {
+    height: 200px !important;
+    min-height: 180px !important;
+  }
+
+  /* ── Chart wrapper in print must not collapse ── */
+  .chart-card .relative.flex-1 {
+    height: 200px !important;
+    min-height: 200px !important;
+    flex: none !important;
+    position: relative !important;
+    overflow: visible !important;
+  }
+}
+
+/* ── Mobile print: narrower screens print single column ── */
+@media print and (max-width: 600px) {
+  [class*="grid-cols-1"][class*="sm:grid-cols-2"][class*="lg:grid-cols-3"] {
+    grid-template-columns: 1fr !important;
+  }
+  [class*="lg:grid-cols-7"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .recharts-responsive-container {
+    height: 160px !important;
+    min-height: 140px !important;
+  }
+  .chart-card .relative.flex-1 {
+    height: 160px !important;
+    min-height: 160px !important;
+  }
 }
 
 /* ─────────────────────────────────────────────

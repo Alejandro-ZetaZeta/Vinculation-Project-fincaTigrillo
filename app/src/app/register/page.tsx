@@ -133,7 +133,7 @@ export default function RegisterPage() {
         style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
         aria-label={theme === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
       >
-        {theme === 'light'
+        {theme === 'light' || theme === 'uleam'
           ? <Moon className="w-5 h-5" aria-hidden="true" />
           : <Sun  className="w-5 h-5" aria-hidden="true" />
         }
