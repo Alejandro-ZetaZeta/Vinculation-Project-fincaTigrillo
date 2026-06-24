@@ -36,7 +36,7 @@ export async function GET(
     if (!userData?.user) return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 })
     const { data, error } = await insforge.database
       .from('animals')
-      .select('id, name, identification_code, metadata, status, weight_kg')
+      .select('id, name, identification_code, metadata, status, weight_kg, is_litter, litter_count, litter_alive')
       .eq('id', id)
       .maybeSingle()
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })

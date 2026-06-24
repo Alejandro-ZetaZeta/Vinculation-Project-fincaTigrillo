@@ -95,12 +95,21 @@ export async function POST(request: NextRequest) {
       status,
       type_id,
       metadata,
+      is_litter,
+      litter_count,
     } = body as Record<string, unknown>
 
     // Normalize legacy/plural sex values (DB constraint expects 'macho' / 'hembra').
     let sex = typeof rawSex === 'string' ? rawSex.toLowerCase() : rawSex
     if (sex === 'machos') sex = 'macho'
     if (sex === 'hembras') sex = 'hembra'
+
+    // Litter validation
+    const isLitter = is_litter === true
+    const litterCount = typeof litter_count === 'number' ? litter_count : parseInt(String(litter_count ?? ''), 10)
+    if (isLitter && (!Number.isFinite(litterCount) || litterCount <= 0)) {
+      return NextResponse.json({ error: 'Una camada debe tener al menos 1 lechón nacido vivo.' }, { status: 400 })
+    }
 
     const identCode = typeof identification_code === 'string' ? identification_code.trim() : null
     if (identCode) {
@@ -137,6 +146,9 @@ export async function POST(request: NextRequest) {
       status:              status              ?? 'activo',
       type_id:             type_id             ?? null,
       metadata:            metadata            ?? null,
+      is_litter:           isLitter,
+      litter_count:        isLitter ? litterCount : null,
+      litter_alive:        isLitter ? litterCount : null,
       created_by:          userData.user.id,
     }
 

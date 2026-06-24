@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-06-14T23:34:58.163Z",
+  "source_url": "https://fincatigrillo.vercel.app",
+  "preset": "emerald-editorial",
+  "tokens_file": "chunks/tokens.css",
+  "easings_file": "chunks/easings.js",
+  "voice_file": "chunks/voice.md",
+  "hints_file": "chunks/composition-hints.md",
+  "type_roles_file": "chunks/type-roles.md",
+  "caption_skin_file": "chunks/caption-skin.html",
+  "components": [
+    {
+      "id": "agenda-row",
+      "file": "chunks/components/agenda-row.html"
+    },
+    {
+      "id": "button",
+      "file": "chunks/components/button.html"
+    },
+    {
+      "id": "chart-card",
+      "file": "chunks/components/chart-card.html"
+    },
+    {
+      "id": "chip",
+      "file": "chunks/components/chip.html"
+    },
+    {
+      "id": "divider-loud",
+      "file": "chunks/components/divider-loud.html"
+    },
+    {
+      "id": "hero",
+      "file": "chunks/components/hero.html"
+    },
+    {
+      "id": "inverse-tile",
+      "file": "chunks/components/inverse-tile.html"
+    },
+    {
+      "id": "kpi-tile",
+      "file": "chunks/components/kpi-tile.html"
+    },
+    {
+      "id": "masthead-strip",
+      "file": "chunks/components/masthead-strip.html"
+    },
+    {
+      "id": "ornament-double-rule",
+      "file": "chunks/components/ornament-double-rule.html"
+    },
+    {
+      "id": "paper-tile",
+      "file": "chunks/components/paper-tile.html"
+    },
+    {
+      "id": "process-step",
+      "file": "chunks/components/process-step.html"
+    },
+    {
+      "id": "section-numeral-panel",
+      "file": "chunks/components/section-numeral-panel.html"
+    },
+    {
+      "id": "stat-counter",
+      "file": "chunks/components/stat-counter.html"
+    }
+  ]
+}

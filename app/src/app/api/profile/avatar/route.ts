@@ -116,32 +116,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    /* 3. Upload to storage  (path = user_id, content-type set per object) */
-    const path = authUser.id   // no extension; content-type stored per object
+    /* 3. Upload to a unique path so CDN cache never serves stale content */
+    const ts      = Date.now()
+    const newPath = `${authUser.id}_${ts}`   // unique every upload
 
-    // Pass the File/Blob directly so the SDK can read .size automatically
-    const { error: uploadError } = await client.storage
+    const { data: uploadData, error: uploadError } = await client.storage
       .from(BUCKET)
-      .upload(path, file)
+      .upload(newPath, file)
 
-    if (uploadError) {
+    if (uploadError || !uploadData) {
       console.error('[avatar] Storage upload error:', uploadError)
       return NextResponse.json({ error: 'Error al subir la imagen.' }, { status: 500 })
     }
 
-    /* 4. Build public URL — InsForge getPublicUrl returns a string directly */
-    const publicUrl = client.storage.from(BUCKET).getPublicUrl(path) as unknown as string
-    const avatarUrl = `${publicUrl}?v=${Date.now()}`
+    /* 4. Build public URL */
+    const publicUrl = client.storage.from(BUCKET).getPublicUrl(newPath) as unknown as string
+    const avatarUrl = `${publicUrl}?v=${ts}`
 
-    /* 5. Persist URL + timestamp in profile */
-    const { error: updateError } = await client.database
+    /* 5. Persist new URL + timestamp in profile */
+    const { data: oldProfile, error: updateError } = await client.database
       .from('user_profiles')
       .update({ avatar_url: avatarUrl, avatar_updated_at: new Date().toISOString() })
       .eq('user_id', authUser.id)
+      .select('avatar_url')
+      .maybeSingle()
 
     if (updateError) {
       console.error('[avatar] DB update error:', updateError)
       return NextResponse.json({ error: 'Error al guardar la imagen.' }, { status: 500 })
+    }
+
+    /* 6. Clean up old storage file (best-effort, non-blocking) */
+    const oldUrl = (oldProfile as { avatar_url?: string } | null)?.avatar_url
+    if (oldUrl) {
+      const oldPath = oldUrl
+        .split(`/storage/v1/object/public/${BUCKET}/`)[1]
+        ?.split('?')[0]
+      if (oldPath && oldPath !== newPath) {
+        client.storage.from(BUCKET).remove(oldPath).catch(() => {/* ignore */})
+      }
     }
 
     return NextResponse.json({ avatar_url: avatarUrl })

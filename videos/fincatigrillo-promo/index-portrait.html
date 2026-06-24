@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    @font-face { font-family: "Syne"; src: url("assets/fonts/Syne.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+    @font-face { font-family: "DM Sans"; src: url("assets/fonts/DMSans.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+    body { font-family: "DM Sans"; }
+    :root {
+      --emerald: #16a34a; --emerald-light: #22c55e; --forest: #0b2414; --forest-mid: #1a2414;
+      --slate: #374151; --parchment: #f6f7f2; --mint: #d1fae5; --danger: #fca5a5; --white: #ffffff;
+    }
+    .root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+    .display { font-family: "Syne"; letter-spacing: -1.2px; }
+    .plate { position: absolute; inset: 0; display: grid; place-items: center; padding: 80px 48px; opacity: 0; }
+
+    .screenshot-frame {
+      border-radius: 18px; overflow: hidden; border: 2px solid rgba(255,255,255,0.12);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4); opacity: 0;
+    }
+    .screenshot-frame img { width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+
+    /* Beat 1 */
+    .b1-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; }
+    .b1-logo { width: 200px; height: 200px; border-radius: 999px; background: rgba(22, 163, 74, 0.08); border: 2px solid rgba(22, 163, 74, 0.2); display: grid; place-items: center; position: relative; }
+    .b1-logo img { width: 160px; height: 160px; border-radius: 999px; }
+    .b1-glow { position: absolute; inset: -20px; border-radius: 999px; background: radial-gradient(circle, rgba(22,163,74,0.15) 0%, transparent 70%); opacity: 0; }
+    .b1-name { margin-top: 32px; font-size: 72px; font-weight: 900; color: var(--white); letter-spacing: -2px; }
+    .b1-tagline { margin-top: 20px; font-size: 26px; color: rgba(255,255,255,0.85); max-width: 900px; font-weight: 600; opacity: 0; }
+
+    /* Beat 2 */
+    .b2-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; }
+    .b2-logo-sm { width: 56px; height: 56px; border-radius: 999px; overflow: hidden; margin-bottom: 28px; opacity: 0; }
+    .b2-logo-sm img { width: 100%; height: 100%; object-fit: cover; }
+    .b2-title { font-size: 36px; font-weight: 800; color: var(--forest); margin-bottom: 36px; opacity: 0; }
+    .b2-chips { display: flex; flex-direction: column; gap: 18px; align-items: center; }
+    .b2-chip { padding: 20px 40px; border-radius: 18px; border: 1px solid rgba(22, 163, 74, 0.25); background: rgba(22, 163, 74, 0.06); color: var(--forest); font-weight: 700; font-size: 26px; display: flex; align-items: center; gap: 14px; opacity: 0; }
+    .b2-chip .icon { width: 44px; height: 44px; border-radius: 12px; background: var(--emerald); color: var(--white); display: grid; place-items: center; font-size: 22px; }
+
+    /* Screenshot beats */
+    .ss-beat { display: grid; grid-template-rows: auto auto 1fr; gap: 14px; width: 100%; height: 100%; }
+    .ss-header { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+    .ss-title { font-family: "Syne"; font-size: 36px; font-weight: 900; color: var(--white); letter-spacing: -1px; }
+    .ss-badge { padding: 8px 18px; border-radius: 999px; border: 1px solid rgba(22, 163, 74, 0.3); background: rgba(22, 163, 74, 0.1); color: var(--emerald-light); font-weight: 700; font-size: 16px; }
+    .ss-text {
+      font-size: 26px; font-weight: 700; color: var(--white); line-height: 1.3;
+      text-align: center; opacity: 0;
+    }
+    .ss-frame-wrap { width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .ss-frame-wrap > .screenshot-frame { width: 100%; max-height: 70%; }
+
+    /* Beat 7 light variant */
+    .ss7 .ss-title { color: var(--forest); }
+    .ss7 .ss-text { color: var(--forest); }
+    .ss7 .screenshot-frame { border-color: rgba(22, 163, 74, 0.3); }
+    .ss7 .ss-badge { color: var(--emerald); border-color: rgba(22, 163, 74, 0.3); background: rgba(22, 163, 74, 0.06); }
+
+    /* Beat 8 */
+    .b8-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; }
+    .b8-logo { width: 180px; height: 180px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25); display: grid; place-items: center; }
+    .b8-logo img { width: 140px; height: 140px; border-radius: 999px; }
+    .b8-name { margin-top: 28px; font-size: 72px; font-weight: 900; color: var(--white); letter-spacing: -2px; }
+    .b8-rule { width: 100px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 3px; margin: 20px auto; opacity: 0; }
+    .b8-tagline { font-size: 24px; color: rgba(255,255,255,0.9); max-width: 800px; font-weight: 600; opacity: 0; }
+  </style>
+</head>
+<body>
+<div data-composition-id="main-portrait" data-start="0" data-duration="31" data-width="1080" data-height="1920" class="root">
+
+  <audio id="bgm-p" class="clip" data-start="0" data-duration="31" data-track-index="0" src="assets/bgm.mp3"></audio>
+
+  <!-- Beat 1 -->
+  <section id="b1" class="clip plate" data-start="0" data-duration="4" data-track-index="1" style="background:var(--forest)">
+    <div class="b1-center">
+      <div class="b1-logo" id="b1-logo-wrap">
+        <div class="b1-glow" id="b1-glow"></div>
+        <img id="b1-logo-img" class="clip" data-start="0" data-duration="4" data-track-index="2" src="capture/assets/favicon.png" alt="Finca Tigrillo">
+      </div>
+      <div class="b1-name display" id="b1-name">FINCA TIGRILLO</div>
+      <div class="b1-tagline" id="b1-tagline">La plataforma que unifica gestión ganadera, agronómica y educativa</div>
+    </div>
+  </section>
+
+  <!-- Beat 2 -->
+  <section id="b2" class="clip plate" data-start="4" data-duration="3.5" data-track-index="1" style="background:var(--white)">
+    <div class="b2-center">
+      <div class="b2-logo-sm" id="b2-logo-sm"><img src="capture/assets/favicon.png" alt="Finca Tigrillo"></div>
+      <div class="b2-title display" id="b2-title">Tres roles, un solo ecosistema</div>
+      <div class="b2-chips" id="b2-chips">
+        <div class="b2-chip" id="chip1"><span class="icon">👤</span> Administradores</div>
+        <div class="b2-chip" id="chip2"><span class="icon">📚</span> Docentes</div>
+        <div class="b2-chip" id="chip3"><span class="icon">🎓</span> Estudiantes</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beat 3: Dashboard -->
+  <section id="b3" class="clip plate" data-start="7.5" data-duration="4.5" data-track-index="1" style="background:var(--forest)">
+    <div class="ss-beat">
+      <div class="ss-header"><div class="ss-title display">Panel de control</div><div class="ss-badge">KPIs</div></div>
+      <div class="ss-text" id="ss3-text">Panel de control con KPIs, reportes e inteligencia operativa</div>
+      <div class="ss-frame-wrap">
+        <div class="screenshot-frame" id="ss3"><img src="assets/screenshots-mobile/dashboard.png" alt="Dashboard"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beat 4: Animals -->
+  <section id="b4" class="clip plate" data-start="12" data-duration="4" data-track-index="1" style="background:var(--forest-mid)">
+    <div class="ss-beat">
+      <div class="ss-header"><div class="ss-title display">Inventario ganadero</div><div class="ss-badge">Multi-especie</div></div>
+      <div class="ss-text" id="ss4-text">Inventario multi-especie con trazabilidad completa</div>
+      <div class="ss-frame-wrap">
+        <div class="screenshot-frame" id="ss4"><img src="assets/screenshots-mobile/animals-list.png" alt="Animales"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beat 5: Health + AI -->
+  <section id="b5" class="clip plate" data-start="16" data-duration="4" data-track-index="1" style="background:var(--slate)">
+    <div class="ss-beat">
+      <div class="ss-header"><div class="ss-title display">Salud animal + IA</div><div class="ss-badge">Predictivo</div></div>
+      <div class="ss-text" id="ss5-text">Vacunas automatizadas y predicción reproductiva con IA</div>
+      <div class="ss-frame-wrap">
+        <div class="screenshot-frame" id="ss5"><img src="assets/screenshots-mobile/vaccines.png" alt="Vacunas"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beat 6: Agronomy -->
+  <section id="b6" class="clip plate" data-start="20" data-duration="4" data-track-index="1" style="background:var(--forest)">
+    <div class="ss-beat">
+      <div class="ss-header"><div class="ss-title display">Agronomía</div><div class="ss-badge">Potreros</div></div>
+      <div class="ss-text" id="ss6-text">Gestión de potreros, sembríos y alimentación avícola</div>
+      <div class="ss-frame-wrap">
+        <div class="screenshot-frame" id="ss6"><img src="assets/screenshots-mobile/sembrios.png" alt="Sembríos"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beat 7: Community -->
+  <section id="b7" class="clip plate ss7" data-start="24" data-duration="4" data-track-index="1" style="background:var(--parchment)">
+    <div class="ss-beat">
+      <div class="ss-header"><div class="ss-title display" style="color:var(--forest)">Comunidad educativa</div><div class="ss-badge">Estudiantes</div></div>
+      <div class="ss-text" id="ss7-text" style="color:var(--forest)">Coordinación educativa: actividades, progreso y aprobaciones</div>
+      <div class="ss-frame-wrap">
+        <div class="screenshot-frame" id="ss7" style="border-color:rgba(22,163,74,0.3)"><img src="assets/screenshots-mobile/students.png" alt="Estudiantes"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beat 8: Closing -->
+  <section id="b8" class="clip plate" data-start="28" data-duration="3" data-track-index="1" style="background:var(--emerald)">
+    <div class="b8-center">
+      <div class="b8-logo" id="b8-logo"><img src="capture/assets/favicon.png" alt="Finca Tigrillo"></div>
+      <div class="b8-name display" id="b8-name">FINCA TIGRILLO</div>
+      <div class="b8-rule" id="b8-rule"></div>
+      <div class="b8-tagline" id="b8-tagline">Tecnología al servicio del agro educativo ecuatoriano</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+window.__timelines = window.__timelines || {};
+const tl = gsap.timeline({ paused: true });
+
+// Beat 1 (0-4s)
+tl.to("#b1", { opacity: 1, duration: 0.4, ease: "power2.out" }, 0);
+tl.fromTo("#b1-glow", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1.1, duration: 0.7, ease: "power2.out" }, 0.05);
+tl.fromTo("#b1-logo-img", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.5)" }, 0.1);
+tl.fromTo("#b1-name", { opacity: 0, y: 24, letterSpacing: "10px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.8, ease: "power3.out" }, 0.3);
+tl.fromTo("#b1-tagline", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0.7);
+tl.to("#b1", { opacity: 0, duration: 0.3, ease: "power2.in" }, 3.6);
+
+// Beat 2 (4-7.5s)
+const b2 = 4;
+tl.to("#b2", { opacity: 1, duration: 0.35, ease: "power2.out" }, b2);
+tl.fromTo("#b2-logo-sm", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, b2 + 0.05);
+tl.fromTo("#b2-title", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, b2 + 0.15);
+tl.fromTo(".b2-chip", { opacity: 0, y: 16, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(1.2)", stagger: 0.12 }, b2 + 0.4);
+  tl.to("#b2", { opacity: 0, duration: 0.3, ease: "power2.in" }, b2 + 3.15);
+  tl.set("#b2", { opacity: 0 }, 7.50);
+
+// Beat 3 (7.5-12s)
+const b3 = 7.5;
+tl.to("#b3", { opacity: 1, duration: 0.35, ease: "power2.out" }, b3);
+tl.fromTo(".ss-header", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, b3 + 0.05);
+tl.fromTo("#ss3", { opacity: 0, scale: 0.92, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.7, ease: "power3.out" }, b3 + 0.15);
+tl.fromTo("#ss3-text", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, b3 + 0.6);
+  tl.to("#b3", { opacity: 0, duration: 0.3, ease: "power2.in" }, b3 + 4.15);
+  tl.set("#b3", { opacity: 0 }, 12.00);
+
+// Beat 4 (12-16s)
+const b4 = 12;
+tl.to("#b4", { opacity: 1, duration: 0.35, ease: "power2.out" }, b4);
+tl.fromTo("#b4 .ss-header", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, b4 + 0.05);
+tl.fromTo("#ss4", { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.7, ease: "power3.out" }, b4 + 0.15);
+tl.fromTo("#ss4-text", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, b4 + 0.6);
+  tl.to("#b4", { opacity: 0, duration: 0.3, ease: "power2.in" }, b4 + 3.65);
+  tl.set("#b4", { opacity: 0 }, 16.00);
+
+// Beat 5 (16-20s)
+const b5 = 16;
+tl.to("#b5", { opacity: 1, duration: 0.35, ease: "power2.out" }, b5);
+tl.fromTo("#b5 .ss-header", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, b5 + 0.05);
+tl.fromTo("#ss5", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.7, ease: "power3.out" }, b5 + 0.15);
+tl.fromTo("#ss5-text", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, b5 + 0.6);
+tl.to("#b5", { opacity: 0, duration: 0.3, ease: "power2.in" }, b5 + 3.65);
+
+// Beat 6 (20-24s)
+const b6 = 20;
+tl.to("#b6", { opacity: 1, duration: 0.35, ease: "power2.out" }, b6);
+tl.fromTo("#b6 .ss-header", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, b6 + 0.05);
+tl.fromTo("#ss6", { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.7, ease: "power3.out" }, b6 + 0.15);
+tl.fromTo("#ss6-text", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, b6 + 0.6);
+tl.to("#b6", { opacity: 0, duration: 0.3, ease: "power2.in" }, b6 + 3.65);
+
+// Beat 7 (24-28s)
+const b7 = 24;
+tl.to("#b7", { opacity: 1, duration: 0.35, ease: "power2.out" }, b7);
+tl.fromTo("#b7 .ss-header", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, b7 + 0.05);
+tl.fromTo("#ss7", { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.7, ease: "power3.out" }, b7 + 0.15);
+tl.fromTo("#ss7-text", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, b7 + 0.6);
+tl.to("#b7", { opacity: 0, duration: 0.3, ease: "power2.in" }, b7 + 3.65);
+
+// Beat 8 (28-31s)
+const b8 = 28;
+tl.to("#b8", { opacity: 1, duration: 0.4, ease: "power2.out" }, b8);
+tl.fromTo("#b8-logo", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.4)" }, b8 + 0.1);
+tl.fromTo("#b8-name", { opacity: 0, y: 20, letterSpacing: "8px" }, { opacity: 1, y: 0, letterSpacing: "-2px", duration: 0.7, ease: "power3.out" }, b8 + 0.3);
+tl.to("#b8-rule", { opacity: 1, width: 100, duration: 0.5, ease: "power2.out" }, b8 + 0.6);
+tl.fromTo("#b8-tagline", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, b8 + 0.7);
+
+window.__timelines["main-portrait"] = tl;
+</script>
+</body>
+</html>

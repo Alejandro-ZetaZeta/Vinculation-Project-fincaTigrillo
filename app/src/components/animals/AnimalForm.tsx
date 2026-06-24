@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, ArrowLeft, PawPrint, HeartPulse, CheckCircle, XCircle, Loader, Syringe } from 'lucide-react'
+import { Save, ArrowLeft, PawPrint, HeartPulse, CheckCircle, XCircle, Loader, Syringe, Users, User } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -138,6 +138,10 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
+  /* ── Registration mode: individual vs litter (porcino only) ── */
+  const [registrationMode, setRegistrationMode] = useState<'individual' | 'litter'>('individual')
+  const isLitterMode = typeSlug === 'porcino' && registrationMode === 'litter'
+
   /* ── Reactive controlled fields ── */
   const [sex, setSex]                         = useState('')
   const [reproStatus, setReproStatus]         = useState('no aplica')
@@ -146,6 +150,19 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   const [sireId, setSireId]                   = useState('')
   const [avesEtapa, setAvesEtapa]             = useState('')
   const [avesProposito, setAvesProposito]     = useState('')
+
+  /* ── Litter-specific fields ── */
+  const [litterNacidosVivos, setLitterNacidosVivos] = useState('')
+  const [litterNacidosMuertos, setLitterNacidosMuertos] = useState('')
+  const [litterMadreId, setLitterMadreId] = useState('')
+  const [litterPadreId, setLitterPadreId] = useState('')
+  const [teatCount, setTeatCount] = useState('')
+
+  /* ── Madre/padre lists for litter ── */
+  const [madres, setMadres] = useState<SireOption[]>([])
+  const [padres, setPadres] = useState<SireOption[]>([])
+  const [loadingMadres, setLoadingMadres] = useState(false)
+  const [loadingPadres, setLoadingPadres] = useState(false)
 
   /* ── Identification code duplicate check ── */
   const [identCode, setIdentCode]                     = useState('')
@@ -185,8 +202,9 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   const [loadingSires, setLoadingSires] = useState(false)
 
   const isReproType     = REPRO_TYPES.includes(typeSlug)
-  const showSireSelector = isReproType && sex === 'hembra' && reproStatus === 'preñada'
-  const showAcqDate      = acquisitionType === 'compra' || acquisitionType === 'donacion'
+  const showSireSelector = isReproType && sex === 'hembra' && reproStatus === 'preñada' && !isLitterMode
+  const showAcqDate      = !isLitterMode && (acquisitionType === 'compra' || acquisitionType === 'donacion')
+  const showTeatCount    = typeSlug === 'porcino' && sex === 'hembra' && !isLitterMode
 
   /* ── Sex-aware derived values ── */
   const reproStatusOptions = sex === 'macho'
@@ -212,9 +230,27 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
       .finally(() => setLoadingSires(false))
   }, [showSireSelector, typeSlug])
 
+  /* fetch madres/padres for litter mode */
+  useEffect(() => {
+    if (!isLitterMode) { setMadres([]); setPadres([]); return }
+    setLoadingMadres(true)
+    fetch(`/api/animals?sex=hembra&type_slug=porcino`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setMadres(d) })
+      .catch(() => {})
+      .finally(() => setLoadingMadres(false))
+    setLoadingPadres(true)
+    fetch(`/api/animals?sex=macho&type_slug=porcino`)
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setPadres(d) })
+      .catch(() => {})
+      .finally(() => setLoadingPadres(false))
+  }, [isLitterMode])
+
   const fields = typeFields[typeSlug] || typeFields['bovino']
 
   const iconSrc: string | null =
+    isLitterMode                  ? '/camada.svg' :
     typeSlug === 'bovino'         ? (sex === 'hembra' ? '/vaca.svg'    : '/toro.svg') :
     typeSlug === 'equino'         ? (sex === 'hembra' ? '/yegua.svg'   : '/caballo.svg') :
     typeSlug === 'porcino'        ? (sex === 'hembra' ? '/cerda.svg'   : '/cerdo.svg') :
@@ -245,6 +281,66 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
       return
     }
 
+    // ── LITTER MODE ──
+    if (isLitterMode) {
+      const nacidosVivos = parseInt(litterNacidosVivos, 10)
+      if (!Number.isFinite(nacidosVivos) || nacidosVivos <= 0) {
+        setError('Debe indicar al menos 1 lechón nacido vivo.')
+        return
+      }
+      const formData = new FormData(e.currentTarget)
+      const metadata: Record<string, unknown> = {}
+      const nacidosMuertos = parseInt(litterNacidosMuertos, 10)
+      if (Number.isFinite(nacidosMuertos) && nacidosMuertos > 0) {
+        metadata['nacidos_muertos'] = nacidosMuertos
+      }
+      if (litterMadreId) {
+        metadata['madre_id'] = litterMadreId
+        const madre = madres.find(m => m.id === litterMadreId)
+        if (madre) metadata['madre_nombre'] = madre.name || madre.identification_code
+      }
+      if (litterPadreId) {
+        metadata['padre_id'] = litterPadreId
+        const padre = padres.find(p => p.id === litterPadreId)
+        if (padre) metadata['padre_nombre'] = padre.name || padre.identification_code
+      }
+
+      const animalData: Record<string, unknown> = {
+        type_id: typeId,
+        status: 'activo',
+        name: formData.get('name') || null,
+        breed: formData.get('breed') || null,
+        sex: sex || 'mixto',
+        birth_date: formData.get('birth_date') || null,
+        identification_code: identCode,
+        color: formData.get('color') || null,
+        weight_kg: formData.get('weight_kg') ? parseFloat(formData.get('weight_kg') as string) : null,
+        acquisition_type: 'nacimiento',
+        notes: formData.get('notes') || null,
+        is_litter: true,
+        litter_count: nacidosVivos,
+        metadata,
+      }
+
+      startTransition(async () => {
+        try {
+          const res = await fetch('/api/animals', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(animalData),
+          })
+          const result = await res.json()
+          if (!res.ok) { setError(result.error || 'Error al registrar la camada'); return }
+          setSuccess(true)
+          setTimeout(() => { router.push('/dashboard/animals/list') }, 1500)
+        } catch {
+          setError('Error de conexión. Intenta de nuevo.')
+        }
+      })
+      return
+    }
+
+    // ── INDIVIDUAL MODE ──
     const formData = new FormData(e.currentTarget)
     const baseFields = ['name', 'breed', 'sex', 'birth_date', 'identification_code', 'color', 'weight_kg', 'acquisition_type', 'acquisition_date', 'notes', 'status']
 
@@ -269,11 +365,14 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
 
     /* inject controlled values not in formData */
     animalData.sex = sex || animalData.sex
-    if (isReproType) metadata['estado_reproductivo'] = reproStatus
+    if (isReproType && !isLitterMode) metadata['estado_reproductivo'] = reproStatus
     if (showSireSelector && sireId) {
       metadata['padre_id'] = sireId
       const sireName = sires.find(s => s.id === sireId)?.name || sires.find(s => s.id === sireId)?.identification_code
       if (sireName) metadata['padre_nombre'] = sireName
+    }
+    if (showTeatCount && teatCount) {
+      metadata['numero_pezones'] = parseInt(teatCount, 10) || 0
     }
     if (acquisitionType) animalData['acquisition_type'] = acquisitionType
     if (showAcqDate && acquisitionDate) animalData['acquisition_date'] = acquisitionDate
@@ -318,8 +417,8 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display tracking-tight text-2xl md:text-3xl font-bold text-foreground">Registrar {typeName}</h1>
-          <p className="text-muted mt-1">Completa la información del animal</p>
+          <h1 className="font-display tracking-tight text-2xl md:text-3xl font-bold text-foreground">Registrar {isLitterMode ? 'Camada Porcina' : typeName}</h1>
+          <p className="text-muted mt-1">{isLitterMode ? 'Registra una camada completa de lechones' : 'Completa la información del animal'}</p>
         </div>
         {/* Tablet / mobile: small icon to the right of heading, sticky below header */}
         {iconSrc && (
@@ -399,6 +498,154 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* ── Porcino: Individual / Litter toggle ── */}
+          {typeSlug === 'porcino' && (
+            <div className="flex gap-2 p-1 bg-background border border-border rounded-xl">
+              <button
+                type="button"
+                onClick={() => { setRegistrationMode('individual'); setSex('') }}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  registrationMode === 'individual'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-muted hover:text-foreground hover:bg-surface-hover'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                Individual
+              </button>
+              <button
+                type="button"
+                onClick={() => { setRegistrationMode('litter'); setSex('mixto') }}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  registrationMode === 'litter'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-muted hover:text-foreground hover:bg-surface-hover'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                Camada
+              </button>
+            </div>
+          )}
+
+          {/* ── LITTER MODE FIELDS ── */}
+          {isLitterMode ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Nombre / Identificador de camada</label>
+                <input id="name" name="name" type="text" placeholder="Ej: Camada-001"
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label htmlFor="breed" className="block text-sm font-medium text-foreground mb-1.5">Raza <span className="text-danger ml-1">*</span></label>
+                <input id="breed" name="breed" type="text" required placeholder="Ej: Landrace, Pietrain"
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label htmlFor="sex" className="block text-sm font-medium text-foreground mb-1.5">Sexo de la camada</label>
+                <select id="sex" name="sex" value={sex} onChange={e => setSex(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all capitalize">
+                  <option value="mixto">Mixto</option>
+                  <option value="macho">Macho</option>
+                  <option value="hembra">Hembra</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="birth_date" className="block text-sm font-medium text-foreground mb-1.5">Fecha de nacimiento <span className="text-danger ml-1">*</span></label>
+                <input id="birth_date" name="birth_date" type="date" required
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+              </div>
+
+              {/* identification code — same controlled input */}
+              <div>
+                <label htmlFor="identification_code" className="block text-sm font-medium text-foreground mb-1.5">Código de identificación</label>
+                <div className="relative">
+                  <input
+                    id="identification_code" name="identification_code" type="text" required
+                    value={identCode} onChange={e => handleIdentCodeChange(e.target.value)}
+                    placeholder="Código de camada"
+                    className={`w-full px-4 py-2.5 pr-10 rounded-xl bg-background border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 transition-all ${
+                      codeStatus === 'taken' ? 'border-danger focus:border-danger focus:ring-danger/30' :
+                      codeStatus === 'available' ? 'border-success focus:border-success focus:ring-success/30' :
+                      'border-border focus:border-primary focus:ring-primary/30'
+                    }`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    {codeStatus === 'checking'  && <Loader    className="w-4 h-4 text-muted animate-spin" />}
+                    {codeStatus === 'available' && <CheckCircle className="w-4 h-4 text-success" />}
+                    {codeStatus === 'taken'     && <XCircle    className="w-4 h-4 text-danger" />}
+                  </span>
+                </div>
+                {codeStatus === 'taken' && <p className="mt-1 text-xs text-danger flex items-center gap-1"><XCircle className="w-3 h-3" /> {codeTakenMsg}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="litter_nacidos_vivos" className="block text-sm font-medium text-foreground mb-1.5">Lechones nacidos vivos <span className="text-danger ml-1">*</span></label>
+                <input id="litter_nacidos_vivos" type="number" min="1" step="1" required
+                  value={litterNacidosVivos} onChange={e => setLitterNacidosVivos(e.target.value)}
+                  placeholder="Ej: 10"
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label htmlFor="litter_nacidos_muertos" className="block text-sm font-medium text-foreground mb-1.5">Lechones nacidos muertos</label>
+                <input id="litter_nacidos_muertos" type="number" min="0" step="1"
+                  value={litterNacidosMuertos} onChange={e => setLitterNacidosMuertos(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                <p className="text-[11px] text-muted mt-1">Lechones que nacieron sin vida (mortinatos)</p>
+              </div>
+              <div>
+                <label htmlFor="weight_kg" className="block text-sm font-medium text-foreground mb-1.5">Peso promedio (kg)</label>
+                <input id="weight_kg" name="weight_kg" type="number" step="0.01" min="0" placeholder="Ej: 1.2"
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label htmlFor="color" className="block text-sm font-medium text-foreground mb-1.5">Color</label>
+                <input id="color" name="color" type="text" placeholder="Ej: Blanco, Rosado"
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+              </div>
+
+              {/* Madre selector */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Madre (cerda)</label>
+                {loadingMadres ? (
+                  <div className="flex items-center gap-2 text-xs text-muted py-2">
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    Cargando cerdas...
+                  </div>
+                ) : (
+                  <select value={litterMadreId} onChange={e => setLitterMadreId(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                    <option value="">— Sin especificar —</option>
+                    {madres.map(m => <option key={m.id} value={m.id}>{m.name || m.identification_code || 'Sin nombre'}</option>)}
+                  </select>
+                )}
+              </div>
+              {/* Padre selector */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Padre (verraco)</label>
+                {loadingPadres ? (
+                  <div className="flex items-center gap-2 text-xs text-muted py-2">
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    Cargando verracos...
+                  </div>
+                ) : (
+                  <select value={litterPadreId} onChange={e => setLitterPadreId(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                    <option value="">— Sin especificar —</option>
+                    {padres.map(p => <option key={p.id} value={p.id}>{p.name || p.identification_code || 'Sin nombre'}</option>)}
+                  </select>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div className="md:col-span-2">
+                <label htmlFor="notes" className="block text-sm font-medium text-foreground mb-1.5">Notas</label>
+                <textarea id="notes" name="notes" rows={3} placeholder="Observaciones de la camada..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none" />
+              </div>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {fields.map((field) => {
               /* ── Skip reactive fields rendered separately ── */
@@ -700,6 +947,20 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
               </div>
             )}
 
+            {/* ── Teat count: porcino hembras only ── */}
+            {showTeatCount && (
+              <div>
+                <label htmlFor="teat_count" className="block text-sm font-medium text-foreground mb-1.5">
+                  Número de pezones
+                </label>
+                <input id="teat_count" type="number" min="0" step="1"
+                  value={teatCount} onChange={e => setTeatCount(e.target.value)}
+                  placeholder="Ej: 14"
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                <p className="text-[11px] text-muted mt-1">Cantidad de pezones funcionales de la cerda</p>
+              </div>
+            )}
+
             {/* ── Notes: always last field ── */}
             {fields.find(f => f.name === 'notes') && (
               <div className="md:col-span-2">
@@ -712,6 +973,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
               </div>
             )}
           </div>
+          )/* end individual mode */}
 
           <div className="pt-4 border-t border-border flex gap-3">
             <button type="submit" disabled={isPending || success}
@@ -721,7 +983,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  Guardar Animal
+                  {isLitterMode ? 'Guardar Camada' : 'Guardar Animal'}
                 </>
               )}
             </button>

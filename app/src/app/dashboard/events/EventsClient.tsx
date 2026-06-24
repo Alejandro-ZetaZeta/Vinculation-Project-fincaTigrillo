@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Capacitor } from '@capacitor/core'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import {
@@ -64,6 +65,9 @@ interface AnimalOption {
   name: string | null
   identification_code: string | null
   sex?: string
+  is_litter?: boolean
+  litter_count?: number | null
+  litter_alive?: number | null
   animal_types: { name: string; slug: string; animal_categories?: { slug: string } }
 }
 
@@ -108,7 +112,11 @@ interface Invoice {
    COMPONENTE PRINCIPAL
    ════════════════════════════════════════ */
 export default function EventsClient({ isAdmin }: { isAdmin: boolean }) {
-  const [activeTab, setActiveTab] = useState<EventTab>('reproductivos')
+  const searchParams = useSearchParams()
+  const initialTab = (searchParams.get('tab') as EventTab) || 'reproductivos'
+  const [activeTab, setActiveTab] = useState<EventTab>(
+    ['reproductivos', 'mortalidad', 'produccion', 'facturas'].includes(initialTab) ? initialTab : 'reproductivos'
+  )
   const [animals, setAnimals] = useState<AnimalOption[]>([])
   const [loadingAnimals, setLoadingAnimals] = useState(true)
 
@@ -201,6 +209,7 @@ function ReproductivosTab({
   const [sireId, setSireId] = useState('')
   const [sires, setSires] = useState<AnimalOption[]>([])
   const [loadingSires, setLoadingSires] = useState(false)
+  const [weanedCount, setWeanedCount] = useState<number>(0)
 
   const reproEventTypes = REPRODUCTIVE_EVENT_TYPES.filter(t => t.value !== 'muerte')
 
@@ -226,13 +235,22 @@ function ReproductivosTab({
       .finally(() => setLoadingSires(false))
   }, [eventType, animalId, animals])
 
+  useEffect(() => {
+    if (animalId) {
+      const selected = animals.find(a => a.id === animalId)
+      if (selected?.is_litter) {
+        setWeanedCount(selected.litter_alive ?? selected.litter_count ?? 0)
+      }
+    }
+  }, [animalId, animals, eventType])
+
   function getSpeciesSlug(aid: string) {
     return animals.find(a => a.id === aid)?.animal_types?.slug || ''
   }
 
   const allFemales = animals.filter(a => {
     if (a.animal_types?.slug === 'aves-de-corral') return false
-    return a.sex?.toLowerCase() === 'hembra'
+    return a.sex?.toLowerCase() === 'hembra' || a.is_litter === true
   })
 
   // ── unique species present in the female list ──────────────────────
@@ -254,6 +272,15 @@ function ReproductivosTab({
   const femaleAnimals = formSpecies
     ? allFemales.filter(a => a.animal_types?.slug === formSpecies)
     : allFemales
+
+  const filteredFemaleAnimals = React.useMemo(() => {
+    const isWeaning = eventType === 'destete'
+    return femaleAnimals.filter(a => {
+      if (a.is_litter && !isWeaning) return false
+      if (!a.is_litter && a.sex?.toLowerCase() !== 'hembra') return false
+      return true
+    })
+  }, [femaleAnimals, eventType])
 
   // ── log: filter state ─────────────────────────────────────────────
   const [filterSpecies, setFilterSpecies] = useState('')
@@ -328,6 +355,7 @@ function ReproductivosTab({
           notes: notes || null,
           species_slug: getSpeciesSlug(animalId),
           sire_id: (eventType === 'monta_natural' && sireId) ? sireId : null,
+          quantity: (eventType === 'destete' && animals.find(a => a.id === animalId)?.is_litter) ? weanedCount : null,
         }),
       })
       const result = await res.json()
@@ -389,9 +417,9 @@ function ReproductivosTab({
                 required
               >
                 <option value="">Seleccionar…</option>
-                {femaleAnimals.map(a => (
+                {filteredFemaleAnimals.map(a => (
                   <option key={a.id} value={a.id}>
-                    {a.name || a.identification_code || 'Sin nombre'} — {a.animal_types?.name}
+                    {a.name || a.identification_code || 'Sin nombre'} — {a.animal_types?.name} {a.is_litter ? '(Camada)' : ''}
                   </option>
                 ))}
               </select>
@@ -430,6 +458,25 @@ function ReproductivosTab({
             )}
 
             <DateField label="Fecha del Evento" value={eventDate} onChange={setEventDate} />
+
+            {eventType === 'destete' && animals.find(a => a.id === animalId)?.is_litter && (
+              <div>
+                <label className="block text-xs font-medium text-muted mb-1">
+                  Lechones vivos al destete
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={weanedCount}
+                  onChange={e => setWeanedCount(parseInt(e.target.value, 10) || 0)}
+                  className="input-calc"
+                  required
+                />
+                <p className="text-[10px] text-muted mt-0.5">
+                  Cantidad de lechones vivos en la camada al momento de destete.
+                </p>
+              </div>
+            )}
 
             <div className="col-span-1 sm:col-span-2">
               <label className="block text-xs font-medium text-muted mb-1">Notas (opcional)</label>
@@ -587,6 +634,9 @@ function ReproductivosTab({
                 </div>
                 <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted">
                   <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{fmtDate(ev.event_date)}</span>
+                  {ev.event_type === 'destete' && typeof ev.quantity === 'number' && (
+                    <span className="font-semibold text-success">({ev.quantity} destetados)</span>
+                  )}
                   {ev.expected_due_date && (
                     <span className="text-primary font-medium">Parto est.: {fmtDate(ev.expected_due_date)}</span>
                   )}
@@ -643,7 +693,7 @@ function MortalidadTab({
   })
   const [filterYear, setFilterYear] = useState(() => String(new Date().getFullYear()))
 
-  const poultryBatches = animals.filter(a => a.animal_types?.slug === 'aves-de-corral')
+  const mortalityBatches = animals.filter(a => a.animal_types?.slug === 'aves-de-corral' || a.is_litter === true)
 
   useEffect(() => {
     fetch('/api/reproductive-events')
@@ -658,9 +708,11 @@ function MortalidadTab({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!animalId) { setError('Selecciona un lote'); return }
+    if (!animalId) { setError('Selecciona un lote o camada'); return }
     setSaving(true)
     try {
+      const targetAnimal = animals.find(a => a.id === animalId)
+      const speciesSlug = targetAnimal?.animal_types?.slug || 'aves-de-corral'
       const res = await fetch('/api/reproductive-events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -670,7 +722,7 @@ function MortalidadTab({
           event_date: eventDate,
           notes: notes || null,
           quantity: deathCount,
-          species_slug: 'aves-de-corral',
+          species_slug: speciesSlug,
         }),
       })
       const result = await res.json()
@@ -738,12 +790,12 @@ function MortalidadTab({
           {error && <ErrorBanner message={error} />}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Lote de Aves</label>
+              <label className="block text-xs font-medium text-muted mb-1">Lote / Camada</label>
               <select value={animalId} onChange={e => setAnimalId(e.target.value)} className="input-calc" required>
-                <option value="">Seleccionar lote…</option>
-                {poultryBatches.map(a => (
+                <option value="">Seleccionar lote o camada…</option>
+                {mortalityBatches.map(a => (
                   <option key={a.id} value={a.id}>
-                    {a.name || a.identification_code || 'Sin nombre'} — {a.animal_types?.name}
+                    {a.name || a.identification_code || 'Sin nombre'} — {a.animal_types?.name} {a.is_litter ? '(Camada)' : ''}
                   </option>
                 ))}
               </select>
@@ -863,7 +915,9 @@ function MortalidadTab({
                     <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted">
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{fmtDate(ev.event_date)}</span>
                       {typeof ev.quantity === 'number' && (
-                        <span className="font-semibold text-danger">−{ev.quantity} aves</span>
+                        <span className="font-semibold text-danger">
+                          −{ev.quantity} {ev.animals?.animal_types?.slug === 'aves-de-corral' ? 'aves' : 'lechones'}
+                        </span>
                       )}
                       {ev.notes && <span className="italic truncate max-w-[200px]">{ev.notes}</span>}
                     </div>

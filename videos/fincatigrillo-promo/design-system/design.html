@@ -1,0 +1,3148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fincatigrillo × Emerald Editorial — design.html</title>
+<!--
+  AGENT NOTE — design.html (product-launch-video Phase 1b output)
+  Brand DNA from: https://fincatigrillo.vercel.app
+  Style preset:   emerald-editorial (forced)
+  Generated:      2026-06-14T23:34:46.562Z
+
+  Downstream usage (Phase 4b scene workers):
+    - §2: grep <!-- ROOT-START --> .. <!-- ROOT-END --> → paste into scene <style>
+    - §4: grep <!-- MOTION-START --> .. <!-- MOTION-END --> → paste into <script>
+    - §5: grep <!-- VOICE-START --> .. <!-- VOICE-END --> → register for DOM text copy
+    - §H: grep <!-- HINTS-START --> .. <!-- HINTS-END --> → composition rules for plan agent
+    - §6: grep <!-- COMPONENT: <name> --> .. <!-- /COMPONENT --> → paste by name
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- preset chromeFonts: native typography for doc chrome + .preset-native-scope -->
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500;700;800;900&amp;family=Manrope:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: #000000;
+    background: #FFFFFF;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+  .ds-section { padding: 80px 0; border-top: 1px solid #e5e5e5; }
+  .ds-section:first-of-type { border-top: none; }
+  .eyebrow { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.6; margin-bottom: 12px; }
+  h1, h2, h3 { font-family: 'Playfair Display', serif; font-weight: 400; letter-spacing: -0.015em; line-height: 1.05; }
+  h2 { font-size: clamp(36px, 4vw, 56px); margin-bottom: 16px; }
+  h3.ds-h3 { font-size: 18px; font-family: 'DM Sans', sans-serif; font-weight: 600; margin: 20px 0 12px; opacity: 0.85; }
+  .ds-prose { font-size: 16px; max-width: 62ch; margin: 12px 0; opacity: 0.85; }
+  .ds-prose code, code { font-family: 'JetBrains Mono', monospace; background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.92em; }
+  .ds-code { font-family: 'JetBrains Mono', monospace; background: #0f1419; color: #e6edf3; padding: 20px 24px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 16px 0; white-space: pre; }
+  .ds-summary { cursor: pointer; padding: 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.7; }
+  details[open] .ds-summary { opacity: 1; }
+
+  /* Paste-ready source blocks — collapsed by default because the raw markdown / CSS
+     in <pre> doesn't render as a readable doc (it's machine-bound for emit-chunks).
+     The rendered version sits above each <details>. */
+  .ds-paste-ready { margin: 16px 0; padding: 12px 16px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa; }
+  .ds-paste-ready > .ds-summary { padding: 4px 0; font-size: 11px; opacity: 0.85; }
+  .ds-paste-ready > .ds-summary code { background: #eee; padding: 1px 5px; border-radius: 3px; font-size: 0.95em; }
+  .ds-paste-ready[open] > .ds-summary { margin-bottom: 8px; }
+  .ds-paste-ready > pre.ds-code { margin: 0; }
+
+  /* ── Title card */
+  .title-card { padding: 80px 0 64px; border-bottom: 1px solid #e5e5e5; }
+  .title-card-inner { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+  .brand-row { display: flex; gap: 12px; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 24px; }
+  .brand-name { color: #16A34A; font-weight: 700; }
+  .brand-x { opacity: 0.4; }
+  .style-name { color: #149D45; font-weight: 700; }
+  .title-display { font-size: clamp(48px, 7vw, 96px); margin: 0; }
+  .title-meta { margin-top: 32px; font-family: 'JetBrains Mono', monospace; font-size: 12px; opacity: 0.7; }
+  .title-meta strong { font-weight: 700; opacity: 0.9; }
+
+  /* ── §1 Brand DNA */
+  .dna-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0; }
+  .dna-grid-5 { grid-template-columns: repeat(5, 1fr); }
+  .dna-swatch { padding: 24px 20px; border-radius: 8px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; }
+  .dna-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.8; }
+  .dna-hex { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
+  .dna-desc { margin-top: 24px; font-size: 18px; line-height: 1.55; max-width: 60ch; opacity: 0.85; }
+  .dna-gradient { margin: 32px 0 0; }
+  .dna-gradient-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; margin-bottom: 10px; }
+  .dna-gradient-bar { height: 96px; border-radius: 8px; }
+  .dna-gradient-code { display: block; margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; opacity: 0.7; word-break: break-all; }
+  @media (max-width: 900px) { .dna-grid-5 { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 720px) { .dna-grid { grid-template-columns: repeat(2, 1fr); } .dna-grid-5 { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ── §3 Typography */
+  .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0; }
+  .type-card { padding: 24px; border: 1px solid #e5e5e5; border-radius: 8px; }
+  .type-role { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; }
+  .type-name { font-size: 18px; font-weight: 600; margin: 4px 0; }
+  .type-note { font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.5; margin-bottom: 16px; }
+  .type-specimen { margin-top: 16px; }
+  @media (max-width: 720px) { .type-grid { grid-template-columns: 1fr; } }
+
+  /* ── §5 Voice */
+  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 24px 0; }
+  .voice-dl dt { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.6; margin-top: 16px; }
+  .voice-dl dd { font-size: 15px; margin-top: 4px; }
+  .voice-cta { display: inline-block; padding: 2px 10px; border: 1px solid #ddd; border-radius: 999px; font-size: 13px; margin: 2px 4px 2px 0; }
+  .voice-sample { font-size: 15px; opacity: 0.85; margin: 4px 0; }
+  .voice-pair { padding: 16px; border: 1px solid #e5e5e5; border-radius: 8px; margin: 12px 0; }
+  .voice-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.6; margin-right: 8px; }
+  .voice-in { margin-bottom: 8px; }
+  .voice-out { opacity: 0.7; }
+  @media (max-width: 720px) { .voice-grid { grid-template-columns: 1fr; } }
+
+  /* ── §6 Components */
+  .comp-card { padding: 0; border: 1px solid #e5e5e5; border-radius: 8px; margin: 16px 0; overflow: hidden; }
+  .comp-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #fafafa; border-bottom: 1px solid #e5e5e5; }
+  .comp-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+  .comp-marker { font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.6; }
+  /* Component preview: components are authored for 1920×1080 scenes. The doc
+     container is ~1056px wide, so wide components (mega-stat etc.) overflow.
+     Allow horizontal scroll so reviewers can pan; max-height caps vertical too. */
+  .comp-preview { padding: 32px; background: #FFFFFF; overflow: auto; max-height: 720px; }
+  .comp-preview::-webkit-scrollbar { height: 8px; width: 8px; }
+  .comp-preview::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+  /* ── Markdown blocks (mdBlockToHtml output) */
+  .ds-prose-block { max-width: 80ch; margin: 16px 0; }
+  .ds-prose-block .ds-prose { margin: 0 0 12px; }
+  .ds-prose-block .ds-prose:last-child { margin-bottom: 0; }
+  .ds-prose-block .ds-h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin: 24px 0 12px; }
+  .ds-prose-block .ds-h3 { font-size: 16px; font-weight: 700; margin: 20px 0 8px; opacity: 0.9; }
+  .ds-prose-block .ds-h4 { font-size: 14px; font-weight: 700; margin: 18px 0 6px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.06em; }
+  .ds-prose-block .ds-list { margin: 8px 0 16px; padding-left: 24px; }
+  .ds-prose-block .ds-list li { margin: 4px 0; line-height: 1.55; }
+  .ds-prose-block .ds-list li code { font-size: 0.92em; }
+  .ds-prose-block .ds-code { margin: 12px 0; }
+  .ds-table { border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  .ds-table th, .ds-table td { padding: 8px 12px; border: 1px solid #e5e5e5; vertical-align: top; text-align: left; }
+  .ds-table th { background: #fafafa; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .ds-table td code { font-size: 0.92em; }
+  
+
+/* ── Preset §I page styling (from emerald-editorial.md) ── */
+/* ── Preset-native typography vars (loaded via preset-meta.chromeFonts.googleFontsHref). */
+:root {
+  --f-disp-native:
+    "Bodoni Moda", "Playfair Display", "DM Serif Display", Georgia, "Times New Roman", serif;
+  --f-body-native:
+    "Manrope", "Inter", "IBM Plex Sans", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --f-script-native:
+    "Bodoni Moda", "Playfair Display", "DM Serif Display", Georgia, "Times New Roman", serif;
+  --f-mono-native:
+    "JetBrains Mono", "IBM Plex Mono", "Space Mono", "Menlo", ui-monospace, monospace;
+}
+
+/* .preset-native-scope: re-bind brand DNA font tokens to preset-native families for §6 previews and §T atlas. */
+.preset-native-scope {
+  --font-display: var(--f-disp-native);
+  --font-body: var(--f-body-native);
+  --font-script: var(--f-script-native);
+  --font-mono: var(--f-mono-native);
+}
+
+/* design.html itself reads as the preset: paper-stock canvas, ink rules,
+   no radius, Bodoni-style heads. The chunks/* extracts are unaffected. */
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--f-body-native);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--f-disp-native);
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  line-height: 0.95;
+}
+
+hr,
+.ds-section + .ds-section {
+  border: 0;
+  border-top: 4px solid var(--ink);
+}
+
+.ds-card,
+.ds-section,
+pre.ds-code {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.ds-eyebrow,
+.ds-label {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+/* ── §T Type-role atlas. Family selectors use var(--font-*) so the atlas renders in brand DNA fonts; only the recipe is preset-declared. */
+.ds-trole-box {
+  display: flex;
+  flex-direction: column;
+  border: 4px solid var(--ink);
+  border-radius: 0;
+  background: var(--canvas);
+  overflow: hidden;
+  margin-top: 24px;
+}
+.ds-trole-row {
+  padding: 28px 32px;
+  border-bottom: 4px solid var(--ink);
+}
+.ds-trole-row:last-child {
+  border-bottom: 0;
+}
+.ds-trole-sample {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 960px) {
+  .ds-trole-row {
+    padding: 24px;
+  }
+}
+
+/* ── Type-role samples. Uses var(--font-*) for typeface; preset-native decoration. */
+.t-trole-numeral-jumbo {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(160px, 24vw, 460px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: var(--canvas);
+  background: var(--ink);
+  padding: 40px 56px;
+}
+.t-trole-display-section {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(96px, 12vw, 200px);
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.t-trole-display-cover {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(96px, 11vw, 184px);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.t-trole-display {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(72px, 8.5vw, 130px);
+  line-height: 0.96;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.t-trole-headline {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(56px, 6vw, 104px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.t-trole-ornament-word {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(48px, 5.5vw, 84px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding: 0 6px;
+  color: var(--ink);
+}
+.t-trole-kpi-figure {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(96px, 11vw, 144px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--canvas);
+  background: var(--ink);
+  padding: 28px 40px;
+  display: inline-block;
+}
+.t-trole-kpi-figure .u {
+  font-size: 0.42em;
+  margin-left: 4px;
+  font-weight: 800;
+}
+.t-trole-stat-figure {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(64px, 7vw, 92px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.t-trole-stat-figure .u {
+  font-size: 0.52em;
+  margin-left: 2px;
+}
+.t-trole-title-card {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 4vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.t-trole-eyebrow {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(24px, 1.8vw, 28px);
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.t-trole-label {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(24px, 1.8vw, 28px);
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.t-trole-tag {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(24px, 1.6vw, 26px);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--canvas);
+  padding: 10px 22px;
+}
+.t-trole-caption {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(24px, 1.6vw, 26px);
+  line-height: 1.35;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.t-trole-delta-pill {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(24px, 1.6vw, 26px);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--canvas);
+  color: var(--ink);
+  padding: 6px 16px;
+  border: 2px solid var(--ink);
+}
+
+</style>
+</head>
+<body>
+
+
+<section class="title-card">
+  <div class="title-card-inner">
+    <div class="brand-row">
+      <span class="brand-name">Fincatigrillo</span>
+      <span class="brand-x">×</span>
+      <span class="style-name">Emerald Editorial</span>
+    </div>
+    <h1 class="title-display">Fincatigrillo</h1>
+    <p class="title-meta">
+      <strong>Source</strong> https://fincatigrillo.vercel.app
+      &nbsp;·&nbsp;
+      <strong>Material</strong> flat
+      &nbsp;·&nbsp;
+      <strong>Intent</strong> landing
+      &nbsp;·&nbsp;
+      <strong>Style</strong> Emerald Editorial (forced)
+    </p>
+  </div>
+</section>
+
+<main class="wrap">
+
+<section id="brand-dna" class="ds-section">
+  <div class="eyebrow">§1 · Brand DNA (from site)</div>
+  <h2>Fincatigrillo in one glance</h2>
+  <div class="dna-grid dna-grid-5">
+    
+    <div class="dna-swatch" style="background: #16A34A; color: #fff; ">
+      <div class="dna-label">Primary</div>
+      <div class="dna-hex">#16A34A</div>
+    </div>
+    
+    <div class="dna-swatch" style="background: #4B5563; color: #fff; ">
+      <div class="dna-label">Secondary</div>
+      <div class="dna-hex">#4B5563</div>
+    </div>
+    
+    <div class="dna-swatch" style="background: #149D45; color: #fff; ">
+      <div class="dna-label">Accent</div>
+      <div class="dna-hex">#149D45</div>
+    </div>
+    
+    <div class="dna-swatch" style="background: #FFFFFF; color: #000; border: 1px solid #eee;">
+      <div class="dna-label">Canvas</div>
+      <div class="dna-hex">#FFFFFF</div>
+    </div>
+    
+    <div class="dna-swatch" style="background: #000000; color: #fff; ">
+      <div class="dna-label">Ink</div>
+      <div class="dna-hex">#000000</div>
+    </div>
+  </div>
+
+  <div class="dna-gradient">
+    <div class="dna-gradient-label">Signature gradient</div>
+    <div class="dna-gradient-bar" style="background: linear-gradient(135deg, #16A34A 0%, #4B5563 50%, #149D45 100%);"></div>
+    <code class="dna-gradient-code">linear-gradient(135deg, #16A34A 0%, #4B5563 50%, #149D45 100%)</code>
+  </div>
+
+  <p class="dna-desc">Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.</p>
+</section>
+
+<section id="color-tokens" class="ds-section">
+  <div class="eyebrow">§2 · Color × Style overlay</div>
+  <h2>Color tokens + Emerald Editorial decoration vars</h2>
+  <p class="ds-prose">Brand colors come from the site. Decoration variables come from the <strong>Emerald Editorial</strong> preset. The <code>:root</code> block is live on this page (so §6 component previews render properly). The paste-ready source for <code>chunks/tokens.css</code> is collapsed below — open it to copy.</p>
+  <style>:root {
+  --brand-primary:   #16A34A;
+  --brand-secondary: #4B5563;
+  --brand-tertiary:  #1A2414;
+  --brand-accent:    #149D45;
+  --brand-costume:   #FFFFFF;
+  --ink:             #000000;
+  --canvas:          #FFFFFF;
+  --brand-gradient:  linear-gradient(135deg, #16A34A 0%, #4B5563 50%, #149D45 100%);
+  --deco-1:          #1A2414;
+  --deco-2:          #99E885;
+  --deco-3:          #C0F7FE;
+  --deco-4:          #FE90E8;
+  --font-display:    'Playfair Display', Georgia, serif;
+  --font-body:       'DM Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono:       'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ee-rule-weight: 4px;
+  --ee-rule-weight-cover: 5px; /* cover ornament rules; slightly heavier */
+  --ee-rule-color: var(--ink);
+  --ee-rule: var(--ee-rule-weight) solid var(--ee-rule-color);
+  --ee-ornament-height: 18px;
+  --ee-ornament-rule-gap: 3px;
+  --ee-ornament-rule-thickness: 4px;
+  --ee-ornament-side-bracket-width: 64px; /* vertical-rule side bracket */
+  --ee-ornament-side-bracket-gap: 8px;
+  --ee-radius: 0; /* strict rectangle commitment */
+  --ee-tile-border: var(--ee-rule);
+  --ee-paper: var(--brand-accent);
+  --ee-inverse-bg: var(--ink);
+  --ee-inverse-fg: var(--canvas);
+  --ee-pad-default: 110px;
+  --ee-pad-default-y-bottom: 70px;
+  --ee-pad-cover: 56px;
+  --ee-pad-tile: 36px;
+  --ee-pad-tile-tight: 32px;
+  --ee-pad-pill-y: 10px;
+  --ee-pad-pill-x: 22px;
+  --ee-masthead-inset-top: 56px;
+  --ee-masthead-inset-x: 80px;
+  --ee-gap-default: 30px;
+  --ee-gap-loose: 50px;
+  --ee-gap-row: 26px;
+  --ee-display-tracking: -0.015em;
+  --ee-display-tracking-tight: -0.03em;
+  --ee-display-leading: 0.95;
+  --ee-display-leading-tight: 0.9;
+  --ee-chrome-tracking: 0.1em;
+  --ee-chrome-tracking-wide: 0.18em;
+  --ee-chrome-tracking-tight: 0.05em;
+  --ee-chart-grid: color-mix(in srgb, var(--canvas) 22%, transparent);
+  }</style>
+  <details class="ds-paste-ready">
+    <summary class="ds-summary">▸ Paste-ready source → <code>chunks/tokens.css</code></summary>
+    <pre class="ds-code"><!-- ROOT-START -->:root {
+  --brand-primary:   #16A34A;
+  --brand-secondary: #4B5563;
+  --brand-tertiary:  #1A2414;
+  --brand-accent:    #149D45;
+  --brand-costume:   #FFFFFF;
+  --ink:             #000000;
+  --canvas:          #FFFFFF;
+  --brand-gradient:  linear-gradient(135deg, #16A34A 0%, #4B5563 50%, #149D45 100%);
+  --deco-1:          #1A2414;
+  --deco-2:          #99E885;
+  --deco-3:          #C0F7FE;
+  --deco-4:          #FE90E8;
+  --font-display:    'Playfair Display', Georgia, serif;
+  --font-body:       'DM Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono:       'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ee-rule-weight: 4px;
+  --ee-rule-weight-cover: 5px; /* cover ornament rules; slightly heavier */
+  --ee-rule-color: var(--ink);
+  --ee-rule: var(--ee-rule-weight) solid var(--ee-rule-color);
+  --ee-ornament-height: 18px;
+  --ee-ornament-rule-gap: 3px;
+  --ee-ornament-rule-thickness: 4px;
+  --ee-ornament-side-bracket-width: 64px; /* vertical-rule side bracket */
+  --ee-ornament-side-bracket-gap: 8px;
+  --ee-radius: 0; /* strict rectangle commitment */
+  --ee-tile-border: var(--ee-rule);
+  --ee-paper: var(--brand-accent);
+  --ee-inverse-bg: var(--ink);
+  --ee-inverse-fg: var(--canvas);
+  --ee-pad-default: 110px;
+  --ee-pad-default-y-bottom: 70px;
+  --ee-pad-cover: 56px;
+  --ee-pad-tile: 36px;
+  --ee-pad-tile-tight: 32px;
+  --ee-pad-pill-y: 10px;
+  --ee-pad-pill-x: 22px;
+  --ee-masthead-inset-top: 56px;
+  --ee-masthead-inset-x: 80px;
+  --ee-gap-default: 30px;
+  --ee-gap-loose: 50px;
+  --ee-gap-row: 26px;
+  --ee-display-tracking: -0.015em;
+  --ee-display-tracking-tight: -0.03em;
+  --ee-display-leading: 0.95;
+  --ee-display-leading-tight: 0.9;
+  --ee-chrome-tracking: 0.1em;
+  --ee-chrome-tracking-wide: 0.18em;
+  --ee-chrome-tracking-tight: 0.05em;
+  --ee-chart-grid: color-mix(in srgb, var(--canvas) 22%, transparent);
+}<!-- ROOT-END --></pre>
+  </details>
+</section>
+
+<section id="typography" class="ds-section">
+  <div class="eyebrow">§3 · Typography</div>
+  <h2>Type roles</h2>
+  <p class="ds-prose">Font families resolved by 4-step lookup: site name on Google Fonts → self-host local woff2 → preset §D fallback → final hard-coded fallback. Each card shows which step landed.</p>
+
+  <div class="type-grid">
+    
+    <div class="type-card">
+      <div class="type-role">Display</div>
+      <div class="type-name">Playfair Display</div>
+      <div class="type-note">site 'Syne' not resolvable → preset fallback</div>
+      <div class="type-specimen" style="font-family: 'Playfair Display', serif; font-size: 72px; font-weight: 400; letter-spacing: -0.02em; line-height: 1;">Fincatigrillo</div>
+    </div>
+    <div class="type-card">
+      <div class="type-role">Body</div>
+      <div class="type-name">DM Sans</div>
+      <div class="type-note">✓ from site (Google Fonts CDN)</div>
+      <div class="type-specimen" style="font-family: 'DM Sans', sans-serif; font-size: 22px; line-height: 1.5;">The quick brown fox jumps over the lazy dog.</div>
+    </div>
+    <div class="type-card">
+      <div class="type-role">Mono</div>
+      <div class="type-name">JetBrains Mono</div>
+      <div class="type-note">site has no mono face → preset fallback</div>
+      <div class="type-specimen" style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 18px;">font: JetBrains Mono</div>
+    </div>
+  </div>
+
+  <h3 class="ds-h3" style="margin-top: 48px;">Type-role atlas</h3>
+  <div class="ds-trole-box">
+    
+    <div class="ds-trole-row" data-scale="numeral-jumbo" data-family="display" data-px-min="320" data-px-max="460" data-weight="900" data-leading="0.9" data-tracking="-0.04em" data-case="upper" data-purpose="hero numeral on inverse navy section-opener panel — the 460px playbill mass">
+      <div class="ds-trole-sample"><div class="t-trole-numeral-jumbo">Q3</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="display-section" data-family="display" data-px-min="160" data-px-max="200" data-weight="900" data-leading="0.9" data-tracking="-0.015em" data-case="title" data-purpose="agenda / section-title hero (the Programme scale)">
+      <div class="ds-trole-sample"><div class="t-trole-display-section">The Programme</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="display-cover" data-family="display" data-px-min="144" data-px-max="184" data-weight="900" data-leading="0.92" data-tracking="-0.01em" data-case="upper" data-purpose="cover masthead title (184px Bodoni 900)">
+      <div class="ds-trole-sample"><div class="t-trole-display-cover">STATE</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="display" data-family="display" data-px-min="104" data-px-max="130" data-weight="900" data-leading="0.96" data-tracking="-0.015em" data-case="title" data-purpose="statement / pull-quote scale headline">
+      <div class="ds-trole-sample"><div class="t-trole-display">Three Threads Worth Following.</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="headline" data-family="display" data-px-min="80" data-px-max="104" data-weight="900" data-leading="1" data-tracking="-0.02em" data-case="title" data-purpose="routine slide headline (the 92px default)">
+      <div class="ds-trole-sample"><div class="t-trole-headline">The Quarter, In Review.</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="ornament-word" data-family="display" data-px-min="60" data-px-max="84" data-weight="800" data-leading="1" data-tracking="0.02em" data-case="lower" data-purpose="small connector word bracketed by the double-rule ornament (&quot;of&quot;, &quot;and&quot;, &quot;for&quot;)">
+      <div class="ds-trole-sample"><span class="t-trole-ornament-word">of</span></div>
+    </div>
+    <div class="ds-trole-row" data-scale="kpi-figure" data-family="display" data-px-min="120" data-px-max="144" data-weight="900" data-leading="0.9" data-tracking="-0.03em" data-case="upper" data-purpose="KPI-tile numeral on inverse navy tile (144px Bodoni 900)">
+      <div class="ds-trole-sample"><div class="t-trole-kpi-figure">94<span class="u">%</span></div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="stat-figure" data-family="display" data-px-min="80" data-px-max="92" data-weight="900" data-leading="1" data-tracking="-0.02em" data-case="upper" data-purpose="secondary stat numeral in a side panel (92px Bodoni 900)">
+      <div class="ds-trole-sample"><div class="t-trole-stat-figure">+24<span class="u">%</span></div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="title-card" data-family="display" data-px-min="40" data-px-max="64" data-weight="800" data-leading="1.05" data-tracking="-0.005em" data-case="title" data-purpose="Bodoni 800 title inside a card / agenda-row name / chart take-away">
+      <div class="ds-trole-sample"><div class="t-trole-title-card">A Reading Of The Data</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="eyebrow" data-family="body" data-px-min="24" data-px-max="28" data-weight="800" data-leading="1.2" data-tracking="0.18em" data-case="upper" data-purpose="Manrope 800 uppercase eyebrow above a headline (0.18em tracking)">
+      <div class="ds-trole-sample"><div class="t-trole-eyebrow">A Reading Of The Period</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="label" data-family="body" data-px-min="24" data-px-max="28" data-weight="700" data-leading="1.2" data-tracking="0.08em" data-case="upper" data-purpose="masthead / footline label (Manrope 700, 0.08em)">
+      <div class="ds-trole-sample"><div class="t-trole-label">Data Study · Quarterly Movement</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="tag" data-family="body" data-px-min="24" data-px-max="26" data-weight="800" data-leading="1" data-tracking="0.12em" data-case="upper" data-purpose="inverse pill / chip mark (ink bg, emerald text, Manrope 800 0.12em)">
+      <div class="ds-trole-sample"><span class="t-trole-tag">Three Themes</span></div>
+    </div>
+    <div class="ds-trole-row" data-scale="caption" data-family="body" data-px-min="24" data-px-max="26" data-weight="700" data-leading="1.35" data-tracking="0.1em" data-case="upper" data-purpose="agenda-row kind label / chart axis / KPI sub-label (Manrope 700 uppercase 0.1em)">
+      <div class="ds-trole-sample"><div class="t-trole-caption">Overview · 8 Min</div></div>
+    </div>
+    <div class="ds-trole-row" data-scale="delta-pill" data-family="body" data-px-min="24" data-px-max="26" data-weight="800" data-leading="1" data-tracking="0.08em" data-case="upper" data-purpose="directional change chip inside a KPI tile (emerald bg, navy text on ink tile)">
+      <div class="ds-trole-sample"><span class="t-trole-delta-pill">+ 12.4%</span></div>
+    </div>
+  </div>
+
+  <details class="ds-paste-ready" style="margin-top: 32px;">
+    <summary class="ds-summary">▸ Paste-ready source → <code>chunks/type-roles.md</code> (scene worker reads on demand)</summary>
+    <pre class="ds-code"><!-- TYPE-ROLES-START -->
+# Type-roles atlas — Emerald Editorial
+
+Phase 4b scene worker reads this when text outside §6 components is needed (hero displays, ledes, pill rows, CTA buttons, …). Workflow: pick role by id → paste the CSS rule into scene `&lt;style&gt;` with `s&lt;N&gt;-` prefix on the class names → wrap content using the prefixed class. Family tokens (`var(--font-*)`) resolve to brand DNA at scene-render time.
+
+## type-role: numeral-jumbo
+
+- family: display · px: 320–460 · weight: 900
+- leading: 0.9 · tracking: -0.04em · case: upper
+- purpose: hero numeral on inverse navy section-opener panel — the 460px playbill mass
+
+```css
+.t-trole-numeral-jumbo {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(160px, 24vw, 460px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: var(--canvas);
+  background: var(--ink);
+  padding: 40px 56px;
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-numeral-jumbo&quot;&gt;Q3&lt;/div&gt;
+```
+
+## type-role: display-section
+
+- family: display · px: 160–200 · weight: 900
+- leading: 0.9 · tracking: -0.015em · case: title
+- purpose: agenda / section-title hero (the Programme scale)
+
+```css
+.t-trole-display-section {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(96px, 12vw, 200px);
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-display-section&quot;&gt;The Programme&lt;/div&gt;
+```
+
+## type-role: display-cover
+
+- family: display · px: 144–184 · weight: 900
+- leading: 0.92 · tracking: -0.01em · case: upper
+- purpose: cover masthead title (184px Bodoni 900)
+
+```css
+.t-trole-display-cover {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(96px, 11vw, 184px);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-display-cover&quot;&gt;STATE&lt;/div&gt;
+```
+
+## type-role: display
+
+- family: display · px: 104–130 · weight: 900
+- leading: 0.96 · tracking: -0.015em · case: title
+- purpose: statement / pull-quote scale headline
+
+```css
+.t-trole-display {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(72px, 8.5vw, 130px);
+  line-height: 0.96;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-display&quot;&gt;Three Threads Worth Following.&lt;/div&gt;
+```
+
+## type-role: headline
+
+- family: display · px: 80–104 · weight: 900
+- leading: 1 · tracking: -0.02em · case: title
+- purpose: routine slide headline (the 92px default)
+
+```css
+.t-trole-headline {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(56px, 6vw, 104px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-headline&quot;&gt;The Quarter, In Review.&lt;/div&gt;
+```
+
+## type-role: ornament-word
+
+- family: display · px: 60–84 · weight: 800
+- leading: 1 · tracking: 0.02em · case: lower
+- purpose: small connector word bracketed by the double-rule ornament (&quot;of&quot;, &quot;and&quot;, &quot;for&quot;)
+
+```css
+.t-trole-ornament-word {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(48px, 5.5vw, 84px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding: 0 6px;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;span class=&quot;t-trole-ornament-word&quot;&gt;of&lt;/span&gt;
+```
+
+## type-role: kpi-figure
+
+- family: display · px: 120–144 · weight: 900
+- leading: 0.9 · tracking: -0.03em · case: upper
+- purpose: KPI-tile numeral on inverse navy tile (144px Bodoni 900)
+
+```css
+.t-trole-kpi-figure {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(96px, 11vw, 144px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--canvas);
+  background: var(--ink);
+  padding: 28px 40px;
+  display: inline-block;
+}
+
+.t-trole-kpi-figure .u {
+  font-size: 0.42em;
+  margin-left: 4px;
+  font-weight: 800;
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-kpi-figure&quot;&gt;94&lt;span class=&quot;u&quot;&gt;%&lt;/span&gt;&lt;/div&gt;
+```
+
+## type-role: stat-figure
+
+- family: display · px: 80–92 · weight: 900
+- leading: 1 · tracking: -0.02em · case: upper
+- purpose: secondary stat numeral in a side panel (92px Bodoni 900)
+
+```css
+.t-trole-stat-figure {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(64px, 7vw, 92px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.t-trole-stat-figure .u {
+  font-size: 0.52em;
+  margin-left: 2px;
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-stat-figure&quot;&gt;+24&lt;span class=&quot;u&quot;&gt;%&lt;/span&gt;&lt;/div&gt;
+```
+
+## type-role: title-card
+
+- family: display · px: 40–64 · weight: 800
+- leading: 1.05 · tracking: -0.005em · case: title
+- purpose: Bodoni 800 title inside a card / agenda-row name / chart take-away
+
+```css
+.t-trole-title-card {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 4vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-title-card&quot;&gt;A Reading Of The Data&lt;/div&gt;
+```
+
+## type-role: eyebrow
+
+- family: body · px: 24–28 · weight: 800
+- leading: 1.2 · tracking: 0.18em · case: upper
+- purpose: Manrope 800 uppercase eyebrow above a headline (0.18em tracking)
+
+```css
+.t-trole-eyebrow {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(24px, 1.8vw, 28px);
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-eyebrow&quot;&gt;A Reading Of The Period&lt;/div&gt;
+```
+
+## type-role: label
+
+- family: body · px: 24–28 · weight: 700
+- leading: 1.2 · tracking: 0.08em · case: upper
+- purpose: masthead / footline label (Manrope 700, 0.08em)
+
+```css
+.t-trole-label {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(24px, 1.8vw, 28px);
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-label&quot;&gt;Data Study · Quarterly Movement&lt;/div&gt;
+```
+
+## type-role: tag
+
+- family: body · px: 24–26 · weight: 800
+- leading: 1 · tracking: 0.12em · case: upper
+- purpose: inverse pill / chip mark (ink bg, emerald text, Manrope 800 0.12em)
+
+```css
+.t-trole-tag {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(24px, 1.6vw, 26px);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--canvas);
+  padding: 10px 22px;
+}
+```
+
+Sample:
+
+```html
+&lt;span class=&quot;t-trole-tag&quot;&gt;Three Themes&lt;/span&gt;
+```
+
+## type-role: caption
+
+- family: body · px: 24–26 · weight: 700
+- leading: 1.35 · tracking: 0.1em · case: upper
+- purpose: agenda-row kind label / chart axis / KPI sub-label (Manrope 700 uppercase 0.1em)
+
+```css
+.t-trole-caption {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(24px, 1.6vw, 26px);
+  line-height: 1.35;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;div class=&quot;t-trole-caption&quot;&gt;Overview · 8 Min&lt;/div&gt;
+```
+
+## type-role: delta-pill
+
+- family: body · px: 24–26 · weight: 800
+- leading: 1 · tracking: 0.08em · case: upper
+- purpose: directional change chip inside a KPI tile (emerald bg, navy text on ink tile)
+
+```css
+.t-trole-delta-pill {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(24px, 1.6vw, 26px);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--canvas);
+  color: var(--ink);
+  padding: 6px 16px;
+  border: 2px solid var(--ink);
+}
+```
+
+Sample:
+
+```html
+&lt;span class=&quot;t-trole-delta-pill&quot;&gt;+ 12.4%&lt;/span&gt;
+```
+<!-- TYPE-ROLES-END --></pre>
+  </details>
+  <details style="margin-top: 32px;">
+    <summary class="ds-summary">Font pairing recipe (preset §D)</summary>
+    <div class="ds-prose-block"><ul class="ds-list"><li><strong>display</strong>: <code>&#39;Bodoni Moda&#39;</code> · <code>&#39;Playfair Display&#39;</code> · <code>&#39;DM Serif Display&#39;</code> wght 900</li><li><strong>body</strong>: <code>&#39;Manrope&#39;</code> · <code>&#39;Inter&#39;</code> wght 500</li><li><strong>mono</strong>: <code>&#39;JetBrains Mono&#39;</code> · <code>&#39;Space Mono&#39;</code> wght 600</li></ul></div>
+  </details>
+</section>
+
+<section id="motion" class="ds-section">
+  <div class="eyebrow">§4 · Motion (preset)</div>
+  <h2>Emerald Editorial motion language</h2>
+  <div class="ds-prose-block"><p class="ds-prose">A fashion-masthead / 19th-century theatrical-playbill register: one display serif at extreme scale (heavy Bodoni-style, weight 900, 92-460px), with negative tracking and tight leading, set against a saturated brand canvas with deep ink and a warm alt-tile surface. The signature is the <strong>double-rule ornament</strong> — a centered serif word framed by two stacked 4px horizontal rules on each side (3px between them), bracketing a connector (&quot;of&quot;, &quot;and&quot;, &quot;for&quot;) between two display words like a printed playbill.</p>
+<p class="ds-prose">Depth is flat printed ink. <strong>Zero shadows, zero gradients, zero border-radius, zero blur.</strong> Elevation is communicated through color-block inversion (an <code>--ink</code> tile on the canvas reads as &quot;elevated&quot;) and 4px solid ink rules that separate every section, list row, and tile divider.</p>
+<p class="ds-prose">Class prefix: <code>ee-</code> (emerald-editorial). All component CSS classes are namespaced under this prefix. No hex literals — every color references brand vars (<code>var(--canvas)</code>, <code>var(--ink)</code>, <code>var(--brand-primary)</code>, <code>var(--brand-accent)</code>).</p></div>
+  <details class="ds-paste-ready">
+    <summary class="ds-summary">▸ Paste-ready source → <code>chunks/easings.js</code> (paste at top of every scene's <code>&lt;script&gt;</code>)</summary>
+    <pre class="ds-code"><!-- MOTION-START -->
+// Emerald Editorial motion: paper-and-ink. Type sets like a typewriter
+// would set it — deliberate, with clear arrivals. Avoid rubber-band / bouncy.
+// Decorative rules draw on like a pen across paper.
+
+const EASE = {
+  entry: &quot;expo.out&quot;, // headlines arrive decisively, then settle
+  emphasis: &quot;power3.out&quot;, // ornament words pop in over the rule-draw
+  exit: &quot;power2.in&quot;, // exits accelerate (book closing)
+  drift: &quot;sine.inOut&quot;, // chrome (masthead, footline) breathes very slowly
+  // Optional: rule-draw — bracket lines extend horizontally with a slight ease-out
+  rule: &quot;power2.out&quot;,
+};
+
+const DUR = {
+  snap: 0.16, // small chrome reveals (chips, eyebrows)
+  med: 0.45, // primary headline / display arrivals
+  slow: 0.9, // ornament rule-draw, jumbo numeral lockup
+};
+
+// RULE: never use back / elastic / bounce easing — overshoot breaks the
+//       printed-ink discipline. The system is press-and-stop, not spring.
+// RULE: ornament double-rule lines draw left-to-right (scaleX 0 -&gt; 1) with
+//       transform-origin: left. The connector word fades in AFTER both
+//       lines have fully drawn (stagger by DUR.med).
+// RULE: jumbo Bodoni numerals (200px+) scale in from 0.9 -&gt; 1 with EASE.entry
+//       and DUR.slow. Never spin, skew, or 3D-rotate them.
+// RULE: text-transform: uppercase content (chrome labels) reveals via opacity
+//       only — never per-letter splittext, which fights the wide tracking.
+<!-- MOTION-END --></pre>
+  </details>
+</section>
+
+<section id="voice" class="ds-section">
+  <div class="eyebrow">§5 · Voice (site × style transform)</div>
+  <h2>How to write on-screen copy in Emerald Editorial register</h2>
+
+  <div class="voice-grid">
+    <div>
+      <h3 class="ds-h3">From the site (DNA)</h3>
+      <dl class="voice-dl">
+        <dt>Tone</dt><dd>neutral</dd>
+        <dt>Heading style</dt><dd>Sentence case</dd>
+        <dt>CTA verbs</dt><dd><span class="voice-cta">iniciar</span></dd>
+        <dt>Sample headings</dt><dd><div class="voice-sample">Finca Tigrillo</div><div class="voice-sample">Iniciar Sesión</div></dd>
+      </dl>
+    </div>
+    <div>
+      <h3 class="ds-h3">Transform recipe (preset §G)</h3>
+      <div class="ds-prose-block"><ol class="ds-list"><li>Strip web-marketing connectives (<code>learn more</code>, <code>today</code>, <code>easily</code>, <code>instantly</code>) — they read as adtech, not editorial.</li><li>Keep grammatical articles (<code>the</code>, <code>a</code>, <code>of</code>, <code>and</code>) — editorial voice is full-sentence, not strip-mined nominal.</li><li>Title Case the headline (<code>The Quarter, In Review</code>), NOT UPPERCASE. Bodoni 900 carries the weight; uppercase serif at 184px is brutalist, not editorial.</li><li>UPPERCASE only the chrome layer — eyebrows, masthead/footline strings, marks/chips, KPI labels, captions — with 0.05-0.18em letter-spacing.</li><li>Punctuate with em-dashes (—) and serial commas. End headlines with a period when the line stands as a complete statement (<code>The Quarter, In Review.</code>); drop the period on a fragment in the cover position (<code>THE STATE / of / THE WORK AHEAD</code>).</li><li>When the headline contains a small connector word (<code>of</code>, <code>and</code>, <code>in</code>, <code>for</code>), set that word in the ornament between display words and downscale it to ~0.42x the display size — this is the playbill bracket.</li></ol>
+<p class="ds-prose"><strong>Example:</strong></p>
+<ul class="ds-list"><li>IN: <code>Build faster apps with our AI-powered analytics platform</code></li><li>OUT: <code>Faster Apps. / — and — / Sharper Analytics.</code> (the em-dashes between flank an ornament-bracketed <code>and</code>; the two display lines stack)</li></ul></div>
+    </div>
+  </div>
+
+  <h3 class="ds-h3" style="margin-top: 32px;">Try it on this site's voice</h3>
+  
+  <div class="voice-pair">
+    <div class="voice-in"><span class="voice-tag">IN (site)</span> Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.</div>
+    <div class="voice-out"><span class="voice-tag">OUT (Phase 4b applies recipe to DOM copy)</span> <em>worker writes register-shaped HTML text</em></div>
+  </div>
+  <div class="voice-pair">
+    <div class="voice-in"><span class="voice-tag">IN (site)</span> Finca Tigrillo</div>
+    <div class="voice-out"><span class="voice-tag">OUT (Phase 4b applies recipe to DOM copy)</span> <em>worker writes register-shaped HTML text</em></div>
+  </div>
+
+  <details class="ds-paste-ready" style="margin-top: 32px;">
+    <summary class="ds-summary">▸ Paste-ready source → <code>chunks/voice.md</code> (Phase 4b applies recipe to DOM text)</summary>
+    <pre class="ds-code"><!-- VOICE-START -->
+# Voice register: emerald-editorial
+
+## From the site (DNA)
+- Tone: neutral
+- Heading style: Sentence case
+- Sample headings:
+  - Finca Tigrillo
+  - Iniciar Sesión
+
+## Transform recipe
+
+1. Strip web-marketing connectives (`learn more`, `today`, `easily`, `instantly`) — they read as adtech, not editorial.
+2. Keep grammatical articles (`the`, `a`, `of`, `and`) — editorial voice is full-sentence, not strip-mined nominal.
+3. Title Case the headline (`The Quarter, In Review`), NOT UPPERCASE. Bodoni 900 carries the weight; uppercase serif at 184px is brutalist, not editorial.
+4. UPPERCASE only the chrome layer — eyebrows, masthead/footline strings, marks/chips, KPI labels, captions — with 0.05-0.18em letter-spacing.
+5. Punctuate with em-dashes (—) and serial commas. End headlines with a period when the line stands as a complete statement (`The Quarter, In Review.`); drop the period on a fragment in the cover position (`THE STATE / of / THE WORK AHEAD`).
+6. When the headline contains a small connector word (`of`, `and`, `in`, `for`), set that word in the ornament between display words and downscale it to ~0.42x the display size — this is the playbill bracket.
+
+**Example:**
+
+- IN: `Build faster apps with our AI-powered analytics platform`
+- OUT: `Faster Apps. / — and — / Sharper Analytics.` (the em-dashes between flank an ornament-bracketed `and`; the two display lines stack)
+
+&gt; Phase 4b scene workers: apply to DOM text only (headline / chip / button copy).
+&gt; Phase 2 narrator scripts are TTS-bound — do NOT uppercase or strip articles.
+<!-- VOICE-END --></pre>
+  </details>
+</section>
+
+<section id="hints" class="ds-section">
+  <div class="eyebrow">§H · Scene composition hints (plan agent reads these)</div>
+  <h2>Emerald Editorial composition rules</h2>
+  <p class="ds-prose">Surface contracts, material composition rules, brand-color placement — anything that constrains <strong>which</strong> components a Phase 3 plan can mix in a single scene.</p>
+  <div class="ds-prose-block"><ul class="ds-list"><li><strong>Default surface:</strong> <code>var(--canvas)</code> (the site&#39;s brand canvas). Reach for <code>var(--ink)</code> as the full slide surface only for section-opener and closing moments.</li><li><strong>Default text on canvas:</strong> <code>var(--ink)</code>. <strong>Default text on ink:</strong> <code>var(--canvas)</code>. The system has exactly one color flip — never introduce a third (e.g. paper-on-ink) without explicit reason.</li><li><strong>Focal element sizing:</strong> one display headline per scene at 92-200px Bodoni-equivalent. Hero / cover scenes go to 184px; jumbo numeral panels go to 460px. Routine headlines stay at 92-104px. Pick from the ladder (92 / 104 / 120 / 128 / 130 / 184 / 200) — never invent a new size.</li><li><strong>Tile rotation:</strong> in any row of 3-4 supporting tiles (KPI grid, process flow), alternate <code>--ee-inverse-bg</code> (ink) and <code>--ee-paper</code> (alt-surface) tiles. Three all-ink tiles in a row reads as monotony; pattern is <code>ink → paper → ink → paper</code>.</li><li><strong>Rule rhythm:</strong> every section separator, list-row border, tile internal divider is a 4px solid <code>var(--ink)</code> rule. Never 1px, never 2px (2px is reserved for chart grid lines only), never dashed.</li><li><strong>Ornament use:</strong> the double-rule ornament works best around a small connector word between two display lines. Don&#39;t use it as page-wide decoration without a word inside the bracket — the bracket without a word reads as broken.</li><li><strong>Density:</strong> one display headline + 3-4 supporting tiles is the rhythm. A scene with six small elements breaks the editorial register; if you find yourself crowding, increase the headline size and drop tiles.</li><li><strong>No corner radius anywhere.</strong> Pills, tags, tiles, panels, bars, ornament strips — all strict rectangles. The only curves are inside the Bodoni glyphs themselves.</li><li><strong>No shadows, no gradients, no glass.</strong> If a scene needs depth, invert a tile or add a 4px rule. Never reach for box-shadow.</li><li><strong>Masthead/footline chrome:</strong> cover and closing scenes carry a top + bottom Manrope row (two uppercase strings, opposite sides) at <code>top/bottom: 56px, side: 80px</code>. Content scenes typically skip the chrome and let the 110px-top padding hold the page.</li><li><strong>Section-opener pattern:</strong> a 50/50 split where the left half is a solid <code>var(--ink)</code> panel holding a jumbo Bodoni numeral (~460px) and the right half is canvas with eyebrow + headline + lede + mark chips.</li><li><strong>Transition vocabulary:</strong> snap-cut or <code>--ee-paper</code> page-flip wipe. Never crossfade.</li><li><strong>Brand color placement:</strong> if the site exposes <code>--brand-primary</code>, prefer it for the <strong>rule-fill accent</strong> moments (small inline highlights on display headlines, like an underlined word in a magazine). Keep the dominant text in <code>--ink</code>.</li></ul></div>
+  <details class="ds-paste-ready">
+    <summary class="ds-summary">▸ Paste-ready source → <code>chunks/composition-hints.md</code> (plan agent reads this)</summary>
+    <pre class="ds-code"><!-- HINTS-START -->
+# Composition hints — Emerald Editorial
+
+- **Default surface:** `var(--canvas)` (the site&#39;s brand canvas). Reach for `var(--ink)` as the full slide surface only for section-opener and closing moments.
+- **Default text on canvas:** `var(--ink)`. **Default text on ink:** `var(--canvas)`. The system has exactly one color flip — never introduce a third (e.g. paper-on-ink) without explicit reason.
+- **Focal element sizing:** one display headline per scene at 92-200px Bodoni-equivalent. Hero / cover scenes go to 184px; jumbo numeral panels go to 460px. Routine headlines stay at 92-104px. Pick from the ladder (92 / 104 / 120 / 128 / 130 / 184 / 200) — never invent a new size.
+- **Tile rotation:** in any row of 3-4 supporting tiles (KPI grid, process flow), alternate `--ee-inverse-bg` (ink) and `--ee-paper` (alt-surface) tiles. Three all-ink tiles in a row reads as monotony; pattern is `ink → paper → ink → paper`.
+- **Rule rhythm:** every section separator, list-row border, tile internal divider is a 4px solid `var(--ink)` rule. Never 1px, never 2px (2px is reserved for chart grid lines only), never dashed.
+- **Ornament use:** the double-rule ornament works best around a small connector word between two display lines. Don&#39;t use it as page-wide decoration without a word inside the bracket — the bracket without a word reads as broken.
+- **Density:** one display headline + 3-4 supporting tiles is the rhythm. A scene with six small elements breaks the editorial register; if you find yourself crowding, increase the headline size and drop tiles.
+- **No corner radius anywhere.** Pills, tags, tiles, panels, bars, ornament strips — all strict rectangles. The only curves are inside the Bodoni glyphs themselves.
+- **No shadows, no gradients, no glass.** If a scene needs depth, invert a tile or add a 4px rule. Never reach for box-shadow.
+- **Masthead/footline chrome:** cover and closing scenes carry a top + bottom Manrope row (two uppercase strings, opposite sides) at `top/bottom: 56px, side: 80px`. Content scenes typically skip the chrome and let the 110px-top padding hold the page.
+- **Section-opener pattern:** a 50/50 split where the left half is a solid `var(--ink)` panel holding a jumbo Bodoni numeral (~460px) and the right half is canvas with eyebrow + headline + lede + mark chips.
+- **Transition vocabulary:** snap-cut or `--ee-paper` page-flip wipe. Never crossfade.
+- **Brand color placement:** if the site exposes `--brand-primary`, prefer it for the **rule-fill accent** moments (small inline highlights on display headlines, like an underlined word in a magazine). Keep the dominant text in `--ink`.
+<!-- HINTS-END --></pre>
+  </details>
+</section>
+
+<section id="components" class="ds-section">
+  <div class="eyebrow">§6 · Components (paste-ready)</div>
+  <h2>Emerald Editorial component library</h2>
+
+  
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">agenda-row</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: agenda-row --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-agenda-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 320px;
+    align-items: center;
+    padding: var(--ee-gap-row) 0;
+    border-top: var(--ee-rule);
+    column-gap: 40px;
+    color: var(--ink);
+  }
+  .ee-agenda-row.is-last {
+    border-bottom: var(--ee-rule);
+  }
+  .ee-agenda-row-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 1;
+  }
+  .ee-agenda-row-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: -0.005em;
+  }
+  .ee-agenda-row-kind {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: var(--ee-chrome-tracking);
+    text-transform: uppercase;
+    text-align: right;
+    white-space: nowrap;
+  }
+</style>
+      <!-- Three-column agenda / table-of-contents row. Ordinal + name + kind label.
+     4px ink rule on top; the last row in a stack adds a matching bottom rule
+     (apply via .ee-agenda-row.is-last). Stack 4-6 of these to form the
+     full agenda list pattern. -->
+<div class="ee-agenda-row">
+  <span class="ee-agenda-row-num">01</span>
+  <span class="ee-agenda-row-name">Fincatigrillo</span>
+  <span class="ee-agenda-row-kind">Get started</span>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: agenda-row --&gt;
+```html
+&lt;!-- Three-column agenda / table-of-contents row. Ordinal + name + kind label.
+     4px ink rule on top; the last row in a stack adds a matching bottom rule
+     (apply via .ee-agenda-row.is-last). Stack 4-6 of these to form the
+     full agenda list pattern. --&gt;
+&lt;div class=&quot;ee-agenda-row&quot;&gt;
+  &lt;span class=&quot;ee-agenda-row-num&quot;&gt;01&lt;/span&gt;
+  &lt;span class=&quot;ee-agenda-row-name&quot;&gt;{HEADLINE}&lt;/span&gt;
+  &lt;span class=&quot;ee-agenda-row-kind&quot;&gt;{LABEL}&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-agenda-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 320px;
+    align-items: center;
+    padding: var(--ee-gap-row) 0;
+    border-top: var(--ee-rule);
+    column-gap: 40px;
+    color: var(--ink);
+  }
+  .ee-agenda-row.is-last {
+    border-bottom: var(--ee-rule);
+  }
+  .ee-agenda-row-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 1;
+  }
+  .ee-agenda-row-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: -0.005em;
+  }
+  .ee-agenda-row-kind {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: var(--ee-chrome-tracking);
+    text-transform: uppercase;
+    text-align: right;
+    white-space: nowrap;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">button</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: button --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-button {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 18px 38px;
+    font-family: var(--font-body);
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: var(--ee-chrome-tracking);
+    text-transform: uppercase;
+    border: 0;
+    border-radius: var(--ee-radius);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ee-button:focus-visible {
+    outline: var(--ee-rule);
+    outline-offset: 4px;
+  }
+</style>
+      <!-- Primary action element. Editorial buttons read as authoritative pills:
+     strict rectangle, ink fill on canvas surfaces, canvas-color text. -->
+<button type="button" class="ee-button">Get started</button>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: button --&gt;
+```html
+&lt;!-- Primary action element. Editorial buttons read as authoritative pills:
+     strict rectangle, ink fill on canvas surfaces, canvas-color text. --&gt;
+&lt;button type=&quot;button&quot; class=&quot;ee-button&quot;&gt;{LABEL}&lt;/button&gt;
+
+&lt;style&gt;
+  .ee-button {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 18px 38px;
+    font-family: var(--font-body);
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: var(--ee-chrome-tracking);
+    text-transform: uppercase;
+    border: 0;
+    border-radius: var(--ee-radius);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ee-button:focus-visible {
+    outline: var(--ee-rule);
+    outline-offset: 4px;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">chart-card</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: chart-card --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-chart-card {
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 36px 50px 30px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    overflow: hidden;
+    min-height: 480px;
+    font-family: var(--font-body);
+  }
+  .ee-chart-card-lbl {
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-size: 24px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+  .ee-chart-card-area {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+  }
+  .ee-chart-card-grid {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 60px;
+  }
+  .ee-chart-card-gl {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--ee-chart-grid);
+  }
+  .ee-chart-card-bars {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 60px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+  }
+  .ee-chart-card-grp {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    height: 100%;
+  }
+  .ee-chart-card-bar {
+    flex: 1;
+    background: var(--canvas);
+    position: relative;
+    border-radius: var(--ee-radius);
+  }
+  .ee-chart-card-bar-alt {
+    background: var(--ee-paper);
+  }
+  .ee-chart-card-v {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 30px;
+    color: var(--canvas);
+  }
+  .ee-chart-card-bar-alt .ee-chart-card-v {
+    color: var(--ee-paper);
+  }
+  .ee-chart-card-legend {
+    display: flex;
+    gap: 36px;
+    margin-top: 20px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .ee-chart-card-it {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ee-chart-card-sw {
+    width: 22px;
+    height: 22px;
+    background: var(--canvas);
+  }
+  .ee-chart-card-sw-alt {
+    background: var(--ee-paper);
+  }
+</style>
+      <!-- Magazine-style data panel: solid ink container holding a bar chart on
+     canvas-colored bars + alt brand-accent bars. Strict rectangle, no
+     border-radius, no shadow. The grid lines are 2px at 22% canvas-on-ink.
+     Hand-set bar heights — there is no data-binding layer. -->
+<div class="ee-chart-card">
+  <div class="ee-chart-card-lbl">Get started</div>
+  <div class="ee-chart-card-area">
+    <div class="ee-chart-card-grid">
+      <div class="ee-chart-card-gl" style="top: 0%;"></div>
+      <div class="ee-chart-card-gl" style="top: 25%;"></div>
+      <div class="ee-chart-card-gl" style="top: 50%;"></div>
+      <div class="ee-chart-card-gl" style="top: 75%;"></div>
+      <div class="ee-chart-card-gl" style="top: 100%;"></div>
+    </div>
+    <div class="ee-chart-card-bars">
+      <div class="ee-chart-card-grp">
+        <div class="ee-chart-card-bar" style="height: 42%;">
+          <span class="ee-chart-card-v">52</span>
+        </div>
+        <div class="ee-chart-card-bar ee-chart-card-bar-alt" style="height: 35%;">
+          <span class="ee-chart-card-v">44</span>
+        </div>
+      </div>
+      <div class="ee-chart-card-grp">
+        <div class="ee-chart-card-bar" style="height: 58%;">
+          <span class="ee-chart-card-v">70</span>
+        </div>
+        <div class="ee-chart-card-bar ee-chart-card-bar-alt" style="height: 50%;">
+          <span class="ee-chart-card-v">60</span>
+        </div>
+      </div>
+      <div class="ee-chart-card-grp">
+        <div class="ee-chart-card-bar" style="height: 75%;">
+          <span class="ee-chart-card-v">90</span>
+        </div>
+        <div class="ee-chart-card-bar ee-chart-card-bar-alt" style="height: 70%;">
+          <span class="ee-chart-card-v">84</span>
+        </div>
+      </div>
+      <div class="ee-chart-card-grp">
+        <div class="ee-chart-card-bar" style="height: 88%;">
+          <span class="ee-chart-card-v">106</span>
+        </div>
+        <div class="ee-chart-card-bar ee-chart-card-bar-alt" style="height: 82%;">
+          <span class="ee-chart-card-v">98</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ee-chart-card-legend">
+    <div class="ee-chart-card-it"><span class="ee-chart-card-sw"></span><span>COMMITTED</span></div>
+    <div class="ee-chart-card-it">
+      <span class="ee-chart-card-sw ee-chart-card-sw-alt"></span><span>DELIVERED</span>
+    </div>
+  </div>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: chart-card --&gt;
+```html
+&lt;!-- Magazine-style data panel: solid ink container holding a bar chart on
+     canvas-colored bars + alt brand-accent bars. Strict rectangle, no
+     border-radius, no shadow. The grid lines are 2px at 22% canvas-on-ink.
+     Hand-set bar heights — there is no data-binding layer. --&gt;
+&lt;div class=&quot;ee-chart-card&quot;&gt;
+  &lt;div class=&quot;ee-chart-card-lbl&quot;&gt;{LABEL}&lt;/div&gt;
+  &lt;div class=&quot;ee-chart-card-area&quot;&gt;
+    &lt;div class=&quot;ee-chart-card-grid&quot;&gt;
+      &lt;div class=&quot;ee-chart-card-gl&quot; style=&quot;top: 0%;&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;ee-chart-card-gl&quot; style=&quot;top: 25%;&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;ee-chart-card-gl&quot; style=&quot;top: 50%;&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;ee-chart-card-gl&quot; style=&quot;top: 75%;&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;ee-chart-card-gl&quot; style=&quot;top: 100%;&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;ee-chart-card-bars&quot;&gt;
+      &lt;div class=&quot;ee-chart-card-grp&quot;&gt;
+        &lt;div class=&quot;ee-chart-card-bar&quot; style=&quot;height: 42%;&quot;&gt;
+          &lt;span class=&quot;ee-chart-card-v&quot;&gt;52&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;ee-chart-card-bar ee-chart-card-bar-alt&quot; style=&quot;height: 35%;&quot;&gt;
+          &lt;span class=&quot;ee-chart-card-v&quot;&gt;44&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;ee-chart-card-grp&quot;&gt;
+        &lt;div class=&quot;ee-chart-card-bar&quot; style=&quot;height: 58%;&quot;&gt;
+          &lt;span class=&quot;ee-chart-card-v&quot;&gt;70&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;ee-chart-card-bar ee-chart-card-bar-alt&quot; style=&quot;height: 50%;&quot;&gt;
+          &lt;span class=&quot;ee-chart-card-v&quot;&gt;60&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;ee-chart-card-grp&quot;&gt;
+        &lt;div class=&quot;ee-chart-card-bar&quot; style=&quot;height: 75%;&quot;&gt;
+          &lt;span class=&quot;ee-chart-card-v&quot;&gt;90&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;ee-chart-card-bar ee-chart-card-bar-alt&quot; style=&quot;height: 70%;&quot;&gt;
+          &lt;span class=&quot;ee-chart-card-v&quot;&gt;84&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;ee-chart-card-grp&quot;&gt;
+        &lt;div class=&quot;ee-chart-card-bar&quot; style=&quot;height: 88%;&quot;&gt;
+          &lt;span class=&quot;ee-chart-card-v&quot;&gt;106&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;ee-chart-card-bar ee-chart-card-bar-alt&quot; style=&quot;height: 82%;&quot;&gt;
+          &lt;span class=&quot;ee-chart-card-v&quot;&gt;98&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;ee-chart-card-legend&quot;&gt;
+    &lt;div class=&quot;ee-chart-card-it&quot;&gt;&lt;span class=&quot;ee-chart-card-sw&quot;&gt;&lt;/span&gt;&lt;span&gt;COMMITTED&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;ee-chart-card-it&quot;&gt;
+      &lt;span class=&quot;ee-chart-card-sw ee-chart-card-sw-alt&quot;&gt;&lt;/span&gt;&lt;span&gt;DELIVERED&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-chart-card {
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 36px 50px 30px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    overflow: hidden;
+    min-height: 480px;
+    font-family: var(--font-body);
+  }
+  .ee-chart-card-lbl {
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-size: 24px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+  .ee-chart-card-area {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+  }
+  .ee-chart-card-grid {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 60px;
+  }
+  .ee-chart-card-gl {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--ee-chart-grid);
+  }
+  .ee-chart-card-bars {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 60px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+  }
+  .ee-chart-card-grp {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    height: 100%;
+  }
+  .ee-chart-card-bar {
+    flex: 1;
+    background: var(--canvas);
+    position: relative;
+    border-radius: var(--ee-radius);
+  }
+  .ee-chart-card-bar-alt {
+    background: var(--ee-paper);
+  }
+  .ee-chart-card-v {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 30px;
+    color: var(--canvas);
+  }
+  .ee-chart-card-bar-alt .ee-chart-card-v {
+    color: var(--ee-paper);
+  }
+  .ee-chart-card-legend {
+    display: flex;
+    gap: 36px;
+    margin-top: 20px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .ee-chart-card-it {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ee-chart-card-sw {
+    width: 22px;
+    height: 22px;
+    background: var(--canvas);
+  }
+  .ee-chart-card-sw-alt {
+    background: var(--ee-paper);
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">chip</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: chip --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-chip {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--canvas);
+    padding: var(--ee-pad-pill-y) var(--ee-pad-pill-x);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: var(--ee-chrome-tracking);
+    text-transform: uppercase;
+    border-radius: var(--ee-radius);
+    white-space: nowrap;
+  }
+</style>
+      <!-- Mark/category pill: strict rectangle, ink fill, canvas-color text.
+     Used as a category mark, section tag, or bottom-margin label. -->
+<span class="ee-chip">Get started</span>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: chip --&gt;
+```html
+&lt;!-- Mark/category pill: strict rectangle, ink fill, canvas-color text.
+     Used as a category mark, section tag, or bottom-margin label. --&gt;
+&lt;span class=&quot;ee-chip&quot;&gt;{LABEL}&lt;/span&gt;
+
+&lt;style&gt;
+  .ee-chip {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--canvas);
+    padding: var(--ee-pad-pill-y) var(--ee-pad-pill-x);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: var(--ee-chrome-tracking);
+    text-transform: uppercase;
+    border-radius: var(--ee-radius);
+    white-space: nowrap;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">divider-loud</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: divider-loud --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-divider-loud {
+    width: 100%;
+    height: var(--ee-rule-weight);
+    background: var(--ink);
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+</style>
+      <!-- Universal 4px ink horizontal rule. The system's structural rhythm.
+     Used as section separator, list-row border, tile divider. Never 1px,
+     never 2px (2px reserved for chart grid lines only). -->
+<hr class="ee-divider-loud" />
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: divider-loud --&gt;
+```html
+&lt;!-- Universal 4px ink horizontal rule. The system&#39;s structural rhythm.
+     Used as section separator, list-row border, tile divider. Never 1px,
+     never 2px (2px reserved for chart grid lines only). --&gt;
+&lt;hr class=&quot;ee-divider-loud&quot; /&gt;
+
+&lt;style&gt;
+  .ee-divider-loud {
+    width: 100%;
+    height: var(--ee-rule-weight);
+    background: var(--ink);
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">hero</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: hero --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-hero {
+    width: 100%;
+    background: var(--canvas);
+    color: var(--ink);
+    padding: var(--ee-pad-cover) var(--ee-pad-default);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+    font-family: var(--font-body);
+  }
+  .ee-hero-the {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 76px;
+    line-height: 1;
+    margin-bottom: -2px;
+  }
+  .ee-hero-big {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 184px;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    text-transform: none;
+  }
+  .ee-hero-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 1400px;
+  }
+  .ee-hero-rule {
+    flex: 1;
+    height: 22px;
+    position: relative;
+  }
+  .ee-hero-rule::before,
+  .ee-hero-rule::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--ee-rule-weight-cover);
+    background: var(--ink);
+  }
+  .ee-hero-rule::before {
+    top: 2px;
+  }
+  .ee-hero-rule::after {
+    bottom: 2px;
+  }
+  .ee-hero-of {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 68px;
+    line-height: 1;
+    padding: 0 6px;
+  }
+  .ee-hero-credit {
+    margin-top: 30px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: var(--ee-chrome-tracking-wide);
+    text-transform: uppercase;
+  }
+</style>
+      <!-- Emerald Editorial cover hero: "The X / of / Y" playbill framing.
+     The connector word ("of") is hardcoded — replace per-scene if needed.
+     Class prefix: ee- (emerald-editorial). -->
+<div class="ee-hero">
+  <div class="ee-hero-the">The</div>
+  <div class="ee-hero-big">Fincatigrillo</div>
+
+  <div class="ee-hero-ornament">
+    <span class="ee-hero-rule"></span>
+    <span class="ee-hero-of">of</span>
+    <span class="ee-hero-rule"></span>
+  </div>
+
+  <div class="ee-hero-big">Stamped. Signed. Framed.</div>
+
+  <div class="ee-hero-credit">Get started</div>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: hero --&gt;
+```html
+&lt;!-- Emerald Editorial cover hero: &quot;The X / of / Y&quot; playbill framing.
+     The connector word (&quot;of&quot;) is hardcoded — replace per-scene if needed.
+     Class prefix: ee- (emerald-editorial). --&gt;
+&lt;div class=&quot;ee-hero&quot;&gt;
+  &lt;div class=&quot;ee-hero-the&quot;&gt;The&lt;/div&gt;
+  &lt;div class=&quot;ee-hero-big&quot;&gt;{HEADLINE}&lt;/div&gt;
+
+  &lt;div class=&quot;ee-hero-ornament&quot;&gt;
+    &lt;span class=&quot;ee-hero-rule&quot;&gt;&lt;/span&gt;
+    &lt;span class=&quot;ee-hero-of&quot;&gt;of&lt;/span&gt;
+    &lt;span class=&quot;ee-hero-rule&quot;&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;ee-hero-big&quot;&gt;{SUBHEAD}&lt;/div&gt;
+
+  &lt;div class=&quot;ee-hero-credit&quot;&gt;{LABEL}&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-hero {
+    width: 100%;
+    background: var(--canvas);
+    color: var(--ink);
+    padding: var(--ee-pad-cover) var(--ee-pad-default);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+    font-family: var(--font-body);
+  }
+  .ee-hero-the {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 76px;
+    line-height: 1;
+    margin-bottom: -2px;
+  }
+  .ee-hero-big {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 184px;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    text-transform: none;
+  }
+  .ee-hero-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 1400px;
+  }
+  .ee-hero-rule {
+    flex: 1;
+    height: 22px;
+    position: relative;
+  }
+  .ee-hero-rule::before,
+  .ee-hero-rule::after {
+    content: &quot;&quot;;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--ee-rule-weight-cover);
+    background: var(--ink);
+  }
+  .ee-hero-rule::before {
+    top: 2px;
+  }
+  .ee-hero-rule::after {
+    bottom: 2px;
+  }
+  .ee-hero-of {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 68px;
+    line-height: 1;
+    padding: 0 6px;
+  }
+  .ee-hero-credit {
+    margin-top: 30px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: var(--ee-chrome-tracking-wide);
+    text-transform: uppercase;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">inverse-tile</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: inverse-tile --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-inverse-tile {
+    background: var(--ee-inverse-bg);
+    color: var(--ee-inverse-fg);
+    padding: var(--ee-pad-tile);
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    font-family: var(--font-body);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ee-inverse-tile-eyebrow {
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ee-inverse-tile-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 48px;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    margin: 0;
+    border-top: 4px solid currentColor;
+    padding-top: 16px;
+  }
+  .ee-inverse-tile-body {
+    font-size: 24px;
+    line-height: 1.45;
+    font-weight: 500;
+    margin: 0;
+  }
+</style>
+      <!-- Solid ink container with canvas-color text. The default elevated
+     surface — used in tile rotation with paper-tile. Holds an eyebrow +
+     headline + body block. Strict rectangle, no shadow, no border-radius. -->
+<div class="ee-inverse-tile">
+  <div class="ee-inverse-tile-eyebrow">Build faster</div>
+  <h3 class="ee-inverse-tile-title">Fincatigrillo</h3>
+  <p class="ee-inverse-tile-body">Two lines max. One idea.</p>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: inverse-tile --&gt;
+```html
+&lt;!-- Solid ink container with canvas-color text. The default elevated
+     surface — used in tile rotation with paper-tile. Holds an eyebrow +
+     headline + body block. Strict rectangle, no shadow, no border-radius. --&gt;
+&lt;div class=&quot;ee-inverse-tile&quot;&gt;
+  &lt;div class=&quot;ee-inverse-tile-eyebrow&quot;&gt;{EYEBROW}&lt;/div&gt;
+  &lt;h3 class=&quot;ee-inverse-tile-title&quot;&gt;{HEADLINE}&lt;/h3&gt;
+  &lt;p class=&quot;ee-inverse-tile-body&quot;&gt;{LEDE}&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-inverse-tile {
+    background: var(--ee-inverse-bg);
+    color: var(--ee-inverse-fg);
+    padding: var(--ee-pad-tile);
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    font-family: var(--font-body);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ee-inverse-tile-eyebrow {
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ee-inverse-tile-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 48px;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    margin: 0;
+    border-top: 4px solid currentColor;
+    padding-top: 16px;
+  }
+  .ee-inverse-tile-body {
+    font-size: 24px;
+    line-height: 1.45;
+    font-weight: 500;
+    margin: 0;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">kpi-tile</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: kpi-tile --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-kpi-tile {
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    overflow: hidden;
+    min-width: 0;
+    font-family: var(--font-body);
+  }
+  .ee-kpi-tile.is-alt {
+    background: var(--ee-paper);
+    color: var(--ink);
+  }
+  .ee-kpi-tile-lbl {
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-size: 24px;
+    text-transform: uppercase;
+  }
+  .ee-kpi-tile-val {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 144px;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+  }
+  .ee-kpi-tile-unit {
+    font-size: 60px;
+    margin-left: 4px;
+    font-weight: 800;
+  }
+  .ee-kpi-tile-delta {
+    display: inline-block;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    font-size: 24px;
+    padding: 6px 16px;
+    background: var(--canvas);
+    color: var(--ink);
+    align-self: flex-start;
+    white-space: nowrap;
+    text-transform: uppercase;
+    border-radius: var(--ee-radius);
+  }
+  .ee-kpi-tile.is-alt .ee-kpi-tile-delta {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+  .ee-kpi-tile-desc {
+    font-size: 24px;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+</style>
+      <!-- KPI tile: label + jumbo Bodoni numeral + delta pill + descriptor.
+     Default fill is ink (canvas-color text); add .is-alt to flip to
+     paper-tile (ink text). The delta pill flips colors automatically. -->
+<div class="ee-kpi-tile">
+  <div class="ee-kpi-tile-lbl">Get started</div>
+  <div class="ee-kpi-tile-val">4M<span class="ee-kpi-tile-unit">%</span></div>
+  <div class="ee-kpi-tile-delta">+ 12.4%</div>
+  <div class="ee-kpi-tile-desc">Two lines max. One idea.</div>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: kpi-tile --&gt;
+```html
+&lt;!-- KPI tile: label + jumbo Bodoni numeral + delta pill + descriptor.
+     Default fill is ink (canvas-color text); add .is-alt to flip to
+     paper-tile (ink text). The delta pill flips colors automatically. --&gt;
+&lt;div class=&quot;ee-kpi-tile&quot;&gt;
+  &lt;div class=&quot;ee-kpi-tile-lbl&quot;&gt;{LABEL}&lt;/div&gt;
+  &lt;div class=&quot;ee-kpi-tile-val&quot;&gt;{NUM}&lt;span class=&quot;ee-kpi-tile-unit&quot;&gt;%&lt;/span&gt;&lt;/div&gt;
+  &lt;div class=&quot;ee-kpi-tile-delta&quot;&gt;+ 12.4%&lt;/div&gt;
+  &lt;div class=&quot;ee-kpi-tile-desc&quot;&gt;{LEDE}&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-kpi-tile {
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    overflow: hidden;
+    min-width: 0;
+    font-family: var(--font-body);
+  }
+  .ee-kpi-tile.is-alt {
+    background: var(--ee-paper);
+    color: var(--ink);
+  }
+  .ee-kpi-tile-lbl {
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-size: 24px;
+    text-transform: uppercase;
+  }
+  .ee-kpi-tile-val {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 144px;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+  }
+  .ee-kpi-tile-unit {
+    font-size: 60px;
+    margin-left: 4px;
+    font-weight: 800;
+  }
+  .ee-kpi-tile-delta {
+    display: inline-block;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    font-size: 24px;
+    padding: 6px 16px;
+    background: var(--canvas);
+    color: var(--ink);
+    align-self: flex-start;
+    white-space: nowrap;
+    text-transform: uppercase;
+    border-radius: var(--ee-radius);
+  }
+  .ee-kpi-tile.is-alt .ee-kpi-tile-delta {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+  .ee-kpi-tile-desc {
+    font-size: 24px;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">masthead-strip</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: masthead-strip --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-masthead-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: var(--ee-chrome-tracking-tight);
+    text-transform: uppercase;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+</style>
+      <!-- Magazine masthead/footline strip — two uppercase Manrope strings on
+     opposite sides. Place this absolutely at top: 56px / bottom: 56px,
+     side inset 80px when used as scene chrome on cover and closing scenes. -->
+<div class="ee-masthead-strip">
+  <span class="ee-masthead-strip-l">Column one content</span>
+  <span class="ee-masthead-strip-r">Column two content</span>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: masthead-strip --&gt;
+```html
+&lt;!-- Magazine masthead/footline strip — two uppercase Manrope strings on
+     opposite sides. Place this absolutely at top: 56px / bottom: 56px,
+     side inset 80px when used as scene chrome on cover and closing scenes. --&gt;
+&lt;div class=&quot;ee-masthead-strip&quot;&gt;
+  &lt;span class=&quot;ee-masthead-strip-l&quot;&gt;{LEFT}&lt;/span&gt;
+  &lt;span class=&quot;ee-masthead-strip-r&quot;&gt;{RIGHT}&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-masthead-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: var(--ee-chrome-tracking-tight);
+    text-transform: uppercase;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">ornament-double-rule</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: ornament-double-rule --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-ornament-double-rule {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 26px;
+    width: 100%;
+    color: var(--ink);
+  }
+  .ee-ornament-double-rule-word {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 76px;
+    line-height: 1;
+    padding: 0 6px;
+    letter-spacing: 0.02em;
+  }
+  .ee-ornament-double-rule-lines {
+    flex: 1;
+    height: var(--ee-ornament-height);
+    position: relative;
+  }
+  .ee-ornament-double-rule-lines::before,
+  .ee-ornament-double-rule-lines::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--ee-ornament-rule-thickness);
+    background: var(--ink);
+  }
+  .ee-ornament-double-rule-lines::before {
+    top: 3px;
+  }
+  .ee-ornament-double-rule-lines::after {
+    bottom: 3px;
+  }
+</style>
+      <!-- The signature treatment: a centered serif word framed by two stacked
+     4px horizontal rules on each side (3px gap). 19th-century playbill
+     bracket. Drop this between two display lines around a connector word.
+     Swap the literal "of" for the scene's actual connector word
+     ("and", "for", "in", etc.) per copy. -->
+<div class="ee-ornament-double-rule">
+  <span class="ee-ornament-double-rule-lines"></span>
+  <span class="ee-ornament-double-rule-word">of</span>
+  <span class="ee-ornament-double-rule-lines"></span>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: ornament-double-rule --&gt;
+```html
+&lt;!-- The signature treatment: a centered serif word framed by two stacked
+     4px horizontal rules on each side (3px gap). 19th-century playbill
+     bracket. Drop this between two display lines around a connector word.
+     Swap the literal &quot;of&quot; for the scene&#39;s actual connector word
+     (&quot;and&quot;, &quot;for&quot;, &quot;in&quot;, etc.) per copy. --&gt;
+&lt;div class=&quot;ee-ornament-double-rule&quot;&gt;
+  &lt;span class=&quot;ee-ornament-double-rule-lines&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;ee-ornament-double-rule-word&quot;&gt;of&lt;/span&gt;
+  &lt;span class=&quot;ee-ornament-double-rule-lines&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-ornament-double-rule {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 26px;
+    width: 100%;
+    color: var(--ink);
+  }
+  .ee-ornament-double-rule-word {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 76px;
+    line-height: 1;
+    padding: 0 6px;
+    letter-spacing: 0.02em;
+  }
+  .ee-ornament-double-rule-lines {
+    flex: 1;
+    height: var(--ee-ornament-height);
+    position: relative;
+  }
+  .ee-ornament-double-rule-lines::before,
+  .ee-ornament-double-rule-lines::after {
+    content: &quot;&quot;;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--ee-ornament-rule-thickness);
+    background: var(--ink);
+  }
+  .ee-ornament-double-rule-lines::before {
+    top: 3px;
+  }
+  .ee-ornament-double-rule-lines::after {
+    bottom: 3px;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">paper-tile</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: paper-tile --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-paper-tile {
+    background: var(--ee-paper);
+    color: var(--ink);
+    padding: var(--ee-pad-tile);
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    font-family: var(--font-body);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ee-paper-tile-eyebrow {
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ee-paper-tile-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 48px;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    margin: 0;
+    border-top: 4px solid currentColor;
+    padding-top: 16px;
+  }
+  .ee-paper-tile-body {
+    font-size: 24px;
+    line-height: 1.45;
+    font-weight: 500;
+    margin: 0;
+  }
+</style>
+      <!-- Alt-surface tile (brand-accent fill) with ink text. Rotates with
+     inverse-tile across a row of tiles to break the monotony of all-ink
+     fills. Strict rectangle, no shadow, no border-radius. The internal
+     rule uses currentColor (= ink on paper). -->
+<div class="ee-paper-tile">
+  <div class="ee-paper-tile-eyebrow">Build faster</div>
+  <h3 class="ee-paper-tile-title">Fincatigrillo</h3>
+  <p class="ee-paper-tile-body">Two lines max. One idea.</p>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: paper-tile --&gt;
+```html
+&lt;!-- Alt-surface tile (brand-accent fill) with ink text. Rotates with
+     inverse-tile across a row of tiles to break the monotony of all-ink
+     fills. Strict rectangle, no shadow, no border-radius. The internal
+     rule uses currentColor (= ink on paper). --&gt;
+&lt;div class=&quot;ee-paper-tile&quot;&gt;
+  &lt;div class=&quot;ee-paper-tile-eyebrow&quot;&gt;{EYEBROW}&lt;/div&gt;
+  &lt;h3 class=&quot;ee-paper-tile-title&quot;&gt;{HEADLINE}&lt;/h3&gt;
+  &lt;p class=&quot;ee-paper-tile-body&quot;&gt;{LEDE}&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-paper-tile {
+    background: var(--ee-paper);
+    color: var(--ink);
+    padding: var(--ee-pad-tile);
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    font-family: var(--font-body);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ee-paper-tile-eyebrow {
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .ee-paper-tile-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 48px;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    margin: 0;
+    border-top: 4px solid currentColor;
+    padding-top: 16px;
+  }
+  .ee-paper-tile-body {
+    font-size: 24px;
+    line-height: 1.45;
+    font-weight: 500;
+    margin: 0;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">process-step</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: process-step --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-process-step {
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 32px 32px 26px;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    font-family: var(--font-body);
+  }
+  .ee-process-step.is-alt {
+    background: var(--ee-paper);
+    color: var(--ink);
+  }
+  .ee-process-step-n {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 80px;
+    line-height: 1;
+    margin-bottom: 14px;
+  }
+  .ee-process-step-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 40px;
+    line-height: 1;
+    margin: 0 0 16px;
+    letter-spacing: -0.005em;
+    border-top: 4px solid currentColor;
+    padding-top: 16px;
+  }
+  .ee-process-step-body {
+    font-size: 24px;
+    line-height: 1.4;
+    font-weight: 500;
+    margin: 0 0 16px;
+  }
+  .ee-process-step-meta {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 24px;
+    text-transform: uppercase;
+  }
+</style>
+      <!-- Numbered step card: ordinal + display title sitting under a 4px
+     rule + body paragraph + meta footer. Default fill is ink (canvas
+     text); add .is-alt to flip to paper-tile (ink text). Rotate fills
+     across a row of 4 steps: step → alt → step → alt. -->
+<div class="ee-process-step">
+  <div class="ee-process-step-n">01</div>
+  <h4 class="ee-process-step-title">Fincatigrillo</h4>
+  <p class="ee-process-step-body">Two lines max. One idea.</p>
+  <div class="ee-process-step-meta">
+    <span>Column one content</span>
+    <span>Column two content</span>
+  </div>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: process-step --&gt;
+```html
+&lt;!-- Numbered step card: ordinal + display title sitting under a 4px
+     rule + body paragraph + meta footer. Default fill is ink (canvas
+     text); add .is-alt to flip to paper-tile (ink text). Rotate fills
+     across a row of 4 steps: step → alt → step → alt. --&gt;
+&lt;div class=&quot;ee-process-step&quot;&gt;
+  &lt;div class=&quot;ee-process-step-n&quot;&gt;01&lt;/div&gt;
+  &lt;h4 class=&quot;ee-process-step-title&quot;&gt;{HEADLINE}&lt;/h4&gt;
+  &lt;p class=&quot;ee-process-step-body&quot;&gt;{LEDE}&lt;/p&gt;
+  &lt;div class=&quot;ee-process-step-meta&quot;&gt;
+    &lt;span&gt;{LEFT}&lt;/span&gt;
+    &lt;span&gt;{RIGHT}&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-process-step {
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 32px 32px 26px;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    font-family: var(--font-body);
+  }
+  .ee-process-step.is-alt {
+    background: var(--ee-paper);
+    color: var(--ink);
+  }
+  .ee-process-step-n {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 80px;
+    line-height: 1;
+    margin-bottom: 14px;
+  }
+  .ee-process-step-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 40px;
+    line-height: 1;
+    margin: 0 0 16px;
+    letter-spacing: -0.005em;
+    border-top: 4px solid currentColor;
+    padding-top: 16px;
+  }
+  .ee-process-step-body {
+    font-size: 24px;
+    line-height: 1.4;
+    font-weight: 500;
+    margin: 0 0 16px;
+  }
+  .ee-process-step-meta {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 24px;
+    text-transform: uppercase;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">section-numeral-panel</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: section-numeral-panel --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-section-numeral-panel {
+    width: 100%;
+    min-height: 720px;
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 70px 90px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    font-family: var(--font-body);
+  }
+  .ee-section-numeral-panel-top,
+  .ee-section-numeral-panel-bot {
+    position: absolute;
+    left: 90px;
+    right: 90px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .ee-section-numeral-panel-top {
+    top: 70px;
+  }
+  .ee-section-numeral-panel-bot {
+    bottom: 70px;
+  }
+  .ee-section-numeral-panel-numeral {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 460px;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    text-align: center;
+  }
+</style>
+      <!-- Full-bleed inverse panel holding a single oversized Bodoni numeral.
+     Section-opener / chapter-divider device. Topbar + footline strings
+     sit absolutely in the corners. The numeral is the focal element.
+     Pair with right-half canvas content (eyebrow + headline + lede). -->
+<div class="ee-section-numeral-panel">
+  <div class="ee-section-numeral-panel-top">
+    <span>Column one content</span>
+    <span>Column two content</span>
+  </div>
+  <div class="ee-section-numeral-panel-numeral">4M</div>
+  <div class="ee-section-numeral-panel-bot">
+    <span>Column one content</span>
+    <span>Column two content</span>
+  </div>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: section-numeral-panel --&gt;
+```html
+&lt;!-- Full-bleed inverse panel holding a single oversized Bodoni numeral.
+     Section-opener / chapter-divider device. Topbar + footline strings
+     sit absolutely in the corners. The numeral is the focal element.
+     Pair with right-half canvas content (eyebrow + headline + lede). --&gt;
+&lt;div class=&quot;ee-section-numeral-panel&quot;&gt;
+  &lt;div class=&quot;ee-section-numeral-panel-top&quot;&gt;
+    &lt;span&gt;{LEFT}&lt;/span&gt;
+    &lt;span&gt;{RIGHT}&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;ee-section-numeral-panel-numeral&quot;&gt;{NUM}&lt;/div&gt;
+  &lt;div class=&quot;ee-section-numeral-panel-bot&quot;&gt;
+    &lt;span&gt;{LEFT}&lt;/span&gt;
+    &lt;span&gt;{RIGHT}&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-section-numeral-panel {
+    width: 100%;
+    min-height: 720px;
+    background: var(--ink);
+    color: var(--canvas);
+    padding: 70px 90px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: var(--ee-radius);
+    box-shadow: none;
+    font-family: var(--font-body);
+  }
+  .ee-section-numeral-panel-top,
+  .ee-section-numeral-panel-bot {
+    position: absolute;
+    left: 90px;
+    right: 90px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .ee-section-numeral-panel-top {
+    top: 70px;
+  }
+  .ee-section-numeral-panel-bot {
+    bottom: 70px;
+  }
+  .ee-section-numeral-panel-numeral {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 460px;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    text-align: center;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+  <div class="comp-card">
+    <div class="comp-head">
+      <span class="comp-name">stat-counter</span>
+      <span class="comp-marker">&lt;!-- COMPONENT: stat-counter --&gt;</span>
+    </div>
+    <div class="comp-preview preset-native-scope">
+      <style>
+  .ee-stat-counter {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--ink);
+  }
+  .ee-stat-counter-num {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 92px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .ee-stat-counter-unit {
+    font-size: 48px;
+    margin-left: 2px;
+    font-weight: 900;
+  }
+  .ee-stat-counter-lbl {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: var(--ee-chrome-tracking);
+    text-transform: uppercase;
+    line-height: 1.35;
+  }
+</style>
+      <!-- Stat figure with uppercase caption — the editorial stat-counter.
+     Big Bodoni numeral, no shadow, no border. Caption sits beneath
+     in Manrope uppercase with wide tracking. -->
+<div class="ee-stat-counter">
+  <div class="ee-stat-counter-num">4M<span class="ee-stat-counter-unit">%</span></div>
+  <div class="ee-stat-counter-lbl">Get started</div>
+</div>
+    </div>
+    <details>
+      <summary class="ds-summary">Source</summary>
+      <pre class="ds-code">&lt;!-- COMPONENT: stat-counter --&gt;
+```html
+&lt;!-- Stat figure with uppercase caption — the editorial stat-counter.
+     Big Bodoni numeral, no shadow, no border. Caption sits beneath
+     in Manrope uppercase with wide tracking. --&gt;
+&lt;div class=&quot;ee-stat-counter&quot;&gt;
+  &lt;div class=&quot;ee-stat-counter-num&quot;&gt;{NUM}&lt;span class=&quot;ee-stat-counter-unit&quot;&gt;%&lt;/span&gt;&lt;/div&gt;
+  &lt;div class=&quot;ee-stat-counter-lbl&quot;&gt;{LABEL}&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  .ee-stat-counter {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--ink);
+  }
+  .ee-stat-counter-num {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 92px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .ee-stat-counter-unit {
+    font-size: 48px;
+    margin-left: 2px;
+    font-weight: 900;
+  }
+  .ee-stat-counter-lbl {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: var(--ee-chrome-tracking);
+    text-transform: uppercase;
+    line-height: 1.35;
+  }
+&lt;/style&gt;
+```
+&lt;!-- /COMPONENT --&gt;</pre>
+    </details>
+  </div>
+</section>
+
+<section id="captions" class="ds-section">
+  <div class="eyebrow">§C · Captions (preset-local skin)</div>
+  <h2>Word <em>by word.</em></h2>
+  <p class="ds-prose">Live preview of <code>caption-skin.html</code> — this preset's own caption look. The same file is copied to <code>chunks/caption-skin.html</code> and filled with real word timings by the caption builder (Phase 4a.5); the demo words and loop here are preview-only.</p>
+  <div style="position: relative; width: 100%; max-width: 960px; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid #e5e5e5; border-radius: 8px; margin: 24px 0; background: #fff;">
+    <iframe title="caption-skin preview" loading="lazy" style="position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; border: 0; transform: scale(0.5); transform-origin: top left;" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=1920, height=1080&quot; /&gt;
+    &lt;title&gt;Emerald Editorial — Captions&lt;/title&gt;
+    &lt;!--
+      Emerald Editorial caption skin (preset-local source — second caption source).
+
+      A pre-baked, brand-token-strict caption sub-composition. emit-chunks copies this to
+      design-system/chunks/caption-skin.html for the chosen preset; build-captions-html.mjs
+      then fills three reserved holes and writes compositions/captions.html:
+        - the empty GROUPS array       → engine's scene-aware, non-overlapping word groups
+        - the 0 DURATION + data-duration → real total_duration_s
+        - the empty brand-tokens style → the project's tokens.css
+      (the filler asserts each hole appears exactly once, so this note avoids the literals)
+
+      Contract (so ONE generic fill works for every preset's skin — no per-skin transform):
+        · root carries data-composition-id=&quot;captions&quot;; timeline registers window.__timelines[&quot;captions&quot;]
+        · canonical hooks .caption-group / .caption-word (+ states .is-active / .is-spoken)
+        · all colors are var(--*) / color-mix over tokens — brand-strict by construction
+        · no &lt;video&gt;, no Google Fonts, no placeholder transcript, no window.&lt;native&gt;() calls
+        · state changes use gsap.set({className}) (applied on seek) — NOT .call callbacks
+          (callbacks don't fire on the engine's frame-by-frame seek)
+
+      Visual: a printed-playbill caption band — strict-rectangle canvas pill bracketed by the
+      signature double-rule ornament (two stacked 4px ink rules top + bottom, zero radius, zero
+      shadow). The current word is a solid ink stamp-block with canvas-color text (the
+      inverse-tile flip); spoken words settle to solid ink, upcoming words read as faint ink.
+      Bodoni-class display serif, uppercase, negative tracking. The fashion-masthead counterpart
+      to the registry default caption-pill-karaoke (soft rounded SaaS pill).
+    --&gt;
+    &lt;script src=&quot;https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js&quot;&gt;&lt;/script&gt;
+
+    &lt;!-- build-captions-html.mjs injects the project's tokens.css here --&gt;
+    &lt;style data-brand-tokens&gt;
+
+:root {
+  --brand-primary:   #16A34A;
+  --brand-secondary: #4B5563;
+  --brand-tertiary:  #1A2414;
+  --brand-accent:    #149D45;
+  --brand-costume:   #FFFFFF;
+  --ink:             #000000;
+  --canvas:          #FFFFFF;
+  --brand-gradient:  linear-gradient(135deg, #16A34A 0%, #4B5563 50%, #149D45 100%);
+  --deco-1:          #1A2414;
+  --deco-2:          #99E885;
+  --deco-3:          #C0F7FE;
+  --deco-4:          #FE90E8;
+  --font-display:    'Playfair Display', Georgia, serif;
+  --font-body:       'DM Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono:       'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ee-rule-weight: 4px;
+  --ee-rule-weight-cover: 5px; /* cover ornament rules; slightly heavier */
+  --ee-rule-color: var(--ink);
+  --ee-rule: var(--ee-rule-weight) solid var(--ee-rule-color);
+  --ee-ornament-height: 18px;
+  --ee-ornament-rule-gap: 3px;
+  --ee-ornament-rule-thickness: 4px;
+  --ee-ornament-side-bracket-width: 64px; /* vertical-rule side bracket */
+  --ee-ornament-side-bracket-gap: 8px;
+  --ee-radius: 0; /* strict rectangle commitment */
+  --ee-tile-border: var(--ee-rule);
+  --ee-paper: var(--brand-accent);
+  --ee-inverse-bg: var(--ink);
+  --ee-inverse-fg: var(--canvas);
+  --ee-pad-default: 110px;
+  --ee-pad-default-y-bottom: 70px;
+  --ee-pad-cover: 56px;
+  --ee-pad-tile: 36px;
+  --ee-pad-tile-tight: 32px;
+  --ee-pad-pill-y: 10px;
+  --ee-pad-pill-x: 22px;
+  --ee-masthead-inset-top: 56px;
+  --ee-masthead-inset-x: 80px;
+  --ee-gap-default: 30px;
+  --ee-gap-loose: 50px;
+  --ee-gap-row: 26px;
+  --ee-display-tracking: -0.015em;
+  --ee-display-tracking-tight: -0.03em;
+  --ee-display-leading: 0.95;
+  --ee-display-leading-tight: 0.9;
+  --ee-chrome-tracking: 0.1em;
+  --ee-chrome-tracking-wide: 0.18em;
+  --ee-chrome-tracking-tight: 0.05em;
+  --ee-chart-grid: color-mix(in srgb, var(--canvas) 22%, transparent);
+}&lt;/style&gt;
+
+    &lt;style&gt;
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        overflow: hidden;
+        background: transparent;
+      }
+      #captions-root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: transparent;
+        pointer-events: none;
+      }
+
+      /* emerald-editorial · captions · double-rule playbill band, ink stamp-block active word */
+      .caption-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        pointer-events: none;
+      }
+      .caption-stage {
+        position: absolute;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%);
+        width: 1600px;
+        height: 200px;
+      }
+      .caption-group {
+        /* every group is absolutely positioned over the SAME band — exactly one is shown
+           at a time via opacity. Must be absolute: if groups stay in-flow, N groups lay
+           out side-by-side (opacity:0 hides but still occupies space). */
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+      }
+
+      /* THE playbill band — strict-rectangle canvas pill bracketed top + bottom by the
+         signature double-rule ornament (two stacked 4px ink rules each side, drawn with
+         ::before/::after). Zero radius, zero shadow — flat printed ink. */
+      .caption-pill {
+        position: relative;
+        max-width: 1600px;
+        padding: 26px 44px;
+        background: var(--canvas);
+        border: 0;
+        border-radius: var(--ee-radius, 0);
+        box-shadow: none;
+      }
+      /* double-rule ornament: a pair of 4px ink rules above and below the line, 3px apart */
+      .caption-pill::before,
+      .caption-pill::after {
+        content: &quot;&quot;;
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: var(--ee-ornament-rule-thickness, 4px);
+        background: var(--ink);
+      }
+      .caption-pill::before {
+        top: 0;
+        box-shadow: 0 calc(var(--ee-ornament-rule-thickness, 4px) + 3px) 0 0 var(--ink);
+      }
+      .caption-pill::after {
+        bottom: 0;
+        box-shadow: 0 calc(-1 * (var(--ee-ornament-rule-thickness, 4px) + 3px)) 0 0 var(--ink);
+      }
+      .caption-line {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.12em 0.3em;
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: clamp(42px, 4.4vw, 56px);
+        line-height: 1.02;
+        letter-spacing: var(--ee-display-tracking, -0.015em);
+        text-transform: uppercase;
+      }
+
+      /* upcoming — faint ink, no block */
+      .caption-word {
+        display: inline-block;
+        color: color-mix(in srgb, var(--ink) 32%, var(--canvas));
+      }
+      /* current word — THE ink stamp-block (the inverse-tile flip): solid ink rectangle,
+         canvas-color text. box-shadow spread paints the block with NO layout shift. */
+      .caption-word.is-active {
+        color: var(--canvas);
+        background: var(--ink);
+        box-shadow: 0 0 0 0.08em var(--ink);
+      }
+      /* already spoken — solid ink, block cleared */
+      .caption-word.is-spoken {
+        color: var(--ink);
+        background: transparent;
+        box-shadow: none;
+      }
+
+      /* optional per-word accents (dormant until a word-classer tags them) */
+      .caption-word.cap-brand {
+        color: var(--brand-primary);
+      }
+      .caption-word.cap-brand.is-active {
+        color: var(--canvas);
+        background: var(--brand-primary);
+        box-shadow: 0 0 0 0.08em var(--brand-primary);
+      }
+      .caption-word.cap-num {
+        color: color-mix(in srgb, var(--ink) 70%, var(--canvas));
+      }
+      .caption-word.cap-cta {
+        text-decoration: underline;
+        text-decoration-thickness: 4px;
+        text-decoration-color: var(--ink);
+        text-underline-offset: 0.08em;
+      }
+
+      @media (max-aspect-ratio: 9/16) {
+        .caption-stage {
+          bottom: 100px;
+          width: 92%;
+        }
+        .caption-line {
+          font-size: clamp(36px, 5.2vw, 48px);
+        }
+      }
+    &lt;/style&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div
+      id=&quot;captions-root&quot;
+      data-composition-id=&quot;captions&quot;
+      data-timeline-locked
+      data-start=&quot;0&quot;
+      data-duration=&quot;6.6&quot;
+      data-fps=&quot;30&quot;
+      data-width=&quot;1920&quot;
+      data-height=&quot;1080&quot;
+    &gt;
+      &lt;div class=&quot;caption-layer&quot; aria-hidden=&quot;true&quot;&gt;
+        &lt;div id=&quot;caption-stage&quot; class=&quot;caption-stage&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+      // build-captions-html.mjs injects the engine's scene-aware groups + real duration.
+      var GROUPS = [{&quot;start&quot;:0.3,&quot;end&quot;:2.1,&quot;words&quot;:[{&quot;text&quot;:&quot;WRITE&quot;,&quot;start&quot;:0.3,&quot;end&quot;:0.9},{&quot;text&quot;:&quot;HTML,&quot;,&quot;start&quot;:0.9,&quot;end&quot;:1.4},{&quot;text&quot;:&quot;RENDER&quot;,&quot;start&quot;:1.4,&quot;end&quot;:2.1}]},{&quot;start&quot;:2.5,&quot;end&quot;:4.3,&quot;words&quot;:[{&quot;text&quot;:&quot;VIDEO.&quot;,&quot;start&quot;:2.5,&quot;end&quot;:3.1},{&quot;text&quot;:&quot;NO&quot;,&quot;start&quot;:3.1,&quot;end&quot;:3.5},{&quot;text&quot;:&quot;TIMELINE.&quot;,&quot;start&quot;:3.5,&quot;end&quot;:4.3}]},{&quot;start&quot;:4.7,&quot;end&quot;:6.2,&quot;words&quot;:[{&quot;text&quot;:&quot;JUST&quot;,&quot;start&quot;:4.7,&quot;end&quot;:5.1},{&quot;text&quot;:&quot;CODE.&quot;,&quot;start&quot;:5.1,&quot;end&quot;:5.9}]}];
+      var DURATION = 6.6;
+
+      (function () {
+        var stage = document.getElementById(&quot;caption-stage&quot;);
+
+        // build DOM: one .caption-group per group, .caption-word per word
+        GROUPS.forEach(function (group, g) {
+          var groupEl = document.createElement(&quot;div&quot;);
+          groupEl.className = &quot;caption-group&quot;;
+          groupEl.id = &quot;caption-group-&quot; + g;
+          var pill = document.createElement(&quot;div&quot;);
+          pill.className = &quot;caption-pill&quot;;
+          var line = document.createElement(&quot;div&quot;);
+          line.className = &quot;caption-line&quot;;
+          (group.words || []).forEach(function (w, i) {
+            var span = document.createElement(&quot;span&quot;);
+            span.className = &quot;caption-word&quot;;
+            span.id = &quot;caption-word-&quot; + g + &quot;-&quot; + i;
+            span.textContent = String(w.text).toUpperCase();
+            line.appendChild(span);
+          });
+          pill.appendChild(line);
+          groupEl.appendChild(pill);
+          stage.appendChild(groupEl);
+        });
+
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+
+        GROUPS.forEach(function (group, g) {
+          var groupEl = document.getElementById(&quot;caption-group-&quot; + g);
+          var words = group.words || [];
+          var next = GROUPS[g + 1];
+          var isLast = g === GROUPS.length - 1;
+          var start = Math.max(0, Number(group.start));
+          var end = isLast ? DURATION : Math.min(Number(next.start), Number(group.end) + 0.3);
+          if (end &lt;= start) end = start + 0.01;
+
+          // group on/off — exactly one group visible at a time
+          tl.set(groupEl, { opacity: 1 }, start);
+          tl.set(groupEl, { opacity: 0 }, end);
+
+          // 3-state karaoke via className SETS — seek-safe (gsap.set applies on the
+          // engine's frame-by-frame seek; .call callbacks would NOT fire).
+          words.forEach(function (w, i) {
+            var el = document.getElementById(&quot;caption-word-&quot; + g + &quot;-&quot; + i);
+            var at = Math.max(start, Number(w.start));
+            tl.set(el, { className: &quot;caption-word&quot; }, start); // upcoming (also resets on reverse-seek)
+            tl.set(el, { className: &quot;caption-word is-active&quot; }, at); // current
+            tl.fromTo(el, { scale: 0.9 }, { scale: 1, duration: 0.14, ease: &quot;power3.out&quot; }, at);
+            if (i + 1 &lt; words.length) {
+              var nextAt = Math.max(start, Number(words[i + 1].start));
+              tl.set(el, { className: &quot;caption-word is-spoken&quot; }, nextAt); // demote when next stamps
+            }
+          });
+          if (words.length) {
+            var lastEl = document.getElementById(&quot;caption-word-&quot; + g + &quot;-&quot; + (words.length - 1));
+            var lastSpoken = Math.min(end, Number(words[words.length - 1].end) + 0.1);
+            tl.set(lastEl, { className: &quot;caption-word is-spoken&quot; }, lastSpoken);
+          }
+        });
+
+        // full-span anchor so the sub-comp timeline spans the whole video
+        tl.to({}, { duration: DURATION }, 0);
+        window.__timelines[&quot;captions&quot;] = tl;
+      })();
+    &lt;/script&gt;
+    &lt;script&gt;
+    (function () {
+      var t = window.__timelines &amp;&amp; window.__timelines[&quot;captions&quot;];
+      if (t &amp;&amp; t.duration()) t.repeat(-1).repeatDelay(0.5).play();
+    })();
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+  </div>
+</section>
+</main>
+
+</body>
+</html>

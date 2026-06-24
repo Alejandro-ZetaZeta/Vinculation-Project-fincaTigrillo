@@ -37,6 +37,27 @@ android/.gradle/
 android/local.properties
 capture.png
 
+# iOS shell — generated native workspace, never commit partial Xcode state
+ios-shell/node_modules
+ios-shell/ios/
+ios-shell/build/
+ios-shell/dist/
+ios-shell/*.xcuserstate
+ios-shell/*.xcuserdatad/
+ios-shell/xcuserdata/
+ios-shell/.swiftpm/
+ios-shell/Package.resolved
+# Xcode metadata that leaks into the local native workspace
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.dSYM
+*.dSYM.zip
+# CocoaPods artifacts (regenerated via `pod install`)
+**/Pods/
+**/*.podspec.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -52,6 +73,7 @@ app/.vercel
 
 # typescript
 app/next-env.d.ts
+app/tsconfig.tsbuildinfo
 
 # InsForge & AI agent skills
 app/.insforge

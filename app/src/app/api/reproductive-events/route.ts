@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     // Fetch target animal to enforce business rules server-side.
     const { data: animalRow, error: animalErr } = await auth.client.database
       .from('animals')
-      .select('id, sex, status, metadata, animal_types(slug)')
+      .select('id, sex, status, metadata, is_litter, litter_count, litter_alive, animal_types(slug)')
       .eq('id', animal_id)
       .maybeSingle()
 
@@ -130,28 +130,46 @@ export async function POST(request: NextRequest) {
     const sex = typeof sexRaw === 'string' ? sexRaw.toLowerCase() : null
 
     const isPoultryBatch = typeSlug === 'aves-de-corral'
-    const reproductiveTypes = new Set([
+    const isLitterRaw = (animalRow as unknown as { is_litter?: unknown }).is_litter
+    const isPorcinoLitter = isLitterRaw === true && typeSlug === 'porcino'
+    const isBatchAnimal = isPoultryBatch || isPorcinoLitter
+
+    // Reproductive event types that require individual females
+    const reproductiveOnlyTypes = new Set([
       'monta_natural',
       'inseminacion',
       'confirmacion_prenez',
       'parto',
       'aborto',
-      'destete',
     ])
 
     if (event_type === 'muerte') {
-      // Mortality events are only for poultry batches.
-      if (!isPoultryBatch) {
-        return NextResponse.json({ error: 'El evento de mortalidad solo aplica a lotes de aves de corral' }, { status: 400 })
+      // Mortality events: allowed for poultry batches AND porcino litters
+      if (!isBatchAnimal) {
+        return NextResponse.json({ error: 'El evento de mortalidad solo aplica a lotes de aves de corral o camadas porcinas' }, { status: 400 })
       }
       const q = typeof quantity === 'number' ? quantity : parseInt(String(quantity ?? ''), 10)
       if (!Number.isFinite(q) || q <= 0) {
         return NextResponse.json({ error: 'Cantidad inválida para mortalidad' }, { status: 400 })
       }
-    } else if (reproductiveTypes.has(event_type)) {
-      // Reproductive events require a female individual (not a poultry batch).
-      if (isPoultryBatch) {
-        return NextResponse.json({ error: 'Los eventos reproductivos no aplican a lotes avícolas' }, { status: 400 })
+    } else if (event_type === 'destete') {
+      // Weaning: allowed for individual females AND litters
+      if (isPorcinoLitter) {
+        // For litters, quantity = piglets alive at weaning time (optional but useful)
+        // No additional validation needed beyond date
+      } else if (isPoultryBatch) {
+        return NextResponse.json({ error: 'El destete no aplica a lotes avícolas' }, { status: 400 })
+      } else if (sex !== 'hembra') {
+        return NextResponse.json({ error: 'El destete solo aplica a hembras' }, { status: 400 })
+      }
+    } else if (reproductiveOnlyTypes.has(event_type)) {
+      // Reproductive events require a female individual (not a batch)
+      if (isBatchAnimal) {
+        return NextResponse.json({
+          error: isPoultryBatch
+            ? 'Los eventos reproductivos no aplican a lotes avícolas'
+            : 'Los eventos reproductivos no aplican a camadas porcinas'
+        }, { status: 400 })
       }
       if (sex !== 'hembra') {
         return NextResponse.json({ error: 'Los eventos reproductivos solo aplican a hembras' }, { status: 400 })
@@ -167,13 +185,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // For litter weaning, store quantity (alive piglets at weaning time)
+    const eventQuantity = event_type === 'muerte'
+      ? (typeof quantity === 'number' ? quantity : parseInt(String(quantity ?? ''), 10))
+      : (event_type === 'destete' && isPorcinoLitter && quantity != null)
+        ? (typeof quantity === 'number' ? quantity : parseInt(String(quantity ?? ''), 10))
+        : null
+
     const insertPayload = {
       animal_id,
       event_type,
       event_date,
       expected_due_date,
       notes: notes || null,
-      quantity: event_type === 'muerte' ? (typeof quantity === 'number' ? quantity : parseInt(String(quantity ?? ''), 10)) : null,
+      quantity: eventQuantity,
       sire_id: (event_type === 'monta_natural' && sire_id) ? sire_id : null,
       created_by: userData.user.id,
     }
@@ -190,33 +215,67 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message || 'Error al guardar evento' }, { status: 400 })
     }
 
-    // If a poultry batch reaches 0 after a mortality event, set its status to 'muerto'.
-    if (event_type === 'muerte' && typeSlug === 'aves-de-corral') {
-      const meta = (animalRow as unknown as { metadata?: Record<string, unknown> | null }).metadata
-      const initialRaw = meta?.cantidad
-      const initial = typeof initialRaw === 'number' ? initialRaw : parseInt(String(initialRaw ?? ''), 10)
+    // ── Post-insert: auto-update batch counts and status on mortality ──
+    if (event_type === 'muerte' && isBatchAnimal) {
+      if (isPoultryBatch) {
+        // Poultry batch: use metadata.cantidad as initial count
+        const meta = (animalRow as unknown as { metadata?: Record<string, unknown> | null }).metadata
+        const initialRaw = meta?.cantidad
+        const initial = typeof initialRaw === 'number' ? initialRaw : parseInt(String(initialRaw ?? ''), 10)
 
-      if (Number.isFinite(initial) && initial >= 0) {
-        const { data: deathsData } = await auth.client.database
-          .from('reproductive_events')
-          .select('quantity')
-          .eq('animal_id', animal_id)
-          .eq('event_type', 'muerte')
+        if (Number.isFinite(initial) && initial >= 0) {
+          const { data: deathsData } = await auth.client.database
+            .from('reproductive_events')
+            .select('quantity')
+            .eq('animal_id', animal_id)
+            .eq('event_type', 'muerte')
 
-        const totalDeaths = Array.isArray(deathsData)
-          ? deathsData.reduce((sum: number, row: unknown) => {
-            const qRaw = (row as { quantity?: unknown } | null)?.quantity
-            const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
-            return sum + q
-          }, 0)
-          : 0
+          const totalDeaths = Array.isArray(deathsData)
+            ? deathsData.reduce((sum: number, row: unknown) => {
+              const qRaw = (row as { quantity?: unknown } | null)?.quantity
+              const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
+              return sum + q
+            }, 0)
+            : 0
 
-        const remaining = initial - totalDeaths
-        const statusRaw = (animalRow as unknown as { status?: unknown }).status
-        if (remaining <= 0 && statusRaw !== 'muerto') {
+          const remaining = initial - totalDeaths
+          const statusRaw = (animalRow as unknown as { status?: unknown }).status
+          if (remaining <= 0 && statusRaw !== 'muerto') {
+            await auth.client.database
+              .from('animals')
+              .update({ status: 'muerto' })
+              .eq('id', animal_id)
+          }
+        }
+      } else if (isPorcinoLitter) {
+        // Porcino litter: use litter_count as initial count, update litter_alive
+        const litterCountRaw = (animalRow as unknown as { litter_count?: unknown }).litter_count
+        const litterCount = typeof litterCountRaw === 'number' ? litterCountRaw : parseInt(String(litterCountRaw ?? ''), 10)
+
+        if (Number.isFinite(litterCount) && litterCount >= 0) {
+          const { data: deathsData } = await auth.client.database
+            .from('reproductive_events')
+            .select('quantity')
+            .eq('animal_id', animal_id)
+            .eq('event_type', 'muerte')
+
+          const totalDeaths = Array.isArray(deathsData)
+            ? deathsData.reduce((sum: number, row: unknown) => {
+              const qRaw = (row as { quantity?: unknown } | null)?.quantity
+              const q = typeof qRaw === 'number' ? qRaw : (parseInt(String(qRaw ?? ''), 10) || 0)
+              return sum + q
+            }, 0)
+            : 0
+
+          const remaining = Math.max(0, litterCount - totalDeaths)
+          const updatePayload: Record<string, unknown> = { litter_alive: remaining }
+          const statusRaw = (animalRow as unknown as { status?: unknown }).status
+          if (remaining <= 0 && statusRaw !== 'muerto') {
+            updatePayload.status = 'muerto'
+          }
           await auth.client.database
             .from('animals')
-            .update({ status: 'muerto' })
+            .update(updatePayload)
             .eq('id', animal_id)
         }
       }

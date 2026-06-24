@@ -41,8 +41,10 @@ export function AssignVaccineModal(props: {
   defaultMode?: 'single' | 'group'
   /** Slug of the animal type (used to detect poultry batches) */
   animalTypeSlug?: string | null
+  /** Hide the Individual/Group mode toggle (e.g. when called from the vaccine catalog) */
+  hideModeToggle?: boolean
 }) {
-  const { open, onClose, defaultAnimalIds, defaultTypeId, isAdmin, title, defaultMode, animalTypeSlug } = props
+  const { open, onClose, defaultAnimalIds, defaultTypeId, isAdmin, title, defaultMode, animalTypeSlug, hideModeToggle } = props
 
   const [vaccines, setVaccines] = useState<VaccineCatalogItem[]>([])
   const [loadingVaccines, setLoadingVaccines] = useState(false)
@@ -66,6 +68,11 @@ export function AssignVaccineModal(props: {
   const [poultryLiveCount, setPoultryLiveCount] = useState<number | null>(null)
   const [loadingPoultryCount, setLoadingPoultryCount] = useState(false)
 
+  // Swine litter: live piglet count used for dose deduction and stock checks
+  const [isPorcinoLitter, setIsPorcinoLitter] = useState(false)
+  const [litterLiveCount, setLitterLiveCount] = useState<number | null>(null)
+  const [loadingLitterCount, setLoadingLitterCount] = useState(false)
+
   const selectedVaccine = useMemo(
     () => vaccines.find(v => v.id === vaccineId) || null,
     [vaccines, vaccineId]
@@ -76,6 +83,8 @@ export function AssignVaccineModal(props: {
   // - everything else → number of selected animal rows
   const effectiveDoseCount = isPoultryBatch
     ? (poultryLiveCount ?? 0)
+    : isPorcinoLitter
+    ? (litterLiveCount ?? 0)
     : (mode === 'single' ? defaultAnimalIds.length : selectedAnimalIds.length)
 
   // For the stock-insufficient guard in the UI
@@ -91,6 +100,8 @@ export function AssignVaccineModal(props: {
     setSelectedAnimalIds(defaultAnimalIds)
     setMode(defaultMode ?? (defaultAnimalIds.length > 1 ? 'group' : 'single'))
     setPoultryLiveCount(null)
+    setIsPorcinoLitter(false)
+    setLitterLiveCount(null)
   }, [open, defaultAnimalIds, defaultMode])
 
   // Fetch live bird count for poultry batches
@@ -123,6 +134,47 @@ export function AssignVaccineModal(props: {
       .finally(() => setLoadingPoultryCount(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, isPoultryBatch, defaultAnimalIds[0]])
+
+  // Fetch live count for porcino litters
+  useEffect(() => {
+    if (!open || defaultAnimalIds.length !== 1 || !defaultAnimalIds[0]) {
+      setIsPorcinoLitter(false)
+      setLitterLiveCount(null)
+      return
+    }
+    const animalId = defaultAnimalIds[0]
+    setLoadingLitterCount(true)
+    fetch(`/api/animals/${encodeURIComponent(animalId)}`)
+      .then(r => r.json())
+      .then((animal: any) => {
+        if (animal?.is_litter === true) {
+          setIsPorcinoLitter(true)
+          
+          // Fetch deaths to get actual live count
+          fetch(`/api/reproductive-events?animal_id=${encodeURIComponent(animalId)}`)
+            .then(r2 => r2.json())
+            .then((events: any) => {
+              const list = Array.isArray(events) ? events : []
+              const deaths = list.reduce((sum, ev) => {
+                if (ev?.event_type !== 'muerte') return sum
+                const q = typeof ev.quantity === 'number' ? ev.quantity : (parseInt(String(ev.quantity ?? ''), 10) || 0)
+                return sum + q
+              }, 0)
+              const initial = animal.litter_count || 0
+              setLitterLiveCount(Math.max(0, initial - deaths))
+            })
+            .catch(() => setLitterLiveCount(null))
+        } else {
+          setIsPorcinoLitter(false)
+          setLitterLiveCount(null)
+        }
+      })
+      .catch(() => {
+        setIsPorcinoLitter(false)
+        setLitterLiveCount(null)
+      })
+      .finally(() => setLoadingLitterCount(false))
+  }, [open, defaultAnimalIds])
 
   useEffect(() => {
     if (!open) return
@@ -202,6 +254,14 @@ export function AssignVaccineModal(props: {
       setError('No hay aves vivas en este lote')
       return
     }
+    if (isPorcinoLitter && (litterLiveCount === null || loadingLitterCount)) {
+      setError('Espera a que se calcule el conteo de lechones vivos')
+      return
+    }
+    if (isPorcinoLitter && litterLiveCount === 0) {
+      setError('No hay lechones vivos en esta camada')
+      return
+    }
 
     setSaving(true)
     try {
@@ -214,8 +274,9 @@ export function AssignVaccineModal(props: {
           applied_at: appliedAt,
           next_dose_at: nextDoseAt || null,
           notes: notes || null,
-          // For poultry batches: deduct live bird count from stock, not 1
+          // For poultry batches / pig litters: deduct live count from stock
           ...(isPoultryBatch && poultryLiveCount !== null ? { doses_count: poultryLiveCount } : {}),
+          ...(isPorcinoLitter && litterLiveCount !== null ? { doses_count: litterLiveCount } : {}),
         })
       })
       const json = await res.json()
@@ -237,9 +298,9 @@ export function AssignVaccineModal(props: {
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+      <div className="absolute inset-0 flex items-end sm:items-center justify-center sm:p-4">
+        <div className="w-full max-w-2xl bg-surface border border-border sm:rounded-2xl rounded-t-2xl shadow-xl flex flex-col max-h-[calc(100dvh-env(safe-area-inset-top,0px)-1rem)] sm:max-h-[90vh]">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <Syringe className="w-5 h-5 text-primary" aria-hidden="true" />
               <h3 className="text-base font-semibold text-foreground">{title || 'Asignar Vacuna'}</h3>
@@ -253,7 +314,7 @@ export function AssignVaccineModal(props: {
             </button>
           </div>
 
-          <div className="p-5 space-y-4">
+          <div className="p-5 space-y-4 overflow-y-auto flex-1">
             {error && (
               <div className="p-3 bg-danger/10 border border-danger/20 text-danger rounded-xl text-sm">{error}</div>
             )}
@@ -263,7 +324,7 @@ export function AssignVaccineModal(props: {
                 <span className="text-base leading-none mt-0.5" aria-hidden="true">⚠️</span>
                 <span>
                   <strong>Stock insuficiente:</strong> {selectedVaccine.stock_doses} dosis disponible{selectedVaccine.stock_doses !== 1 ? 's' : ''},
-                  se requieren {animalCount}{isPoultryBatch ? ' (aves vivas en el lote)' : ''}.
+                  se requieren {animalCount}{isPoultryBatch ? ' (aves vivas en el lote)' : isPorcinoLitter ? ' (lechones vivos en la camada)' : ''}.
                 </span>
               </div>
             )}
@@ -278,6 +339,20 @@ export function AssignVaccineModal(props: {
                     : poultryLiveCount === null
                     ? 'No se pudo obtener el conteo de aves vivas'
                     : <><strong>{poultryLiveCount} aves vivas</strong> en este lote — se descontarán <strong>{poultryLiveCount} dosis</strong> del inventario.</>}
+                </span>
+              </div>
+            )}
+
+            {/* Swine litter live count info */}
+            {isPorcinoLitter && (
+              <div className="p-3 bg-primary/8 border border-primary/20 text-primary rounded-xl text-sm flex items-start gap-2">
+                <span className="text-base leading-none mt-0.5" aria-hidden="true">🐷</span>
+                <span>
+                  {loadingLitterCount
+                    ? 'Calculando lechones vivos…'
+                    : litterLiveCount === null
+                    ? 'No se pudo obtener el conteo de lechones vivos'
+                    : <><strong>{litterLiveCount} lechones vivos</strong> en esta camada — se descontarán <strong>{litterLiveCount} dosis</strong> del inventario.</>}
                 </span>
               </div>
             )}
@@ -303,31 +378,33 @@ export function AssignVaccineModal(props: {
                 )}
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium">Modo</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMode('single')}
-                    className={[
-                      'flex-1 px-3 py-2.5 rounded-xl border text-sm font-medium',
-                      mode === 'single' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-background border-border text-muted hover:bg-surface-hover'
-                    ].join(' ')}
-                  >
-                    Individual
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('group')}
-                    className={[
-                      'flex-1 px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5',
-                      mode === 'group' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-background border-border text-muted hover:bg-surface-hover'
-                    ].join(' ')}
-                  >
-                    <Users className="w-4 h-4" aria-hidden="true" /> Grupo
-                  </button>
+              {!hideModeToggle && (
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium">Modo</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMode('single')}
+                      className={[
+                        'flex-1 px-3 py-2.5 rounded-xl border text-sm font-medium',
+                        mode === 'single' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-background border-border text-muted hover:bg-surface-hover'
+                      ].join(' ')}
+                    >
+                      Individual
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode('group')}
+                      className={[
+                        'flex-1 px-3 py-2.5 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5',
+                        mode === 'group' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-background border-border text-muted hover:bg-surface-hover'
+                      ].join(' ')}
+                    >
+                      <Users className="w-4 h-4" aria-hidden="true" /> Grupo
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -427,7 +504,7 @@ export function AssignVaccineModal(props: {
             )}
           </div>
 
-          <div className="px-5 py-4 border-t border-border flex items-center justify-end gap-2">
+          <div className="px-5 py-4 border-t border-border flex items-center justify-end gap-2 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-4">
             <button
               type="button"
               onClick={onClose}

@@ -1,0 +1,60 @@
+{
+  "tts_provider": "kokoro",
+  "voice_id": "am_adam",
+  "voice_name": "Adam (male)",
+  "bgm_provider": null,
+  "bgm_enabled": false,
+  "bgm_path": null,
+  "bgm_log": null,
+  "total_duration_s": 73.665,
+  "scenes": {
+    "1": {
+      "status": "ok",
+      "path": "assets/voice/scene_1.mp3",
+      "duration_s": 8.448,
+      "text": "Gestionar una finca ganadera y coordinar las prácticas académicas sin un sistema integral es un desafío que frena el progreso."
+    },
+    "2": {
+      "status": "ok",
+      "path": "assets/voice/scene_2.mp3",
+      "duration_s": 7.531,
+      "text": "Finca Tigrillo: la plataforma que conecta administradores, docentes y estudiantes en un solo ecosistema digital."
+    },
+    "3": {
+      "status": "ok",
+      "path": "assets/voice/scene_3.mp3",
+      "duration_s": 10.859,
+      "text": "Registra bovinos, equinos, porcinos, caprinos y aves con trazabilidad completa. Controla eventos reproductivos, producción de leche y camadas desde un solo lugar."
+    },
+    "4": {
+      "status": "ok",
+      "path": "assets/voice/scene_4.mp3",
+      "duration_s": 11.349,
+      "text": "Catálogo de vacunas con asignación individual y recordatorios automáticos. La inteligencia artificial predice fechas de parto y optimiza los ciclos reproductivos."
+    },
+    "5": {
+      "status": "ok",
+      "path": "assets/voice/scene_5.mp3",
+      "duration_s": 10.667,
+      "text": "Gestiona potreros y sembríos con seguimiento de etapas de crecimiento asistido por IA. Controla herramientas, equipos y la alimentación avícola con precisión."
+    },
+    "6": {
+      "status": "ok",
+      "path": "assets/voice/scene_6.mp3",
+      "duration_s": 9.621,
+      "text": "Dashboards interactivos con KPIs, gráficos y reportes automáticos. Calculadoras ganaderas y un asistente de IA que responde al instante."
+    },
+    "7": {
+      "status": "ok",
+      "path": "assets/voice/scene_7.mp3",
+      "duration_s": 10.091,
+      "text": "Integra la comunidad académica: actividades coordinadas, seguimiento del progreso estudiantil y flujos de aprobación que conectan docentes y estudiantes."
+    },
+    "8": {
+      "status": "ok",
+      "path": "assets/voice/scene_8.mp3",
+      "duration_s": 5.099,
+      "text": "Finca Tigrillo: la tecnología al servicio del agro educativo ecuatoriano."
+    }
+  }
+}

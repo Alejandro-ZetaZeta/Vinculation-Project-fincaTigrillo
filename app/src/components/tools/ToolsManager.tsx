@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Image from 'next/image'
 import {
-  Wrench, Plus, Save, X, Loader2, Trash2,
+  Wrench, Plus, Save, X, Loader2, Trash2, Pencil,
   PackagePlus, PackageMinus, Package, ChevronDown, ChevronUp,
   AlertTriangle, History,
 } from 'lucide-react'
@@ -64,6 +65,18 @@ const CAT_COLORS: Record<ToolCategory, { pill: string; dot: string }> = {
   'Transporte':        { pill: 'bg-violet-500/10 text-violet-700 dark:text-violet-400', dot: 'bg-violet-500' },
   'Seguridad':         { pill: 'bg-red-500/10 text-red-700 dark:text-red-400',        dot: 'bg-red-500' },
   'Otro':              { pill: 'bg-muted/10 text-muted',                               dot: 'bg-muted' },
+}
+
+// ── Category icon mapping ─────────────────────────────────────────────────────
+const CAT_ICONS: Record<ToolCategory, string> = {
+  'Maquinaria':         '/Maq.svg',
+  'Herramienta manual': '/Her.svg',
+  'Veterinaria':        '/Vet.svg',
+  'Riego':              '/Rie.svg',
+  'Eléctrico':          '/Ele.svg',
+  'Transporte':         '/Tra.svg',
+  'Seguridad':          '/Seg.svg',
+  'Otro':               '/Otr.svg',
 }
 
 // ── Stock badge helper ────────────────────────────────────────────────────────
@@ -361,62 +374,95 @@ export function ToolsManager() {
         </form>
       )}
 
-      {/* ── Edit form ────────────────────────────────────────────────────── */}
+      {/* ── Edit modal ───────────────────────────────────────────────── */}
       {editing && (
-        <form
-          onSubmit={updateTool}
-          className="bg-surface border border-primary/30 rounded-2xl p-5 space-y-4"
-          id="tool-edit-form"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-foreground">Editar: {editing.name}</h3>
-            <button type="button" onClick={() => setEditing(null)} className="p-2 rounded-xl hover:bg-surface-hover text-muted" aria-label="Cerrar formulario">
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Editar herramienta">
+          {/* Blurred backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setEditing(null)}
+            aria-hidden="true"
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Nombre *</label>
-              <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className={fieldCls} required />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Categoría *</label>
-              <select value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value as ToolCategory })} className={fieldCls}>
-                {TOOL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-surface border border-border rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
+
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <Pencil className="w-5 h-5 text-primary" aria-hidden="true" />
+                  <h3 className="text-base font-semibold text-foreground">Editar: {editing.name}</h3>
+                </div>
+                <button type="button" onClick={() => setEditing(null)} className="p-2 rounded-xl hover:bg-surface-hover text-muted" aria-label="Cerrar formulario">
+                  <X className="w-5 h-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              {/* Scrollable body + form */}
+              <form onSubmit={updateTool} id="tool-edit-form" className="flex flex-col flex-1 min-h-0">
+                <div className="overflow-y-auto flex-1 p-5 space-y-4">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Nombre *</label>
+                      <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className={fieldCls} required autoFocus />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Categoría *</label>
+                      <select value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value as ToolCategory })} className={fieldCls}>
+                        {TOOL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-medium">Descripción</label>
+                    <input value={editing.description || ''} onChange={e => setEditing({ ...editing, description: e.target.value })} className={fieldCls} />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Unidad</label>
+                      <input value={editing.unit} onChange={e => setEditing({ ...editing, unit: e.target.value })} className={fieldCls} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Stock mínimo</label>
+                      <input type="number" min={0} value={editing.min_stock ?? ''} onChange={e => setEditing({ ...editing, min_stock: e.target.value === '' ? null : parseInt(e.target.value, 10) })} className={fieldCls} placeholder="Opcional" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Activa</label>
+                      <label className="flex items-center gap-2 text-sm text-foreground px-3 py-2.5 rounded-xl bg-background border border-border cursor-pointer">
+                        <input type="checkbox" checked={editing.is_active} onChange={e => setEditing({ ...editing, is_active: e.target.checked })} className="accent-[color:var(--color-primary)]" />
+                        Visible en inventario
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sticky footer */}
+                <div className="px-5 py-4 border-t border-border flex items-center justify-end gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setEditing(null)}
+                    className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-surface-hover"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 inline-flex items-center gap-2"
+                  >
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}
+                    Guardar cambios
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium">Descripción</label>
-            <input value={editing.description || ''} onChange={e => setEditing({ ...editing, description: e.target.value })} className={fieldCls} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Unidad</label>
-              <input value={editing.unit} onChange={e => setEditing({ ...editing, unit: e.target.value })} className={fieldCls} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Stock mínimo</label>
-              <input type="number" min={0} value={editing.min_stock ?? ''} onChange={e => setEditing({ ...editing, min_stock: e.target.value === '' ? null : parseInt(e.target.value, 10) })} className={fieldCls} placeholder="Opcional" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Activa</label>
-              <label className="flex items-center gap-2 text-sm text-foreground px-3 py-2.5 rounded-xl bg-background border border-border cursor-pointer">
-                <input type="checkbox" checked={editing.is_active} onChange={e => setEditing({ ...editing, is_active: e.target.checked })} className="accent-[color:var(--color-primary)]" />
-                Visible en inventario
-              </label>
-            </div>
-          </div>
-
-          <button type="submit" disabled={saving} className="w-full py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 flex items-center justify-center gap-2 text-sm transition-colors">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}
-            Guardar cambios
-          </button>
-        </form>
+        </div>
       )}
+
 
       {/* ── Category filter pills ────────────────────────────────────────── */}
       {!loading && usedCategories.length > 0 && (
@@ -490,7 +536,18 @@ export function ToolsManager() {
               >
                 {/* ── Card main row ──────────────────────────────────── */}
                 <div className="p-5">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center justify-between gap-3 md:gap-4">
+                    {/* Category icon — no background, large responsive size */}
+                    <Image
+                      src={CAT_ICONS[tool.category] || '/Otr.svg'}
+                      alt={tool.category}
+                      title={tool.category}
+                      width={64}
+                      height={64}
+                      className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain invert-0 [html[data-theme='dark']_&]:invert"
+                      aria-hidden="true"
+                    />
+
                     {/* Left: info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -503,7 +560,7 @@ export function ToolsManager() {
 
                       {/* Badges row */}
                       <div className="flex flex-wrap gap-2 mt-3">
-                        {/* Category */}
+                        {/* Category pill — color dot only, no icon */}
                         <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold ${catColors.pill}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${catColors.dot}`} aria-hidden="true" />
                           {tool.category}
@@ -626,9 +683,15 @@ export function ToolsManager() {
                       {/* Edit */}
                       <button
                         type="button"
-                        onClick={() => { setEditing(tool); setShowForm(false); setStockOpen(null) }}
-                        className="text-xs font-medium text-primary hover:text-primary-dark transition-colors"
+                        onClick={() => {
+                          setEditing(tool)
+                          setShowForm(false)
+                          setStockOpen(null)
+                        }}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                        aria-label={`Editar ${tool.name}`}
                       >
+                        <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                         Editar
                       </button>
 

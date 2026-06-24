@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
 function getInitials(name: string): string {
@@ -37,6 +37,9 @@ interface AvatarProps {
 export function Avatar({ src, name, size = 'sm', className = '' }: AvatarProps) {
   const [imgError, setImgError] = useState(false)
   const sizeClass = SIZE_CLASSES[size]
+
+  // Reset error state whenever src changes so a new URL always tries to load
+  useEffect(() => { setImgError(false) }, [src])
 
   if (src && !imgError) {
     return (

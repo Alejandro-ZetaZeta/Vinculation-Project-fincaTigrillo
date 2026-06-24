@@ -1,0 +1,111 @@
+{
+  "project": "Finca Tigrillo — Video Promocional",
+  "narrativeArchetype": "Full Platform Tour",
+  "emotionalArc": "Tensión → Reconocimiento → Descubrimiento → Asombro → Confianza → Orgullo institucional",
+  "scenes": [
+    {
+      "sceneNumber": 1,
+      "sceneName": "El Reto",
+      "script": "Gestionar una finca ganadera y coordinar las prácticas académicas sin un sistema integral es un desafío que frena el progreso.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "pain_point",
+        "narrativeRole": "Establecer el problema central: dispersión de herramientas, registros manuales, falta de integración.",
+        "keyMessage": "La gestión ganadera y educativa sin digitalización es ineficiente.",
+        "emotionalBeat": "Tensión, urgencia"
+      },
+      "visualDirective": "Fondo forest oscuro. Tipografía display blanca con acentos en rojo tenue. Pain pills animados mostrando los problemas principales."
+    },
+    {
+      "sceneNumber": 2,
+      "sceneName": "Presentación de la Plataforma",
+      "script": "Finca Tigrillo: la plataforma que conecta administradores, docentes y estudiantes en un solo ecosistema digital.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "product_intro",
+        "narrativeRole": "Revelar la marca como solución y mencionar los tres roles generalmente.",
+        "keyMessage": "Finca Tigrillo unifica toda la gestión en una plataforma para todos los roles.",
+        "emotionalBeat": "Alivio, reconocimiento"
+      },
+      "visualDirective": "Reveal centrado del logo sobre fondo blanco. Nombre en esmeralda. Tres chips de roles aparecen debajo."
+    },
+    {
+      "sceneNumber": 3,
+      "sceneName": "Gestión Ganadera",
+      "script": "Registra bovinos, equinos, porcinos, caprinos y aves con trazabilidad completa. Controla eventos reproductivos, producción de leche y camadas desde un solo lugar.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "feature_showcase",
+        "narrativeRole": "Demostrar las capacidades core de gestión de inventario ganadero y eventos.",
+        "keyMessage": "Control total del hato: registro multi-especie, reproducción, leche y camadas centralizados.",
+        "emotionalBeat": "Confianza, orden"
+      },
+      "visualDirective": "Dashboard con tarjetas KPI de especies con contadores animados y anillos de progreso. Fondo forest oscuro."
+    },
+    {
+      "sceneNumber": 4,
+      "sceneName": "Salud Animal e IA",
+      "script": "Catálogo de vacunas con asignación individual y recordatorios automáticos. La inteligencia artificial predice fechas de parto y optimiza los ciclos reproductivos.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "feature_showcase",
+        "narrativeRole": "Mostrar salud animal y diferenciación por IA.",
+        "keyMessage": "Vacunas automatizadas + IA predictiva para reproducción.",
+        "emotionalBeat": "Asombro, modernidad"
+      },
+      "visualDirective": "Panel dividido: catálogo de vacunas a la izquierda, predicción IA con barra de progreso a la derecha. Fondo slate."
+    },
+    {
+      "sceneNumber": 5,
+      "sceneName": "Agronomía y Potreros",
+      "script": "Gestiona potreros y sembríos con seguimiento de etapas de crecimiento asistido por IA. Controla herramientas, equipos y la alimentación avícola con precisión.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "feature_showcase",
+        "narrativeRole": "Mostrar gestión agronómica y de inventario físico.",
+        "keyMessage": "Potreros, cultivos con IA, herramientas y alimentación avícola en un módulo.",
+        "emotionalBeat": "Control, precisión"
+      },
+      "visualDirective": "Grid de tarjetas mostrando potreros con etapas de crecimiento, herramientas con stock, y tracker avícola. Fondo forest."
+    },
+    {
+      "sceneNumber": 6,
+      "sceneName": "Inteligencia Operativa",
+      "script": "Dashboards interactivos con KPIs, gráficos y reportes automáticos. Calculadoras ganaderas y un asistente de IA que responde al instante.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "benefit_highlight",
+        "narrativeRole": "Mostrar la capa de inteligencia: reportes, calculadoras, chatbot IA.",
+        "keyMessage": "Datos convertidos en decisiones con IA y analítica.",
+        "emotionalBeat": "Empoderamiento, claridad"
+      },
+      "visualDirective": "Mock de dashboard con mini gráficos (donut, gauge, treemap) y chatbot flotante. Fondo slate oscuro."
+    },
+    {
+      "sceneNumber": 7,
+      "sceneName": "Comunidad Educativa",
+      "script": "Integra la comunidad académica: actividades coordinadas, seguimiento del progreso estudiantil y flujos de aprobación que conectan docentes y estudiantes.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "benefit_highlight",
+        "narrativeRole": "Mostrar el componente educativo sin mencionar Kanban ni solicitudes específicamente.",
+        "keyMessage": "Coordinación digital entre docentes y estudiantes para prácticas agropecuarias.",
+        "emotionalBeat": "Pertenencia, colaboración"
+      },
+      "visualDirective": "Tres paneles representando los roles (admin, docente, estudiante) con íconos de actividades y progreso. Fondo parchment."
+    },
+    {
+      "sceneNumber": 8,
+      "sceneName": "Cierre Institucional",
+      "script": "Finca Tigrillo: la tecnología al servicio del agro educativo ecuatoriano.",
+      "estimatedDuration": 10,
+      "narrativeIntent": {
+        "type": "branding",
+        "narrativeRole": "Consolidar orgullo institucional y cerrar con la marca.",
+        "keyMessage": "Finca Tigrillo transforma la educación agropecuaria con tecnología.",
+        "emotionalBeat": "Orgullo, inspiración"
+      },
+      "visualDirective": "Cierre sobre fondo esmeralda puro. Logo centrado en grande, nombre display, tagline institucional."
+    }
+  ]
+}

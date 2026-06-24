@@ -95,20 +95,34 @@ export async function DELETE(req: NextRequest) {
   }
 }
 
-/* ── PATCH /api/notifications  (mark all read) ─────────────────── */
+/* ── PATCH /api/notifications  (mark all read, scoped to caller) ── */
 export async function PATCH() {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('insforge_access_token')?.value
     if (!token) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-    const db = createInsForgeServerClient(token).database
+    const client = createInsForgeServerClient(token)
+    const { data: userData } = await client.auth.getCurrentUser()
+    if (!userData?.user) return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 })
 
-    const { error } = await db
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('is_read', false)
+    const { data: profile } = await client.database
+      .from('user_profiles')
+      .select('role')
+      .eq('user_id', userData.user.id)
+      .maybeSingle()
 
+    const db = client.database
+
+    // Admins mark broadcast + own; teachers/viewers mark only their own personal notifications
+    let query = db.from('notifications').update({ is_read: true }).eq('is_read', false)
+
+    if (profile?.role !== 'admin') {
+      // Non-admins only mark their own personal notifications (not broadcast ones)
+      query = query.eq('user_id', userData.user.id)
+    }
+
+    const { error } = await query
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ ok: true })

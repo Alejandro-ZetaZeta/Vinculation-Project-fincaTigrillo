@@ -22,7 +22,10 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fincatigrillo.vercel.
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
-  title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
+  alternates: {
+    canonical: '/',
+  },
+  title: 'Finca Tigrillo',
   description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
   manifest: '/manifest.webmanifest',
   applicationName: 'Finca Tigrillo',
@@ -32,8 +35,8 @@ export const metadata: Metadata = {
     title: 'Tigrillo',
   },
   icons: {
-    icon: '/faviconOficial.svg',
-    apple: '/faviconOficial.svg',
+    icon: '/TigrilloMobile.png',
+    apple: '/TigrilloMobile.png',
   },
   verification: {
     google: 'o3DzClk0eI-CVW7kn3tbyHSPy-Gx-eOL8ce0zwBm6Ps',
@@ -41,13 +44,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Finca Tigrillo',
-    title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
+    title: 'Finca Tigrillo',
     description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
     locale: 'es_EC',
   },
   twitter: {
     card: 'summary',
-    title: 'Finca Tigrillo — Sistema de Gestión Ganadera',
+    title: 'Finca Tigrillo',
     description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
   },
 }
@@ -80,6 +83,39 @@ export default function RootLayout({
         />
       </head>
       <body className={`${dmSans.variable} ${syne.variable} min-h-screen bg-background text-foreground antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'Finca Tigrillo',
+                url: appUrl,
+                logo: `${appUrl}/faviconOficial.svg`,
+                description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
+                foundingDate: '2025',
+                areaServed: 'Ecuador',
+              },
+              {
+                '@context': 'https://schema.org',
+                '@type': 'WebApplication',
+                name: 'Finca Tigrillo',
+                url: appUrl,
+                description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
+                applicationCategory: 'BusinessApplication',
+                applicationSubCategory: 'Livestock Management',
+                operatingSystem: 'Web',
+                offers: {
+                  '@type': 'Offer',
+                  price: '0',
+                  priceCurrency: 'USD',
+                },
+                inLanguage: 'es',
+              },
+            ]),
+          }}
+        />
         <ThemeProvider>
           {children}
         </ThemeProvider>

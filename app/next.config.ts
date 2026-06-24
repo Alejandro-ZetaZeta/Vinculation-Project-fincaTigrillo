@@ -16,37 +16,44 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Security headers applied to every route.
-        // CORS is handled dynamically in proxy.ts — no static CORS block here.
-        source: "/(.*)",
+        // Minimal headers for sitemap and robots — no X-Frame-Options or CSP
+        // that would confuse Google's crawler when fetching XML.
+        source: '/(sitemap.xml|robots.txt)',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+      {
+        // Full security headers for every other route.
+        source: '/((?!sitemap.xml|robots.txt).*)',
         headers: [
           // Clickjacking protection
-          { key: "X-Frame-Options", value: "DENY" },
+          { key: 'X-Frame-Options', value: 'DENY' },
           // Prevent MIME-type sniffing
-          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
           // Limit referrer leakage
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           // Force HTTPS for 2 years once the first secure response is seen
           {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           // Restrict unused browser APIs
           {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
           // Content Security Policy
           // 'unsafe-inline' in script-src is required for the anti-flash
           // theme script in layout.tsx (dangerouslySetInnerHTML).
           // 'unsafe-eval' is intentionally omitted — not needed in production.
           {
-            key: "Content-Security-Policy",
+            key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
               // 'unsafe-eval' is needed in dev for Next.js hot-reload; stripped in production
-              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-
+              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
@@ -54,7 +61,7 @@ const nextConfig: NextConfig = {
               "manifest-src 'self'",
               "worker-src 'self'",
               "frame-ancestors 'none'",
-            ].join("; "),
+            ].join('; '),
           },
         ],
       },

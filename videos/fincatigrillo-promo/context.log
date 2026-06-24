@@ -1,0 +1,10 @@
+## capture [done 2026-06-14T23:24:00Z]
+URL: https://fincatigrillo.vercel.app
+Assets: 6 (favicon.png + 5 SVGs) + 5 font files
+Notes: Login page only (dashboard behind auth); full feature context from codebase exploration
+
+## design-system [done 2026-06-14T23:35:00Z]
+Preset: emerald-editorial (forced — manual selection for premium/academic brand alignment)
+Brand primary: #16A34A (emerald green)
+Fonts: Playfair Display display · DM Sans body · JetBrains Mono mono
+Components: 14 (agenda-row, button, chart-card, chip, divider-loud, hero, inverse-tile, kpi-tile, masthead-strip, ornament-double-rule, paper-tile, process-step, section-numeral-panel, stat-counter)

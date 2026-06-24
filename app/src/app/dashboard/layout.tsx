@@ -13,6 +13,7 @@ import { SessionKeepAlive } from '@/components/layout/SessionKeepAlive'
 import { NotificationsProvider } from '@/contexts/NotificationsContext'
 import { Day45Checker } from '@/components/layout/Day45Checker'
 import { AIChatbot } from '@/components/ai/AIChatbot'
+import { CropStageChecker } from '@/components/layout/CropStageChecker'
 
 /*
   DashboardShell reads cookies via getCurrentUser — this makes it dynamic.
@@ -26,6 +27,7 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <NotificationsProvider>
     <Day45Checker />
+    <CropStageChecker />
     <div className="min-h-screen flex bg-background print:block print:bg-white print:min-h-0 print:h-auto">
       <EntryAnimation />
       <SessionKeepAlive />

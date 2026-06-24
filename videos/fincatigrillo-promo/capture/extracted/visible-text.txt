@@ -1,0 +1,10 @@
+[h1] Finca Tigrillo
+[p] Sistema de Gestión Ganadera
+[h2] Iniciar Sesión
+[label] Correo electrónico
+[label] Contraseña
+[a] ¿Olvidaste tu contraseña?
+[button] Iniciar Sesión
+[p] ¿No tienes cuenta?
+[a] Regístrate aquí
+[p] © 2026 Finca Tigrillo. Todos los derechos reservados.

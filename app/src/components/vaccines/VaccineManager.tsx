@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Trash2, Save, X, Syringe, Loader2, PackagePlus, Package } from 'lucide-react'
+import { Plus, Trash2, Save, X, Syringe, Loader2, PackagePlus, Package, Pencil } from 'lucide-react'
 import { AssignVaccineModal } from './AssignVaccineModal'
 import { formatVaccineAgeText } from '@/lib/vaccines/format'
 
@@ -239,6 +239,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
         isAdmin={true}
         title="Asignar vacuna por grupo"
         defaultMode="group"
+        hideModeToggle={true}
       />
 
       <div className="flex items-center justify-between">
@@ -356,7 +357,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium">Edad mínima (días)</label>
               <input
@@ -443,180 +444,214 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
         </form>
       )}
 
+      {/* ── Edit modal ─────────────────────────────────────────────────── */}
       {isAdmin && editing && (
-        <form onSubmit={updateVaccine} className="bg-surface border border-border rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-foreground">Editar vacuna</h3>
-            <button type="button" onClick={() => setEditing(null)} className="p-2 rounded-xl hover:bg-surface-hover text-muted" aria-label="Cerrar">
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Editar vacuna">
+          {/* Blurred backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setEditing(null)}
+            aria-hidden="true"
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Nombre *</label>
-              <input
-                value={editing.name}
-                onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Tipo objetivo *</label>
-              <select
-                value={editing.target_type_id || ''}
-                onChange={(e) => {
-                  const newSlug = types.find(t => t.id === e.target.value)?.slug
-                  const newSex = newSlug !== POULTRY_SLUG && editing.target_sex === 'mixto' ? 'any' : editing.target_sex
-                  setEditing({ ...editing, target_type_id: e.target.value || null, target_sex: newSex })
-                }}
-                className="w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                required
-              >
-                <option value="">Seleccionar</option>
-                {types.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-surface border border-border rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
 
-          {(() => {
-            const editTypeSlug = types.find(t => t.id === editing.target_type_id)?.slug
-            const showEdit = !!editTypeSlug && REPRO_TYPES.has(editTypeSlug) && editing.target_sex === 'hembra'
-            const current = Array.isArray(editing.allowed_reproductive_states) ? editing.allowed_reproductive_states : []
-            return (
-              <div
-                className={[
-                  'overflow-hidden transition-all duration-200',
-                  showEdit ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
-                ].join(' ')}
-                aria-hidden={!showEdit}
-              >
-                <div className="pt-1">
-                  <div className="bg-background border border-border rounded-2xl p-4">
-                    <p className="text-sm font-medium text-foreground">Estados reproductivos permitidos</p>
-                    <p className="text-xs text-muted mt-1">Si no seleccionas ninguno, se asume que aplica para cualquier estado.</p>
-                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {REPRO_STATE_OPTIONS.map(opt => (
-                        <label key={opt.value} className="flex items-center gap-2 text-sm text-foreground px-3 py-2 rounded-xl bg-surface border border-border hover:bg-surface-hover">
-                          <input
-                            type="checkbox"
-                            checked={current.includes(opt.value)}
-                            onChange={(e) => {
-                              const checked = e.target.checked
-                              const next = checked ? [...current, opt.value] : current.filter(v => v !== opt.value)
-                              setEditing({
-                                ...editing,
-                                allowed_reproductive_states: showEdit && next.length > 0 ? next : null,
-                              })
-                            }}
-                            className="accent-[color:var(--color-primary)]"
-                          />
-                          {opt.label}
-                        </label>
-                      ))}
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <Pencil className="w-5 h-5 text-primary" aria-hidden="true" />
+                  <h3 className="text-base font-semibold text-foreground">Editar vacuna</h3>
+                </div>
+                <button type="button" onClick={() => setEditing(null)} className="p-2 rounded-xl hover:bg-surface-hover text-muted" aria-label="Cerrar">
+                  <X className="w-5 h-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              {/* Scrollable body */}
+              <form onSubmit={updateVaccine} id="vaccine-edit-form" className="flex flex-col flex-1 min-h-0">
+                <div className="overflow-y-auto flex-1 p-5 space-y-4">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Nombre *</label>
+                      <input
+                        value={editing.name}
+                        onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Tipo objetivo *</label>
+                      <select
+                        value={editing.target_type_id || ''}
+                        onChange={(e) => {
+                          const newSlug = types.find(t => t.id === e.target.value)?.slug
+                          const newSex = newSlug !== POULTRY_SLUG && editing.target_sex === 'mixto' ? 'any' : editing.target_sex
+                          setEditing({ ...editing, target_type_id: e.target.value || null, target_sex: newSex })
+                        }}
+                        className="w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        required
+                      >
+                        <option value="">Seleccionar</option>
+                        {types.map(t => (
+                          <option key={t.id} value={t.id}>{t.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const editTypeSlug = types.find(t => t.id === editing.target_type_id)?.slug
+                    const showEdit = !!editTypeSlug && REPRO_TYPES.has(editTypeSlug) && editing.target_sex === 'hembra'
+                    const current = Array.isArray(editing.allowed_reproductive_states) ? editing.allowed_reproductive_states : []
+                    return (
+                      <div
+                        className={[
+                          'overflow-hidden transition-all duration-200',
+                          showEdit ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
+                        ].join(' ')}
+                        aria-hidden={!showEdit}
+                      >
+                        <div className="pt-1">
+                          <div className="bg-background border border-border rounded-2xl p-4">
+                            <p className="text-sm font-medium text-foreground">Estados reproductivos permitidos</p>
+                            <p className="text-xs text-muted mt-1">Si no seleccionas ninguno, se asume que aplica para cualquier estado.</p>
+                            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {REPRO_STATE_OPTIONS.map(opt => (
+                                <label key={opt.value} className="flex items-center gap-2 text-sm text-foreground px-3 py-2 rounded-xl bg-surface border border-border hover:bg-surface-hover">
+                                  <input
+                                    type="checkbox"
+                                    checked={current.includes(opt.value)}
+                                    onChange={(e) => {
+                                      const checked = e.target.checked
+                                      const next = checked ? [...current, opt.value] : current.filter(v => v !== opt.value)
+                                      setEditing({
+                                        ...editing,
+                                        allowed_reproductive_states: showEdit && next.length > 0 ? next : null,
+                                      })
+                                    }}
+                                    className="accent-[color:var(--color-primary)]"
+                                  />
+                                  {opt.label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-medium">Descripción</label>
+                    <input
+                      value={editing.description || ''}
+                      onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Sexo objetivo</label>
+                      <select
+                        value={editing.target_sex}
+                        onChange={(e) => setEditing({ ...editing, target_sex: asTargetSex(e.target.value) })}
+                        className="w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      >
+                        <option value="any">Cualquiera</option>
+                        <option value="macho">Macho</option>
+                        <option value="hembra">Hembra</option>
+                        {types.find(t => t.id === editing.target_type_id)?.slug === POULTRY_SLUG && (
+                          <option value="mixto">Mixto</option>
+                        )}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Activa</label>
+                      <label className="flex items-center gap-2 text-sm text-foreground px-3 py-2.5 rounded-xl bg-background border border-border cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editing.is_active}
+                          onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })}
+                          className="accent-[color:var(--color-primary)]"
+                        />
+                        Visible para asignación
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Edad mínima (días)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editing.age_min_days ?? ''}
+                        onChange={(e) => setEditing({ ...editing, age_min_days: toIntOrNull(e.target.value) })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Edad máxima (días)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editing.age_max_days ?? ''}
+                        onChange={(e) => setEditing({ ...editing, age_max_days: toIntOrNull(e.target.value) })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Intervalo próxima dosis (días)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editing.default_next_dose_days ?? ''}
+                        onChange={(e) => setEditing({ ...editing, default_next_dose_days: toIntOrNull(e.target.value) })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium">Nº total de dosis</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={editing.total_doses ?? ''}
+                        onChange={(e) => setEditing({ ...editing, total_doses: toIntOrNull(e.target.value) })}
+                        placeholder="(vacío = ilimitado)"
+                        disabled={editing.default_next_dose_days == null}
+                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          })()}
 
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium">Descripción</label>
-            <input
-              value={editing.description || ''}
-              onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Sexo objetivo</label>
-              <select
-                value={editing.target_sex}
-                onChange={(e) => setEditing({ ...editing, target_sex: asTargetSex(e.target.value) })}
-                className="w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-              >
-                <option value="any">Cualquiera</option>
-                <option value="macho">Macho</option>
-                <option value="hembra">Hembra</option>
-                {types.find(t => t.id === editing.target_type_id)?.slug === POULTRY_SLUG && (
-                  <option value="mixto">Mixto</option>
-                )}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Activa</label>
-              <label className="flex items-center gap-2 text-sm text-foreground px-3 py-2.5 rounded-xl bg-background border border-border">
-                <input
-                  type="checkbox"
-                  checked={editing.is_active}
-                  onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })}
-                  className="accent-[color:var(--color-primary)]"
-                />
-                Visible para asignación
-              </label>
+                {/* Sticky footer */}
+                <div className="px-5 py-4 border-t border-border flex items-center justify-end gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setEditing(null)}
+                    className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-surface-hover"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 inline-flex items-center gap-2"
+                  >
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}
+                    Guardar cambios
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Edad mínima (días)</label>
-              <input
-                type="number"
-                min={0}
-                value={editing.age_min_days ?? ''}
-                onChange={(e) => setEditing({ ...editing, age_min_days: toIntOrNull(e.target.value) })}
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Edad máxima (días)</label>
-              <input
-                type="number"
-                min={0}
-                value={editing.age_max_days ?? ''}
-                onChange={(e) => setEditing({ ...editing, age_max_days: toIntOrNull(e.target.value) })}
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Intervalo próxima dosis (días)</label>
-              <input
-                type="number"
-                min={0}
-                value={editing.default_next_dose_days ?? ''}
-                onChange={(e) => setEditing({ ...editing, default_next_dose_days: toIntOrNull(e.target.value) })}
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Nº total de dosis</label>
-              <input
-                type="number"
-                min={1}
-                value={editing.total_doses ?? ''}
-                onChange={(e) => setEditing({ ...editing, total_doses: toIntOrNull(e.target.value) })}
-                placeholder="(vacío = ilimitado)"
-                disabled={editing.default_next_dose_days == null}
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}
-            Guardar cambios
-          </button>
-        </form>
+        </div>
       )}
 
       {!loading && types.length > 0 && (
@@ -712,7 +747,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                     )}
                     {v.default_next_dose_days != null && (
                       <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                        {v.total_doses != null ? `${v.total_doses} dosis` : 'Dosis recurrente'}
+                        {v.total_doses != null ? `Serie: ${v.total_doses} dosis` : 'Dosis recurrente'}
                       </span>
                     )}
                     {/* Stock badge */}
@@ -728,7 +763,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                       title="Dosis en inventario"
                     >
                       <Package className="w-3 h-3" aria-hidden="true" />
-                      {v.stock_doses} dosis
+                      Stock: {v.stock_doses}
                     </span>
                   </div>
 
@@ -784,10 +819,16 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                     + Stock
                   </button>
                   <button
-                    onClick={() => setEditing(v)}
-                    className="text-xs font-medium text-primary hover:text-primary-dark"
+                    onClick={() => {
+                      setEditing(v)
+                      setShowForm(false)
+                      setStockOpen(null)
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                     type="button"
+                    aria-label={`Editar ${v.name}`}
                   >
+                    <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                     Editar
                   </button>
                   {confirmDelete === v.id ? (
