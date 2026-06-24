@@ -19,7 +19,7 @@ function timeAgo(date: Date): string {
 }
 
 const typeConfig: Record<NotificationType, { icon: React.ElementType; colorClass: string; bgClass: string }> = {
-  info:    { icon: Info,          colorClass: 'text-blue-500',  bgClass: 'bg-blue-500/10' },
+  info:    { icon: Info,          colorClass: 'text-accent',    bgClass: 'bg-accent/10' },
   success: { icon: CheckCircle,   colorClass: 'text-success',   bgClass: 'bg-success/10' },
   warning: { icon: AlertTriangle, colorClass: 'text-warning',   bgClass: 'bg-warning/10' },
   error:   { icon: AlertCircle,   colorClass: 'text-danger',    bgClass: 'bg-danger/10' },

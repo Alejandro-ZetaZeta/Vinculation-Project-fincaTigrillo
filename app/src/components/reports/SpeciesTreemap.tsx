@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useState } from 'react'
+import { TreePine } from 'lucide-react'
+import { usePrintWidth } from '@/hooks/usePrintWidth'
 import type { SpeciesNode } from '@/hooks/useChartData'
 
 /* ─────────────────────────────────────────────
    Squarified Treemap Layout
    Implements the Bruls–Huizing–van Wijk algorithm
-───────────────────────────────────────────── */
+   ───────────────────────────────────────────── */
 
 interface TreemapRect {
   x: number
@@ -30,7 +32,6 @@ function layoutTreemap(nodes: SpeciesNode[], x: number, y: number, w: number, h:
   const total = nodes.reduce((s, n) => s + n.value, 0)
   if (total === 0) return []
 
-  // Split into two groups for best aspect ratio
   let bestSplit = 1
   let bestRatio = Infinity
 
@@ -72,26 +73,31 @@ function layoutTreemap(nodes: SpeciesNode[], x: number, y: number, w: number, h:
 
 /* ─────────────────────────────────────────────
    Component
-───────────────────────────────────────────── */
+   ───────────────────────────────────────────── */
 
 interface SpeciesTreemapProps {
   data: SpeciesNode[]
+  isPrint?: boolean
 }
 
-export function SpeciesTreemap({ data }: SpeciesTreemapProps) {
+export function SpeciesTreemap({ data, isPrint = false }: SpeciesTreemapProps) {
   const [hovered, setHovered] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
+  const { containerRef, chartWidth, isPrinting } = usePrintWidth(400)
+
+  const activePrint = isPrint || isPrinting
 
   if (data.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-muted italic text-sm">
-        Sin datos de especies
+      <div ref={containerRef} style={{ height: activePrint ? 280 : 220 }} className="flex flex-col items-center justify-center text-muted italic text-sm gap-2">
+        <TreePine className="w-8 h-8 opacity-20" />
+        <span>Sin datos de especies</span>
       </div>
     )
   }
 
-  const viewW = 400
-  const viewH = 260
+  const viewW = chartWidth > 0 ? chartWidth : 400
+  const viewH = activePrint ? 280 : 200
   const pad = 2
 
   const rects = layoutTreemap(data, pad, pad, viewW - pad * 2, viewH - pad * 2)
@@ -99,10 +105,10 @@ export function SpeciesTreemap({ data }: SpeciesTreemapProps) {
   const selectedNode = selected ? data.find(d => d.name === selected) : null
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div ref={containerRef} className="w-full flex flex-col" style={{ minHeight: viewH }}>
       <svg
         viewBox={`0 0 ${viewW} ${viewH}`}
-        className="w-full flex-1"
+        style={{ width: '100%', height: viewH }}
         preserveAspectRatio="xMidYMid meet"
       >
         {rects.map((rect, i) => {
@@ -170,9 +176,31 @@ export function SpeciesTreemap({ data }: SpeciesTreemapProps) {
         })}
       </svg>
 
+      {/* Legend row */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 mt-1">
+        {data.slice(0, 6).map((d, i) => (
+          <button
+            key={d.name}
+            className={`flex items-center gap-1 text-[10px] font-medium transition-opacity ${
+              hovered && hovered !== d.name ? 'opacity-40' : 'opacity-100'
+            }`}
+            onMouseEnter={() => setHovered(d.name)}
+            onMouseLeave={() => setHovered(null)}
+            onClick={() => setSelected(s => s === d.name ? null : d.name)}
+          >
+            <span
+              className="w-2.5 h-2.5 rounded-sm shrink-0"
+              style={{ backgroundColor: TREEMAP_COLORS[i % TREEMAP_COLORS.length] }}
+            />
+            <span className="text-muted truncate max-w-[70px]">{d.name}</span>
+            <span className="font-bold text-foreground">{d.value}</span>
+          </button>
+        ))}
+      </div>
+
       {/* Selected detail */}
       {selectedNode && (
-        <div className="mt-2 px-3 py-2 bg-primary/8 border border-primary/20 rounded-xl flex items-center justify-between animate-fade-up">
+        <div className="mt-1.5 px-3 py-1.5 bg-primary/8 border border-primary/20 rounded-xl flex items-center justify-between animate-fade-up">
           <div>
             <span className="text-xs font-bold text-foreground">{selectedNode.name}</span>
             <span className="text-xs text-muted ml-2">{selectedNode.value} animales</span>

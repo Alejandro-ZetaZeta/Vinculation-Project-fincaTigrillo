@@ -136,6 +136,77 @@
 }
 
 /* ─────────────────────────────────────────────
+   ANIMACIONES PERSONALIZADAS DEL MENÚ LATERAL
+   ───────────────────────────────────────────── */
+.sidebar-link-animate {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              background-color 0.2s ease, 
+              box-shadow 0.2s ease, 
+              color 0.2s ease !important;
+  transform-origin: center left;
+}
+
+.sidebar-link-animate:hover {
+  transform: translateX(4px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-link-animate:active {
+  transform: translateX(2px) scale(0.97);
+}
+
+/* Micro-animación para el icono */
+.sidebar-link-animate .sidebar-icon {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sidebar-link-animate:hover .sidebar-icon {
+  transform: scale(1.15) rotate(6deg);
+}
+
+.sidebar-panel.is-collapsed .sidebar-link-animate:hover {
+  transform: scale(1.08);
+}
+
+/* ── Custom transitions and animations ── */
+.sidebar-text-transition {
+  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown {
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+}
+
+@keyframes pulseSubtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.92;
+    transform: scale(0.97);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────────
    BASE
 ───────────────────────────────────────────── */
 *, *::before, *::after {
@@ -308,6 +379,28 @@ select {
 }
 [data-theme="dark"] select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+/* ─────────────────────────────────────────────
+   EFECTO HOVER FLOTANTE PARA TARJETAS
+───────────────────────────────────────────── */
+.card-animate {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease !important;
+}
+
+.card-animate:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05),
+              0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border-color: var(--primary-light) !important;
+}
+
+/* Efecto de brillo de borde dorado/azul en modo oscuro */
+[data-theme$="dark"] .card-animate:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.12);
+  border-color: var(--primary) !important;
 }
 
 /* ─────────────────────────────────────────────
@@ -526,14 +619,237 @@ select.input-calc {
 }
 
 /* ─────────────────────────────────────────────
-   PRINT
+   PRINT — Professional layout for any paper size
+   viewBox is injected by PrintResize.tsx so charts
+   scale proportionally without re-rendering.
 ───────────────────────────────────────────── */
-@media print {
-  aside, header, .no-print { display: none !important; }
-  body { background: white !important; }
-  main { margin: 0 !important; padding: 0 !important; }
-  .print-area { width: 100%; }
+
+/* ── Page margins — uniform on A4, Letter, Legal ── */
+@page {
+  margin: 14mm 12mm 18mm 12mm;
+  size: auto;
 }
+
+@media print {
+
+  /* ════════════════════════════════════════════
+     1. STRUCTURAL RESETS
+  ════════════════════════════════════════════ */
+
+  /* Hide navigation chrome */
+  aside,
+  header,
+  .no-print,
+  nav,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  /* Clean white canvas */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 10pt !important;
+    line-height: 1.5 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Strip dashboard shell padding */
+  main,
+  [role="main"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Kill all animations */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ════════════════════════════════════════════
+     2. KPI CARDS — compact, professional
+  ════════════════════════════════════════════ */
+
+  .kpi-card,
+  .bg-background.border.border-border.rounded-xl,
+  .bg-background.border.border-border.rounded-2xl,
+  .p-4.bg-background.border.border-border.rounded-2xl,
+  .p-3.bg-background.border.border-border.rounded-xl,
+  .p-3.bg-background.border.border-border.rounded-2xl {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
+    background: #ffffff !important;
+    border-radius: 4pt !important;
+    padding: 7pt 9pt !important;
+  }
+
+  /* Remove decorative pseudo-elements */
+  .kpi-card::after,
+  .kpi-card::before {
+    display: none !important;
+  }
+
+  /* ════════════════════════════════════════════
+     3. CHART CARDS
+     Charts now use explicit pixel heights (height={220}) in
+     ResponsiveContainer so they render correctly without
+     needing absolute positioning hacks.
+  ════════════════════════════════════════════ */
+
+  .chart-card {
+    display: flex !important;
+    flex-direction: column !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 4pt !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  /* Chart content area — normal block flow */
+  .chart-card > div:last-child {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* ════════════════════════════════════════════
+     4. RECHARTS — scale SVG to fill card width
+     Charts use explicit height={220} on ResponsiveContainer
+     so they always have a defined pixel height for print.
+  ════════════════════════════════════════════ */
+
+  /* Wrapper divs in chart components have explicit pixel height */
+  .recharts-responsive-container {
+    width: 100% !important;
+  }
+
+  .recharts-wrapper {
+    width: 100% !important;
+  }
+
+  .recharts-wrapper > svg {
+    width: 100% !important;
+    display: block !important;
+    max-width: 100% !important;
+  }
+
+  /* ════════════════════════════════════════════
+     5. SECTION BLOCKS
+  ════════════════════════════════════════════ */
+
+  /* Big analytical section cards */
+  .bg-surface.border.border-border.rounded-3xl,
+  .bg-surface.border.border-border.rounded-2xl {
+    box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
+    overflow: visible !important;
+  }
+
+  /* Mute the green section header backgrounds */
+  [class*="bg-primary/5"],
+  [class*="bg-primary/10"] {
+    background: #f9fafb !important;
+  }
+
+  /* ════════════════════════════════════════════
+     6. TABLES
+  ════════════════════════════════════════════ */
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8pt !important;
+  }
+
+  th {
+    padding: 4pt 6pt !important;
+    border-bottom: 2px solid #374151 !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    background: #f9fafb !important;
+    color: #111827 !important;
+  }
+
+  td {
+    padding: 4pt 6pt !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    color: #374151 !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* ════════════════════════════════════════════
+     7. MISC
+  ════════════════════════════════════════════ */
+
+  /* Scrollable containers open up for print */
+  .overflow-x-auto,
+  [class~="overflow-x-auto"] {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
+  /* Suppress browser's auto URL suffix on links */
+  a[href]::after {
+    content: none !important;
+  }
+
+  /* Print area display */
+  .print-area {
+    width: 100% !important;
+    display: block !important;
+  }
+
+  /* Forzar saltos de página en impresión */
+  .print\:break-before-page {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+}
+
+/* ── Mobile print: chart cards stack single column ── */
+@media print and (max-width: 600px) {
+  .chart-card {
+    page-break-after: auto !important;
+  }
+}
+
+
+
+
 
 /* ─────────────────────────────────────────────
    REDUCED MOTION (WCAG 2.3)

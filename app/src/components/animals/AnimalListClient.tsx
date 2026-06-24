@@ -9,6 +9,7 @@ import {
   Scale, History, TrendingUp, Loader2, Plus, CheckCircle, Loader
 } from 'lucide-react'
 import { Chart, registerables } from 'chart.js'
+import { useTheme } from '@/components/ThemeProvider'
 import { AnimalVaccinationProfile } from '@/components/vaccines/AnimalVaccinationProfile'
 import { AssignVaccineModal } from '@/components/vaccines/AssignVaccineModal'
 import { usePoultryStageSync } from '@/hooks/usePoultryStageSync'
@@ -339,7 +340,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     setEditData({
       name: animal.name || '',
       breed: animal.breed || '',
-      sex: (() => {
+      sex: isPoultryBatch ? 'mixto' : (() => {
         const s = (animal.sex || '').toLowerCase()
         if (s === 'machos') return 'macho'
         if (s === 'hembras') return 'hembra'
@@ -839,7 +840,9 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             <label className="block text-xs text-muted mb-1">Sexo</label>
                             <select value={String(editData.sex || '')} onChange={(e) => setEditData(p => ({...p, sex: e.target.value}))}
                               className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
-                              {animal.animal_types?.slug === 'aves-de-corral' || animal.is_litter ? (
+                              {animal.animal_types?.slug === 'aves-de-corral' ? (
+                                <option value="mixto">Mixto</option>
+                              ) : animal.is_litter ? (
                                 <>
                                   <option value="macho">Macho</option>
                                   <option value="hembra">Hembra</option>
@@ -1125,6 +1128,8 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
   const [newNotes, setNewNotes] = useState('')
   const chartRef = useRef<HTMLCanvasElement>(null)
   const chartInstance = useRef<Chart | null>(null)
+  const { theme } = useTheme()
+  const isDark = theme === 'dark' || theme === 'uleam-dark'
 
   const isGrams = isPoultry && poultryEtapa === 'pollitos'
   const isLbs = isPoultry && !!poultryEtapa && poultryEtapa !== 'pollitos'
@@ -1177,8 +1182,15 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
         animation: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: false, grid: { color: '#e2e8f033' } },
-          x: { grid: { display: false } }
+          y: { 
+            beginAtZero: false, 
+            grid: { color: isDark ? '#353e47' : '#dcd3c4' },
+            ticks: { color: isDark ? '#a5b3c2' : '#696152' }
+          },
+          x: { 
+            grid: { display: false },
+            ticks: { color: isDark ? '#a5b3c2' : '#696152' }
+          }
         }
       }
     })
@@ -1189,7 +1201,7 @@ function WeightHistorySection({ animalId, isAdmin, onWeightUpdated, baselineDate
     canvas.classList.add('animate-chart-reveal')
     return () => chartInstance.current?.destroy()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weights, weightUnit, baselineDate])
+  }, [weights, weightUnit, baselineDate, isDark])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

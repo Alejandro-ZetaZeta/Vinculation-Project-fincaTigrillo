@@ -307,8 +307,6 @@ function sexOptionsFor(slug: string | undefined, isLitter: boolean): { value: st
   if (isLitter) return [{ value: 'mixto', label: 'Mixto (camada)' }]
   if (slug === 'aves-de-corral') {
     return [
-      { value: 'macho',  label: 'Machos' },
-      { value: 'hembra', label: 'Hembras' },
       { value: 'mixto',  label: 'Mixto' },
     ]
   }
@@ -583,7 +581,19 @@ export function AnimalRecordForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField label="Tipo de Animal" required>
-          <SelectInput value={selectedTypeId} onChange={v => { onChange({ ...value, type_id: v, _typeSlug: animalTypes.find(t => t.id === v)?.slug ?? '', metadata: null, is_litter: false, litter_count: null }); setWeightInput('') }} required>
+          <SelectInput value={selectedTypeId} onChange={v => {
+            const slug = animalTypes.find(t => t.id === v)?.slug ?? ''
+            onChange({
+              ...value,
+              type_id: v,
+              _typeSlug: slug,
+              metadata: null,
+              is_litter: false,
+              litter_count: null,
+              sex: slug === 'aves-de-corral' ? 'mixto' : ''
+            });
+            setWeightInput('')
+          }} required>
             <option value="">Seleccionar tipo...</option>
             {animalTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </SelectInput>

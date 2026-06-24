@@ -86,8 +86,18 @@ export async function PUT(
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-     // Normalize legacy/plural sex values; prevent setting sex to null/empty.
-     if (typeof body.sex === 'string') {
+     // Fetch the animal to see if it is aves-de-corral
+     const { data: animalObj } = await client.database
+       .from('animals')
+       .select('type_id, animal_types(slug)')
+       .eq('id', id)
+       .maybeSingle()
+     const animalTypes = (animalObj as any)?.animal_types
+     const typeSlug = Array.isArray(animalTypes) ? animalTypes[0]?.slug : animalTypes?.slug
+
+     if (typeSlug === 'aves-de-corral') {
+       body.sex = 'mixto'
+     } else if (typeof body.sex === 'string') {
        const s = body.sex.toLowerCase().trim()
        if (s === 'machos') body.sex = 'macho'
        if (s === 'hembras') body.sex = 'hembra'
