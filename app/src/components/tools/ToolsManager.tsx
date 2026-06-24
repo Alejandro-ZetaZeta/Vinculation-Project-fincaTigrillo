@@ -5,7 +5,7 @@ import Image from 'next/image'
 import {
   Wrench, Plus, Save, X, Loader2, Trash2, Pencil,
   PackagePlus, PackageMinus, Package, ChevronDown, ChevronUp,
-  AlertTriangle, History,
+  AlertTriangle, History, Power,
 } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -121,9 +121,10 @@ export function ToolsManager() {
   const [form, setForm]               = useState(BLANK_FORM)
   const [saving, setSaving]           = useState(false)
 
-  // Delete confirm
+  // Delete / reactivate
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting]           = useState(false)
+  const [reactivating, setReactivating]   = useState<string | null>(null)
 
   // Category filter
   const [filterCat, setFilterCat] = useState<ToolCategory | ''>('')
@@ -268,16 +269,39 @@ export function ToolsManager() {
   }
 
   // ── Delete / deactivate tool ───────────────────────────────────────────────
-  async function deleteTool(id: string) {
+  // force=false → soft-delete (sets is_active=false, keeps history)
+  // force=true  → hard-delete (cascades movements, irreversible)
+  async function deleteTool(id: string, force: boolean) {
     setDeleting(true)
     try {
-      const res = await fetch(`/api/tools/${id}`, { method: 'DELETE' })
+      const url = force ? `/api/tools/${id}?force=true` : `/api/tools/${id}`
+      const res = await fetch(url, { method: 'DELETE' })
       if (res.ok) {
-        setTools(prev => prev.filter(t => t.id !== id))
+        const json = await res.json()
+        if (json.deleted) {
+          // Hard delete: tool + its history are gone
+          setTools(prev => prev.filter(t => t.id !== id))
+        } else {
+          // Soft delete (or no-op if already inactive)
+          setTools(prev => prev.map(t => t.id === id ? { ...t, is_active: false } : t))
+        }
         setConfirmDelete(null)
       }
     } finally {
       setDeleting(false)
+    }
+  }
+
+  // ── Reactivate tool ────────────────────────────────────────────────────────
+  async function reactivateTool(id: string) {
+    setReactivating(id)
+    try {
+      const res = await fetch(`/api/tools/${id}`, { method: 'POST' })
+      if (res.ok) {
+        setTools(prev => prev.map(t => t.id === id ? { ...t, is_active: true } : t))
+      }
+    } finally {
+      setReactivating(null)
     }
   }
 
@@ -789,14 +813,47 @@ export function ToolsManager() {
                         Editar
                       </button>
 
-                      {/* Delete / deactivate */}
+                      {/* Reactivate (inactive tools only) — one-click restore */}
+                      {!tool.is_active && (
+                        <button
+                          type="button"
+                          onClick={() => reactivateTool(tool.id)}
+                          disabled={reactivating === tool.id}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-success/10 text-success hover:bg-success/20 disabled:opacity-50 transition-colors"
+                          aria-label={`Reactivar ${tool.name}`}
+                        >
+                          {reactivating === tool.id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                            : <Power className="w-3.5 h-3.5" aria-hidden="true" />}
+                          Activar
+                        </button>
+                      )}
+
+                      {/* Delete — soft (desactivar) OR hard (eliminar historial) */}
                       {confirmDelete === tool.id ? (
-                        <div className="flex gap-1">
-                          <button onClick={() => deleteTool(tool.id)} disabled={deleting} className="px-2 py-1 text-xs rounded-lg bg-danger text-white hover:opacity-80 disabled:opacity-50">
-                            {deleting ? '…' : 'Sí'}
+                        <div className="flex flex-col gap-1 items-end">
+                          {tool.is_active && (
+                            <button
+                              onClick={() => deleteTool(tool.id, false)}
+                              disabled={deleting}
+                              className="px-2 py-1 text-xs rounded-lg bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/30 disabled:opacity-50"
+                            >
+                              {deleting ? '…' : 'Desactivar'}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteTool(tool.id, true)}
+                            disabled={deleting}
+                            className="px-2 py-1 text-xs rounded-lg bg-danger text-white hover:opacity-80 disabled:opacity-50"
+                            title="Elimina la herramienta y todo su historial de movimientos"
+                          >
+                            {deleting ? '…' : 'Eliminar todo'}
                           </button>
-                          <button onClick={() => setConfirmDelete(null)} className="px-2 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover">
-                            No
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="px-2 py-1 text-xs rounded-lg border border-border hover:bg-surface-hover"
+                          >
+                            Cancelar
                           </button>
                         </div>
                       ) : (
@@ -805,6 +862,7 @@ export function ToolsManager() {
                           onClick={() => setConfirmDelete(tool.id)}
                           className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors"
                           aria-label={`Desactivar o eliminar ${tool.name}`}
+                          title={tool.is_active ? 'Desactivar o eliminar' : 'Eliminar'}
                         >
                           <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </button>
