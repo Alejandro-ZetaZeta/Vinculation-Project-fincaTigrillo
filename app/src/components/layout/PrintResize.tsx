@@ -1,59 +1,106 @@
 'use client'
 
 /**
- * PrintResize — forces Recharts charts to re-measure their containers
- * when the browser's print dialog opens.
+ * PrintResize — makes Recharts charts scale correctly in print without re-rendering.
  *
- * Problem: Recharts uses ResizeObserver to measure its container and renders
- * SVGs with hard-coded pixel widths. When @media print kicks in and the
- * layout changes, Recharts does NOT re-render — so charts appear empty or
- * wrongly sized in the print preview.
+ * ROOT CAUSE: Recharts renders SVGs with hard-coded pixel `width` and `height`
+ * attributes but WITHOUT a `viewBox`. Without viewBox, CSS `width: 100%` only
+ * resizes the element box but the chart paths stay at the original coordinates —
+ * so the chart appears clipped or empty when the print card is smaller.
  *
- * Solution: On `beforeprint` we:
- *  1. Set an explicit pixel height on every .chart-card inner wrapper so
- *     the absolute-positioned child has a resolved height.
- *  2. Dispatch a synthetic ResizeObserver-compatible "resize" event so
- *     Recharts recomputes its dimensions.
- *  3. On `afterprint` we restore the original inline styles.
+ * FIX (beforeprint):
+ *   1. Inject `viewBox="0 0 W H"` onto every Recharts SVG so they become
+ *      fully scalable (like a normal SVG image).
+ *   2. Set explicit heights on chart cards so flex-1 children resolve properly.
+ *
+ * FIX (afterprint):
+ *   1. Remove injected viewBox attributes.
+ *   2. Restore card heights.
+ *   3. After a short reflow delay, fire `window.resize` so Recharts
+ *      re-measures the containers and restores original dimensions.
  */
 
 import { useEffect } from 'react'
 
-const CHART_INNER_SELECTOR = '.chart-card > div:last-child'
-const RECHARTS_CONTAINER_SELECTOR = '.recharts-responsive-container'
-const PRINT_HEIGHT = 220  // px — matches the CSS rule in globals.css
+const PRINT_CARD_HEIGHT = 300  // px — must match CSS .chart-card height in @media print
+
+interface SavedSVG {
+  el: SVGSVGElement
+  hadViewBox: boolean
+  origViewBox: string | null
+}
+
+interface SavedCard {
+  el: HTMLElement
+  height: string
+  minHeight: string
+  maxHeight: string
+}
 
 export function PrintResize() {
   useEffect(() => {
-    let originals: { el: HTMLElement; h: string }[] = []
+    let savedSVGs: SavedSVG[] = []
+    let savedCards: SavedCard[] = []
 
     function beforePrint() {
-      // 1. Give every chart inner wrapper an explicit pixel height
-      const wrappers = document.querySelectorAll<HTMLElement>(CHART_INNER_SELECTOR)
-      originals = Array.from(wrappers).map(el => ({ el, h: el.style.height }))
-      wrappers.forEach(el => {
-        el.style.height = `${PRINT_HEIGHT}px`
-        el.style.minHeight = `${PRINT_HEIGHT}px`
+      /* ── Step 1: Inject viewBox into Recharts SVGs ── */
+      const svgs = document.querySelectorAll<SVGSVGElement>('.recharts-wrapper > svg')
+      savedSVGs = []
+
+      svgs.forEach(svg => {
+        const w = svg.getAttribute('width') ?? String(svg.clientWidth)
+        const h = svg.getAttribute('height') ?? String(svg.clientHeight)
+        savedSVGs.push({
+          el: svg,
+          hadViewBox: svg.hasAttribute('viewBox'),
+          origViewBox: svg.getAttribute('viewBox'),
+        })
+        // Only add if valid dimensions
+        if (!svg.hasAttribute('viewBox') && parseFloat(w) > 0 && parseFloat(h) > 0) {
+          svg.setAttribute('viewBox', `0 0 ${w} ${h}`)
+          svg.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+        }
       })
 
-      // 2. Force Recharts to re-measure by firing a window resize event.
-      //    We do this slightly after setting heights so the DOM has settled.
-      requestAnimationFrame(() => {
-        window.dispatchEvent(new Event('resize'))
+      /* ── Step 2: Fix card heights so flex-1 inner div resolves ── */
+      const cards = document.querySelectorAll<HTMLElement>('.chart-card')
+      savedCards = []
+
+      cards.forEach(el => {
+        savedCards.push({
+          el,
+          height: el.style.height,
+          minHeight: el.style.minHeight,
+          maxHeight: el.style.maxHeight,
+        })
+        el.style.height = `${PRINT_CARD_HEIGHT}px`
+        el.style.minHeight = `${PRINT_CARD_HEIGHT}px`
+        el.style.maxHeight = `${PRINT_CARD_HEIGHT}px`
       })
     }
 
     function afterPrint() {
-      // Restore original inline heights so screen layout is unchanged
-      originals.forEach(({ el, h }) => {
-        el.style.height = h
-        el.style.minHeight = ''
+      /* ── Restore SVG viewBox state ── */
+      savedSVGs.forEach(({ el, hadViewBox, origViewBox }) => {
+        if (!hadViewBox) {
+          el.removeAttribute('viewBox')
+          el.removeAttribute('preserveAspectRatio')
+        } else if (origViewBox !== null) {
+          el.setAttribute('viewBox', origViewBox)
+        }
       })
-      originals = []
-      // Re-fire resize so Recharts readjusts for screen size
-      requestAnimationFrame(() => {
-        window.dispatchEvent(new Event('resize'))
+      savedSVGs = []
+
+      /* ── Restore card heights ── */
+      savedCards.forEach(({ el, height, minHeight, maxHeight }) => {
+        el.style.height = height
+        el.style.minHeight = minHeight
+        el.style.maxHeight = maxHeight
       })
+      savedCards = []
+
+      /* ── Allow DOM to reflow, then let Recharts re-measure ── */
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 250)
     }
 
     window.addEventListener('beforeprint', beforePrint)

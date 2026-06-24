@@ -619,18 +619,24 @@ select.input-calc {
 }
 
 /* ─────────────────────────────────────────────
-   PRINT — Responsive to any paper size & scale
-   Works for A4, Letter, Legal, and mobile print
+   PRINT — Professional layout for any paper size
+   viewBox is injected by PrintResize.tsx so charts
+   scale proportionally without re-rendering.
 ───────────────────────────────────────────── */
 
-/* ── Page setup: uniform margins on any paper size ── */
+/* ── Page margins — uniform on A4, Letter, Legal ── */
 @page {
-  margin: 12mm 10mm 14mm 10mm;
+  margin: 14mm 12mm 18mm 12mm;
   size: auto;
 }
 
 @media print {
-  /* ── 1. Hide navigation chrome ── */
+
+  /* ════════════════════════════════════════════
+     1. STRUCTURAL RESETS
+  ════════════════════════════════════════════ */
+
+  /* Hide navigation chrome */
   aside,
   header,
   .no-print,
@@ -639,11 +645,11 @@ select.input-calc {
     display: none !important;
   }
 
-  /* ── 2. Root canvas reset ── */
+  /* Clean white canvas */
   html,
   body {
     background: #ffffff !important;
-    color: #1a2414 !important;
+    color: #111827 !important;
     font-size: 10pt !important;
     line-height: 1.5 !important;
     -webkit-print-color-adjust: exact !important;
@@ -655,7 +661,7 @@ select.input-calc {
     padding: 0 !important;
   }
 
-  /* ── 3. Strip dashboard shell padding ── */
+  /* Strip dashboard shell padding */
   main,
   [role="main"] {
     margin: 0 !important;
@@ -665,126 +671,189 @@ select.input-calc {
     overflow: visible !important;
   }
 
-  /* ── 4. Disable all animations / transitions ── */
+  /* Kill all animations */
   *,
   *::before,
   *::after {
     animation: none !important;
     transition: none !important;
-    transform: none !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* ── 5. KPI grid — 4 balanced columns ── */
+  /* ════════════════════════════════════════════
+     2. KPI CARDS — compact, professional
+  ════════════════════════════════════════════ */
+
   .kpi-card {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     box-shadow: none !important;
-    padding: 6pt !important;
+    border: 1px solid #d1d5db !important;
+    background: #ffffff !important;
+    border-radius: 4pt !important;
+    padding: 7pt 9pt !important;
   }
 
-  /* ── 6. Charts grid: Tailwind print:grid-cols-2 already handles the 2-col layout.
-     We enforce gap and ensure no overflow clips the charts. */
-  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 {
-    gap: 8pt !important;
-    width: 100% !important;
-    overflow: visible !important;
+  /* Remove decorative pseudo-elements */
+  .kpi-card::after,
+  .kpi-card::before {
+    display: none !important;
   }
 
-  /* ── 7. Chart card shell ── */
+  /* ════════════════════════════════════════════
+     3. CHART CARDS
+     JS (PrintResize) sets height = 300px on each
+     .chart-card. The CSS here ensures flex layout
+     and NO overflow clipping so the SVG renders.
+  ════════════════════════════════════════════ */
+
   .chart-card {
+    display: flex !important;
+    flex-direction: column !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 4pt !important;
+    background: #ffffff !important;
     overflow: hidden !important;
-    width: 100% !important;
+    /* height is set inline by PrintResize.tsx (300px) */
   }
 
-  /* ── 8. Chart card inner flex area: give it a fixed pixel height.
-     The absolute-positioned child (inset-y-0) will stretch to fill it.
-     Recharts ResponsiveContainer then measures this height via ResizeObserver
-     snapshot already taken at screen render time.  ── */
+  /* The flex-1 wrapper takes remaining card height */
   .chart-card > div:last-child {
-    height: 220px !important;
-    min-height: 220px !important;
-    max-height: 220px !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
     position: relative !important;
-    overflow: hidden !important;
+    overflow: hidden !important;   /* clip at card boundary */
   }
 
-  /* ── 9. Recharts: force SVG to fill the container.
-     By the time print dialog opens, Recharts has already rendered the SVG
-     with explicit width/height px attributes. We override those with CSS
-     so the chart scales to 100% of the card width. ── */
-  .recharts-wrapper {
-    width: 100% !important;
-    height: 100% !important;
+  /* The absolute inner child fills the flex area */
+  .chart-content-transition {
+    position: absolute !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
   }
-  .recharts-wrapper svg {
-    width: 100% !important;
-    height: 100% !important;
-  }
+
+  /* ════════════════════════════════════════════
+     4. RECHARTS
+     PrintResize.tsx injects viewBox="0 0 W H" so
+     width:100% + height:auto gives proportional
+     scaling — ALL charts are visible regardless of
+     card width.
+  ════════════════════════════════════════════ */
+
   .recharts-responsive-container {
     width: 100% !important;
     height: 100% !important;
   }
 
-  /* ── 10. Tables — full width, compact, no split rows ── */
+  .recharts-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* With viewBox injected: width fills container,
+     height scales proportionally — no clipping    */
+  .recharts-wrapper > svg {
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+  }
+
+  /* ════════════════════════════════════════════
+     5. SECTION BLOCKS
+  ════════════════════════════════════════════ */
+
+  /* Big analytical section cards */
+  .bg-surface.border.border-border.rounded-3xl,
+  .bg-surface.border.border-border.rounded-2xl {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
+    overflow: visible !important;
+  }
+
+  /* Mute the green section header backgrounds */
+  [class*="bg-primary/5"],
+  [class*="bg-primary/10"] {
+    background: #f9fafb !important;
+  }
+
+  /* ════════════════════════════════════════════
+     6. TABLES
+  ════════════════════════════════════════════ */
+
   table {
     width: 100% !important;
     border-collapse: collapse !important;
     font-size: 8pt !important;
   }
-  th, td {
+
+  th {
+    padding: 4pt 6pt !important;
+    border-bottom: 2px solid #374151 !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    background: #f9fafb !important;
+    color: #111827 !important;
+  }
+
+  td {
     padding: 4pt 6pt !important;
     border-bottom: 1px solid #e5e7eb !important;
     word-break: break-word !important;
     overflow-wrap: anywhere !important;
+    color: #374151 !important;
   }
+
   thead {
     display: table-header-group !important;
   }
+
   tr {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
-  /* ── 11. Scrollable table containers open up ── */
+  /* ════════════════════════════════════════════
+     7. MISC
+  ════════════════════════════════════════════ */
+
+  /* Scrollable containers open up for print */
   .overflow-x-auto,
   [class~="overflow-x-auto"] {
     overflow-x: visible !important;
     overflow-y: visible !important;
   }
 
-  /* ── 12. Section wrappers — Tailwind print:break-inside-avoid already handles
-     page breaks. We also target the bg-surface border rounded-3xl pattern
-     used for the Analytical Breakdown and other big sections. ── */
-  .bg-surface.border.border-border.rounded-3xl,
-  .bg-surface.border.border-border.rounded-2xl {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-  }
-
-  /* ── 14. Suppress link URL decoration ── */
+  /* Suppress browser's auto URL suffix on links */
   a[href]::after {
     content: none !important;
   }
+
+  /* Print area display */
+  .print-area {
+    width: 100% !important;
+    display: block !important;
+  }
+
 }
 
-/* ── Mobile print: single column layout for narrow screens ── */
+/* ── Mobile print: chart cards stack single column ── */
 @media print and (max-width: 600px) {
-  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 {
-    grid-template-columns: 1fr !important;
-  }
-  .chart-card > div:last-child {
-    height: 180px !important;
-    min-height: 180px !important;
-    max-height: 180px !important;
+  .chart-card {
+    page-break-after: auto !important;
   }
 }
+
+
+
 
 /* ─────────────────────────────────────────────
    REDUCED MOTION (WCAG 2.3)
