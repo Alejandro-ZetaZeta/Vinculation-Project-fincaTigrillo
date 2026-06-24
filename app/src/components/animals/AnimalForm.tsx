@@ -143,7 +143,7 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
   const isLitterMode = typeSlug === 'porcino' && registrationMode === 'litter'
 
   /* ── Reactive controlled fields ── */
-  const [sex, setSex]                         = useState('')
+  const [sex, setSex]                         = useState(typeSlug === 'aves-de-corral' ? 'mixto' : '')
   const [reproStatus, setReproStatus]         = useState('no aplica')
   const [acquisitionType, setAcquisitionType] = useState('')
   const [acquisitionDate, setAcquisitionDate] = useState('')
@@ -664,8 +664,6 @@ export function AnimalForm({ typeSlug, typeName, typeId, categorySlug, categoryN
                       <option value="">Seleccionar...</option>
                       {typeSlug === 'aves-de-corral' ? (
                         <>
-                          <option value="macho">machos</option>
-                          <option value="hembra">hembras</option>
                           <option value="mixto">mixto</option>
                         </>
                       ) : field.options ? (

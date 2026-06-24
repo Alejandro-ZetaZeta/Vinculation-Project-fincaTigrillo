@@ -72,7 +72,9 @@ export function validateRequestPayload(
       if (!breed) return { valid: false, error: 'La raza es obligatoria' }
 
       // sex (required, enum)
+      const typeSlugHint = typeof p._typeSlug === 'string' ? p._typeSlug : ''
       let sexRaw = typeof p.sex === 'string' ? p.sex.toLowerCase() : p.sex
+      if (typeSlugHint === 'aves-de-corral') sexRaw = 'mixto'
       if (sexRaw === 'machos') sexRaw = 'macho'
       if (sexRaw === 'hembras') sexRaw = 'hembra'
       if (!inEnum(sexRaw, SEX_VALUES)) {
@@ -115,10 +117,6 @@ export function validateRequestPayload(
       // numero_pezones, cantidad, etapa, proposito, padre_id/nombre, etc.)
       const metadata = sanitizeMetadata(p.metadata)
 
-      // aves-de-corral required metadata (cantidad + etapa). The client stashes
-      // the selected type's slug under _typeSlug; we use it here then drop it
-      // (it's not in the sanitized output so it never persists).
-      const typeSlugHint = typeof p._typeSlug === 'string' ? p._typeSlug : ''
       if (typeSlugHint === 'aves-de-corral' && metadata) {
         if (metadata.cantidad == null || Number(metadata.cantidad) <= 0) {
           return { valid: false, error: 'El número inicial de aves es obligatorio' }

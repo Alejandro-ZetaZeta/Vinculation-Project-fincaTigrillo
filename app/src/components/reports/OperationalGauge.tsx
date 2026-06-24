@@ -63,7 +63,7 @@ export function OperationalGauge({ value }: OperationalGaugeProps) {
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
-      <svg viewBox="0 0 300 180" className="w-full max-w-[280px]" preserveAspectRatio="xMidYMid meet">
+      <svg viewBox="0 0 300 180" className="w-full max-w-[280px] print:max-w-[320px]" preserveAspectRatio="xMidYMid meet">
         {/* Background track */}
         <path
           d={describeArc(startAngle, endAngle)}

@@ -127,7 +127,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
 
   function linkCls(isActive: boolean, collapsed: boolean) {
     return [
-      'flex items-center gap-3 py-2.5 rounded-xl text-sm transition-all duration-200 relative group cursor-pointer',
+      'flex items-center gap-3 py-2.5 rounded-xl text-sm transition-all duration-200 relative group cursor-pointer sidebar-link-animate',
       isActive ? 'nav-item-active' : 'nav-item-idle',
       collapsed ? 'px-0 justify-center' : 'px-3',
     ].join(' ')
@@ -166,7 +166,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
           'sidebar-panel',
           'fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden',
           'transition-transform duration-300 ease-in-out',
-          mobileOpen ? 'w-64' : isCollapsed ? 'w-[72px]' : 'w-64',
+          mobileOpen ? 'w-64' : isCollapsed ? 'w-[72px] is-collapsed' : 'w-64',
           mobileOpen ? 'translate-x-0 is-open' : '-translate-x-full',
           'md:translate-x-0',
         ].join(' ')}
@@ -265,7 +265,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                 className={linkCls(isActive, effectivelyCollapsed)}
                 title={effectivelyCollapsed ? item.label : undefined}
               >
-                <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <Icon className="w-4 h-4 shrink-0 sidebar-icon" aria-hidden="true" />
                 {!effectivelyCollapsed && <span className="whitespace-nowrap flex-1">{item.label}</span>}
                 {isActive && !effectivelyCollapsed && (
                   <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
@@ -288,7 +288,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                   title="Inventario"
                   aria-label="Inventario"
                 >
-                  <Package className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <Package className="w-4 h-4 shrink-0 sidebar-icon" aria-hidden="true" />
                   {inventoryActive && (
                     <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                   )}
@@ -302,7 +302,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                     aria-expanded={invOpen}
                     aria-controls="inventory-submenu"
                   >
-                    <Package className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <Package className="w-4 h-4 shrink-0 sidebar-icon" aria-hidden="true" />
                     <span className="flex-1 text-left whitespace-nowrap">Inventario</span>
                     <ChevronDown
                       className={['w-3.5 h-3.5 transition-transform duration-200', invOpen ? 'rotate-180' : ''].join(' ')}
@@ -332,7 +332,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                               isActive ? 'nav-item-active' : 'nav-item-idle',
                             ].join(' ')}
                           >
-                            <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            <Icon className="w-3.5 h-3.5 shrink-0 sidebar-icon" aria-hidden="true" />
                             <span className="whitespace-nowrap flex-1">{sub.label}</span>
                             {isActive && (
                               <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
@@ -358,7 +358,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                   title="Personas"
                   aria-label="Personas"
                 >
-                  <Users className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <Users className="w-4 h-4 shrink-0 sidebar-icon" aria-hidden="true" />
                   {peopleActive && (
                     <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                   )}
@@ -372,7 +372,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                     aria-expanded={peopleOpen}
                     aria-controls="people-submenu"
                   >
-                    <Users className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <Users className="w-4 h-4 shrink-0 sidebar-icon" aria-hidden="true" />
                     <span className="flex-1 text-left whitespace-nowrap">Personas</span>
                     <ChevronDown
                       className={['w-3.5 h-3.5 transition-transform duration-200', peopleOpen ? 'rotate-180' : ''].join(' ')}
@@ -402,7 +402,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                               isActive ? 'nav-item-active' : 'nav-item-idle',
                             ].join(' ')}
                           >
-                            <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            <Icon className="w-3.5 h-3.5 shrink-0 sidebar-icon" aria-hidden="true" />
                             <span className="whitespace-nowrap flex-1">{sub.label}</span>
                             {isActive && (
                               <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
@@ -428,7 +428,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                   title="Solicitudes"
                   aria-label="Solicitudes"
                 >
-                  <PlusCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <PlusCircle className="w-4 h-4 shrink-0 sidebar-icon" aria-hidden="true" />
                   {requestsActive && (
                     <span className="absolute right-1 w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0" aria-hidden="true" />
                   )}
@@ -442,7 +442,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                     aria-expanded={requestsOpen}
                     aria-controls="requests-submenu"
                   >
-                    <PlusCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <PlusCircle className="w-4 h-4 shrink-0 sidebar-icon" aria-hidden="true" />
                     <span className="flex-1 text-left whitespace-nowrap">Solicitudes</span>
                     <ChevronDown
                       className={['w-3.5 h-3.5 transition-transform duration-200', requestsOpen ? 'rotate-180' : ''].join(' ')}
@@ -472,7 +472,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                               isActive ? 'nav-item-active' : 'nav-item-idle',
                             ].join(' ')}
                           >
-                            <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            <Icon className="w-3.5 h-3.5 shrink-0 sidebar-icon" aria-hidden="true" />
                             <span className="whitespace-nowrap flex-1">{sub.label}</span>
                             {isActive && (
                               <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />
@@ -507,7 +507,7 @@ export function Sidebar({ userRole }: { userRole: string }) {
                   className={linkCls(isActive, effectivelyCollapsed)}
                   title={effectivelyCollapsed ? item.label : undefined}
                 >
-                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <Icon className="w-4 h-4 shrink-0 sidebar-icon" aria-hidden="true" />
                   {!effectivelyCollapsed && <span className="whitespace-nowrap flex-1">{item.label}</span>}
                   {isActive && !effectivelyCollapsed && (
                     <span className="w-1.5 h-1.5 rounded-full bg-sidebar-stripe shrink-0 pulse-dot" aria-hidden="true" />

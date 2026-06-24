@@ -685,7 +685,12 @@ select.input-calc {
      2. KPI CARDS — compact, professional
   ════════════════════════════════════════════ */
 
-  .kpi-card {
+  .kpi-card,
+  .bg-background.border.border-border.rounded-xl,
+  .bg-background.border.border-border.rounded-2xl,
+  .p-4.bg-background.border.border-border.rounded-2xl,
+  .p-3.bg-background.border.border-border.rounded-xl,
+  .p-3.bg-background.border.border-border.rounded-2xl {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     box-shadow: none !important;
@@ -703,9 +708,9 @@ select.input-calc {
 
   /* ════════════════════════════════════════════
      3. CHART CARDS
-     JS (PrintResize) sets height = 300px on each
-     .chart-card. The CSS here ensures flex layout
-     and NO overflow clipping so the SVG renders.
+     Charts now use explicit pixel heights (height={220}) in
+     ResponsiveContainer so they render correctly without
+     needing absolute positioning hacks.
   ════════════════════════════════════════════ */
 
   .chart-card {
@@ -717,52 +722,34 @@ select.input-calc {
     border: 1px solid #d1d5db !important;
     border-radius: 4pt !important;
     background: #ffffff !important;
-    overflow: hidden !important;
-    /* height is set inline by PrintResize.tsx (300px) */
+    overflow: visible !important;
   }
 
-  /* The flex-1 wrapper takes remaining card height */
+  /* Chart content area — normal block flow */
   .chart-card > div:last-child {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    position: relative !important;
-    overflow: hidden !important;   /* clip at card boundary */
-  }
-
-  /* The absolute inner child fills the flex area */
-  .chart-content-transition {
-    position: absolute !important;
-    inset: 0 !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
   }
 
   /* ════════════════════════════════════════════
-     4. RECHARTS
-     PrintResize.tsx injects viewBox="0 0 W H" so
-     width:100% + height:auto gives proportional
-     scaling — ALL charts are visible regardless of
-     card width.
+     4. RECHARTS — scale SVG to fill card width
+     Charts use explicit height={220} on ResponsiveContainer
+     so they always have a defined pixel height for print.
   ════════════════════════════════════════════ */
 
+  /* Wrapper divs in chart components have explicit pixel height */
   .recharts-responsive-container {
     width: 100% !important;
-    height: 100% !important;
   }
 
   .recharts-wrapper {
     width: 100% !important;
-    height: 100% !important;
   }
 
-  /* With viewBox injected: width fills container,
-     height scales proportionally — no clipping    */
   .recharts-wrapper > svg {
     width: 100% !important;
-    height: auto !important;
     display: block !important;
+    max-width: 100% !important;
   }
 
   /* ════════════════════════════════════════════
@@ -772,8 +759,6 @@ select.input-calc {
   /* Big analytical section cards */
   .bg-surface.border.border-border.rounded-3xl,
   .bg-surface.border.border-border.rounded-2xl {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
     box-shadow: none !important;
     border: 1px solid #d1d5db !important;
     overflow: visible !important;
@@ -843,6 +828,16 @@ select.input-calc {
     display: block !important;
   }
 
+  /* Forzar saltos de página en impresión */
+  .print\:break-before-page {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
 }
 
 /* ── Mobile print: chart cards stack single column ── */
@@ -851,6 +846,7 @@ select.input-calc {
     page-break-after: auto !important;
   }
 }
+
 
 
 

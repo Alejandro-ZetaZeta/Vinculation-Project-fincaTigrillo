@@ -23,7 +23,7 @@ export function ChartCard({ title, icon, children, className = '' }: ChartCardPr
   return (
     <div
       className={`chart-card group bg-surface border border-border rounded-2xl flex flex-col shadow-sm
-        print:p-4 print:border print:border-border/50 print:shadow-none print:break-inside-avoid
+        print:border print:border-border/50 print:shadow-none print:break-inside-avoid
         overflow-hidden min-w-0 ${className}`}
     >
       {/* Header */}
@@ -58,12 +58,9 @@ export function ChartCard({ title, icon, children, className = '' }: ChartCardPr
         </div>
       </div>
 
-      {/* Chart content */}
-      <div className="relative flex-1 px-3 pb-3 sm:px-4 sm:pb-4"
-           style={{ minHeight: 220 }}>
-        <div className="chart-content-transition absolute inset-x-3 inset-y-0 sm:inset-x-4">
-          {children(period)}
-        </div>
+      {/* Chart content — uses explicit pixel height wrapper so print gets dimensions */}
+      <div className="px-2 pb-3 sm:px-3 sm:pb-4">
+        {children(period)}
       </div>
     </div>
   )

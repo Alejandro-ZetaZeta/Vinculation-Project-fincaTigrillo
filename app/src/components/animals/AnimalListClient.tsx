@@ -340,7 +340,7 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
     setEditData({
       name: animal.name || '',
       breed: animal.breed || '',
-      sex: (() => {
+      sex: isPoultryBatch ? 'mixto' : (() => {
         const s = (animal.sex || '').toLowerCase()
         if (s === 'machos') return 'macho'
         if (s === 'hembras') return 'hembra'
@@ -840,7 +840,9 @@ export function AnimalListClient({ animals: initialAnimals, categories, types, i
                             <label className="block text-xs text-muted mb-1">Sexo</label>
                             <select value={String(editData.sex || '')} onChange={(e) => setEditData(p => ({...p, sex: e.target.value}))}
                               className="w-full px-3 py-1.5 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 capitalize">
-                              {animal.animal_types?.slug === 'aves-de-corral' || animal.is_litter ? (
+                              {animal.animal_types?.slug === 'aves-de-corral' ? (
+                                <option value="mixto">Mixto</option>
+                              ) : animal.is_litter ? (
                                 <>
                                   <option value="macho">Macho</option>
                                   <option value="hembra">Hembra</option>

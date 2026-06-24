@@ -99,10 +99,27 @@ export async function POST(request: NextRequest) {
       litter_count,
     } = body as Record<string, unknown>
 
-    // Normalize legacy/plural sex values (DB constraint expects 'macho' / 'hembra').
+    // Fetch the animal type's slug to check if it's aves-de-corral.
+    let typeSlug: string | null = null
+    if (type_id && typeof type_id === 'string') {
+      const { data: typeData } = await insforge.database
+        .from('animal_types')
+        .select('slug')
+        .eq('id', type_id)
+        .maybeSingle()
+      if (typeData) {
+        typeSlug = typeData.slug
+      }
+    }
+
+    // Normalize legacy/plural sex values (DB constraint expects 'macho' / 'hembra' / 'mixto').
     let sex = typeof rawSex === 'string' ? rawSex.toLowerCase() : rawSex
-    if (sex === 'machos') sex = 'macho'
-    if (sex === 'hembras') sex = 'hembra'
+    if (typeSlug === 'aves-de-corral') {
+      sex = 'mixto'
+    } else {
+      if (sex === 'machos') sex = 'macho'
+      if (sex === 'hembras') sex = 'hembra'
+    }
 
     // Litter validation
     const isLitter = is_litter === true
