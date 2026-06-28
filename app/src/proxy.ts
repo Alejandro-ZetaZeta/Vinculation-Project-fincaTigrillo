@@ -149,23 +149,17 @@ export async function proxy(request: NextRequest) {
         if (isPublicRoute) {
           return NextResponse.redirect(new URL('/dashboard', request.url))
         }
-        if (pathname === '/') {
-          return NextResponse.redirect(new URL('/dashboard', request.url))
-        }
         return continueWithNewTokens(request, refreshed.accessToken, refreshed.setCookies)
       }
     }
 
-    // No refresh token or refresh failed
+    // No refresh token or refresh failed.
+    // '/' is exempt — the public landing page handles its own auth gate.
     if (!isPublicRoute && pathname !== '/') {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
     }
-  }
-
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL(accessToken ? '/dashboard' : '/login', request.url))
   }
 
   return NextResponse.next()
