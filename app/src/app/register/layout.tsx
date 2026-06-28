@@ -6,6 +6,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/register',
   },
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
   openGraph: {
     title: 'Registro — Finca Tigrillo',
     description: 'Crea tu cuenta en la plataforma de gestión ganadera de Finca Tigrillo.',

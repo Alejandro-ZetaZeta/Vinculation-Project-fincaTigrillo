@@ -47,11 +47,20 @@ export const metadata: Metadata = {
     title: 'Finca Tigrillo',
     description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
     locale: 'es_EC',
+    images: [
+      {
+        url: '/TigrilloMobile.png',
+        width: 1024,
+        height: 1024,
+        alt: 'Finca Tigrillo',
+      },
+    ],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Finca Tigrillo',
     description: 'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
+    images: ['/TigrilloMobile.png'],
   },
 }
 

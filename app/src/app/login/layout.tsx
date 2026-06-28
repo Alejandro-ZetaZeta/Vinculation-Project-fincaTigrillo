@@ -6,6 +6,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/login',
   },
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
   openGraph: {
     title: 'Iniciar Sesión — Finca Tigrillo',
     description: 'Accede a la plataforma de gestión ganadera de Finca Tigrillo.',
