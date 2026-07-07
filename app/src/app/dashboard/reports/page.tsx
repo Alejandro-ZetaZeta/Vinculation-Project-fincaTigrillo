@@ -347,13 +347,15 @@ export default function ReportsPage() {
 
             {/* Botones principales */}
             <div className="flex flex-wrap gap-2.5">
-              <button onClick={() => requestAI()}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm
-                  bg-gradient-to-r from-violet-600 to-indigo-500 text-white shadow-md
-                  hover:shadow-lg hover:scale-[1.02] transition-all">
-                <Bot className="w-4 h-4" />
-                Reporte con IA
-              </button>
+              {userRole !== 'viewer' && (
+                <button onClick={() => requestAI()}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm
+                    bg-gradient-to-r from-violet-600 to-indigo-500 text-white shadow-md
+                    hover:shadow-lg hover:scale-[1.02] transition-all">
+                  <Bot className="w-4 h-4" />
+                  Reporte con IA
+                </button>
+              )}
               {userRole === 'admin' && (
                 <button onClick={() => setPrintPreview(!printPreview)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all hover:scale-[1.02] ${

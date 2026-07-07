@@ -36,6 +36,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Sesión inválida' }, { status: 401 })
     }
 
+    // El resumen con IA es exclusivo para docentes y administradores
+    const { data: analyzeProfile } = await insforge.database
+      .from('user_profiles')
+      .select('role')
+      .eq('user_id', userData.user.id)
+      .maybeSingle()
+
+    if (analyzeProfile?.role === 'viewer' || !analyzeProfile) {
+      return NextResponse.json(
+        { error: 'El resumen con IA está disponible solo para docentes y administradores.' },
+        { status: 403 },
+      )
+    }
+
     // Parsear body: { reportType, focusModule, userQuestion, period }
     const body = await request.json()
     const { focusModule = 'todos', userQuestion = '', period = 'mes' } = body

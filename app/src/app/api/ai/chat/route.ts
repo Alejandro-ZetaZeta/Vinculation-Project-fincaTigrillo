@@ -474,6 +474,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Sesion invalida' }, { status: 401 })
     }
 
+    // Restringir TigriA (chat IA) a docentes y administradores
+    const { data: chatProfile } = await insforge.database
+      .from('user_profiles')
+      .select('role')
+      .eq('user_id', userData.user.id)
+      .maybeSingle()
+
+    if (chatProfile?.role === 'viewer' || !chatProfile) {
+      return NextResponse.json(
+        { error: 'TigriA está disponible solo para docentes y administradores.' },
+        { status: 403 },
+      )
+    }
+
     // Parsear cuerpo
     const body: ChatRequestBody = await request.json()
     const { messages } = body

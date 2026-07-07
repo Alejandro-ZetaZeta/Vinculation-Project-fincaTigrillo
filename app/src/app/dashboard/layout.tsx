@@ -53,7 +53,7 @@ async function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      <AIChatbot />
+      {user.role !== 'viewer' && <AIChatbot />}
     </div>
     </NotificationsProvider>
   )
