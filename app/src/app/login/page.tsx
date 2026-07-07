@@ -4,7 +4,7 @@ import { useState, useTransition, useId, useEffect, Suspense } from 'react'
 import { signIn } from '@/lib/auth/actions'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { LogIn, Mail, Lock, Eye, EyeOff, Sun, Moon } from 'lucide-react'
+import { LogIn, Mail, Lock, Eye, EyeOff, Sun, Moon, Home } from 'lucide-react'
 import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
 import UpdateChecker from '@/components/pwa/UpdateChecker'
@@ -52,6 +52,17 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+
+      {/* Back to home */}
+      <Link
+        href="/"
+        className="absolute left-4 z-10 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface border border-border text-muted hover:text-foreground hover:bg-surface-hover shadow-sm transition-colors min-h-[44px] text-sm font-medium"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+        aria-label="Volver al inicio"
+      >
+        <Home className="w-4 h-4" aria-hidden="true" />
+        <span>Inicio</span>
+      </Link>
 
       {/* Theme toggle */}
       <button

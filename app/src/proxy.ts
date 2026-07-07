@@ -123,6 +123,8 @@ export async function proxy(request: NextRequest) {
   // --- Auth proxy ---
   const rawToken = request.cookies.get('insforge_access_token')?.value
   const accessToken = rawToken && !isJwtExpired(rawToken) ? rawToken : null
+  const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(request.headers.get('user-agent') ?? '')
+  const hasRootSeen = request.cookies.get('ft_root_seen')?.value === '1'
 
   // Allow static files and unmatched API routes through
   if (
@@ -136,7 +138,11 @@ export async function proxy(request: NextRequest) {
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
 
   if (isPublicRoute && accessToken) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    const res = NextResponse.redirect(new URL('/dashboard', request.url))
+    if (isMobile && !hasRootSeen) {
+      res.cookies.set('ft_root_seen', '1', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+    }
+    return res
   }
 
   // Access token missing or expired — try silent refresh before giving up
@@ -147,7 +153,11 @@ export async function proxy(request: NextRequest) {
       if (refreshed) {
         // Public route with now-valid session → send to dashboard
         if (isPublicRoute) {
-          return NextResponse.redirect(new URL('/dashboard', request.url))
+          const res = NextResponse.redirect(new URL('/dashboard', request.url))
+          if (isMobile && !hasRootSeen) {
+            res.cookies.set('ft_root_seen', '1', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+          }
+          return res
         }
         return continueWithNewTokens(request, refreshed.accessToken, refreshed.setCookies)
       }
@@ -158,11 +168,27 @@ export async function proxy(request: NextRequest) {
     if (!isPublicRoute && pathname !== '/') {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(loginUrl)
+      const res = NextResponse.redirect(loginUrl)
+      if (isMobile && !hasRootSeen) {
+        res.cookies.set('ft_root_seen', '1', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+      }
+      return res
     }
   }
 
-  return NextResponse.next()
+  // Mobile root-skip: on a mobile UA's first visit to '/', send to /login
+  // and remember with a cookie so the "Volver al inicio" button works first try.
+  if (pathname === '/' && !accessToken && isMobile && !hasRootSeen) {
+    const res = NextResponse.redirect(new URL('/login', request.url))
+    res.cookies.set('ft_root_seen', '1', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+    return res
+  }
+
+  const res = NextResponse.next()
+  if (isMobile && !hasRootSeen) {
+    res.cookies.set('ft_root_seen', '1', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+  }
+  return res
 }
 
 export const config = {

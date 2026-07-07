@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'Tigrillo',
     description:
       'Plataforma de gestión ganadera para el registro y monitoreo de animales de la Finca Tigrillo.',
-    start_url: '/dashboard',
+    start_url: '/login',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',

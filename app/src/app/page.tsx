@@ -117,7 +117,7 @@ export default async function HomePage() {
   await AuthGate()
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen bg-background text-foreground" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <a href="#features" className="skip-link">Saltar al contenido</a>
 
       <script
@@ -126,27 +126,28 @@ export default async function HomePage() {
       />
 
       <header className="w-full border-b border-border" role="banner">
-        <div className="mx-auto max-w-6xl flex items-center justify-between px-4 sm:px-6 py-4">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto max-w-6xl flex items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center gap-3 min-w-0">
             <Image
               src="/faviconOficial.svg"
               alt="Logo de Finca Tigrillo"
               width={36}
               height={36}
-              className="object-contain dark:invert"
+              className="object-contain dark:invert shrink-0"
             />
-            <span className="font-display text-lg font-bold tracking-tight">Finca Tigrillo</span>
+            <span className="font-display text-base sm:text-lg font-bold tracking-tight whitespace-nowrap truncate">Finca Tigrillo</span>
           </div>
-          <nav aria-label="Acceso" className="flex items-center gap-2 sm:gap-3">
+          <nav aria-label="Acceso" className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Link
               href="/login"
-              className="px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-surface-hover transition-colors min-h-[40px] flex items-center"
+              className="px-2.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-foreground hover:bg-surface-hover transition-colors min-h-[40px] flex items-center whitespace-nowrap"
             >
-              Iniciar sesión
+              <span className="sm:hidden">Entrar</span>
+              <span className="hidden sm:inline">Iniciar sesión</span>
             </Link>
             <Link
               href="/register"
-              className="px-3 sm:px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background transition-colors min-h-[40px] flex items-center"
+              className="px-2.5 sm:px-4 py-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-semibold hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background transition-colors min-h-[40px] flex items-center whitespace-nowrap"
             >
               Registrarse
             </Link>
