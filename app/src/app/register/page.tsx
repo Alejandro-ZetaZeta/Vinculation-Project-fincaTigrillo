@@ -222,7 +222,7 @@ export default function RegisterPage() {
                   <p className="text-xs text-muted">
                     {detectedRole === 'teacher'
                       ? <>Correo docente detectado — se registrará como <span className="font-semibold text-foreground">Docente</span>.</>
-                      : <>Estudiantes: <span className="font-mono text-foreground">@live.uleam.edu.ec</span> · Docentes: <span className="font-mono text-foreground">@uleam.edu.ec</span></>
+                      : <>Estudiantes: <span className="font-mono text-foreground">@live.uleam.edu.ec</span><br /> Docentes: <span className="font-mono text-foreground">@uleam.edu.ec</span></>
                     }
                   </p>
                 </div>

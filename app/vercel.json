@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/crop-stage-suggestions",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/calving-reminders",
+      "schedule": "0 13 * * *"
     }
   ]
 }
