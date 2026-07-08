@@ -10,7 +10,18 @@ export function buildWelcomeEmail(name: string): { subject: string; html: string
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
   <title>${subject}</title>
+  <style>
+    /* Mobile-only card layout: stack full-width + horizontal icon|text */
+    @media only screen and (max-width: 600px) {
+      .animal-row { display: block !important; width: 100% !important; }
+      .animal-cell { display: block !important; width: 100% !important; padding: 0 0 8px 0 !important; }
+      .animal-card { display: table !important; width: 100% !important; border-radius: 8px !important; }
+      .animal-card-icon { display: table-cell !important; width: 42px !important; padding: 12px 0 12px 14px !important; vertical-align: top !important; font-size: 20px !important; line-height: 1 !important; }
+      .animal-card-body { display: table-cell !important; padding: 12px 14px 12px 8px !important; vertical-align: top !important; }
+    }
+  </style>
 </head>
 <body style="margin:0;padding:0;background:#f4f6f3;font-family:'Segoe UI',Arial,sans-serif;color:#2d3a2e;">
 
@@ -50,44 +61,64 @@ export function buildWelcomeEmail(name: string): { subject: string; html: string
             <h3 style="margin:0 0 16px;font-size:16px;color:#1b4332;">Especies y procesos registrados</h3>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td width="50%" style="padding:0 8px 12px 0;vertical-align:top;">
-                  <div style="background:#f0f7f2;border-radius:8px;padding:14px 16px;">
-                    <p style="margin:0 0 4px;font-size:18px;">🐄</p>
-                    <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Bovinos — Ganado mayor</p>
-                    <p style="margin:4px 0 0;font-size:13px;color:#5a7060;">Registro individual de hembras y machos. Control de producción lechera, peso, condición corporal y trazabilidad por arete.</p>
-                  </div>
+                <td class="animal-cell" width="50%" style="padding:0 8px 12px 0;vertical-align:top;">
+                  <table class="animal-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7f2;border-radius:8px;">
+                    <tr>
+                      <td class="animal-card-icon" style="display:block;font-size:18px;line-height:1;padding:0;">🐄</td>
+                      <td class="animal-card-body" style="display:block;padding:8px 0 0;">
+                        <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Bovinos — Ganado mayor</p>
+                        <p style="margin:4px 0 0;font-size:13px;color:#5a7060;line-height:1.5;">Registro individual de hembras y machos. Control de producción lechera, peso, condición corporal y trazabilidad por arete.</p>
+                      </td>
+                    </tr>
+                  </table>
                 </td>
-                <td width="50%" style="padding:0 0 12px 8px;vertical-align:top;">
-                  <div style="background:#f0f7f2;border-radius:8px;padding:14px 16px;">
-                    <p style="margin:0 0 4px;font-size:18px;">🐓</p>
-                    <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Aves de corral</p>
-                    <p style="margin:4px 0 0;font-size:13px;color:#5a7060;">Lotes de pollos de engorde <strong>Ross 308 AP</strong>, gallinas de postura y patos. Control de mortalidad, peso y consumo.</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td width="50%" style="padding:0 8px 12px 0;vertical-align:top;">
-                  <div style="background:#f0f7f2;border-radius:8px;padding:14px 16px;">
-                    <p style="margin:0 0 4px;font-size:18px;">🐷</p>
-                    <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Porcinos — Ganado menor</p>
-                    <p style="margin:4px 0 0;font-size:13px;color:#5a7060;">Manejo de camadas, control de hembras y verracos, registro de eventos productivos y sanitarios por animal.</p>
-                  </div>
-                </td>
-                <td width="50%" style="padding:0 0 12px 8px;vertical-align:top;">
-                  <div style="background:#f0f7f2;border-radius:8px;padding:14px 16px;">
-                    <p style="margin:0 0 4px;font-size:18px;">🐐</p>
-                    <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Caprinos — Ganado menor</p>
-                    <p style="margin:4px 0 0;font-size:13px;color:#5a7060;">Seguimiento individual con registro de producción de leche, peso, eventos sanitarios y reproductivos.</p>
-                  </div>
+                <td class="animal-cell" width="50%" style="padding:0 0 12px 8px;vertical-align:top;">
+                  <table class="animal-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7f2;border-radius:8px;">
+                    <tr>
+                      <td class="animal-card-icon" style="display:block;font-size:18px;line-height:1;padding:0;">🐓</td>
+                      <td class="animal-card-body" style="display:block;padding:8px 0 0;">
+                        <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Aves de corral</p>
+                        <p style="margin:4px 0 0;font-size:13px;color:#5a7060;line-height:1.5;">Lotes de pollos de engorde <strong>Ross 308 AP</strong>, gallinas de postura y patos. Control de mortalidad, peso y consumo.</p>
+                      </td>
+                    </tr>
+                  </table>
                 </td>
               </tr>
               <tr>
-                <td colspan="2" style="padding:0 0 4px;">
-                  <div style="background:#f0f7f2;border-radius:8px;padding:14px 16px;">
-                    <p style="margin:0 0 4px;font-size:18px;">🐴</p>
-                    <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Equinos</p>
-                    <p style="margin:4px 0 0;font-size:13px;color:#5a7060;">Ficha individual de équidos de trabajo y reproductores, con registro de herrajes, desparasitación y atención veterinaria.</p>
-                  </div>
+                <td class="animal-cell" width="50%" style="padding:0 8px 12px 0;vertical-align:top;">
+                  <table class="animal-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7f2;border-radius:8px;">
+                    <tr>
+                      <td class="animal-card-icon" style="display:block;font-size:18px;line-height:1;padding:0;">🐷</td>
+                      <td class="animal-card-body" style="display:block;padding:8px 0 0;">
+                        <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Porcinos — Ganado menor</p>
+                        <p style="margin:4px 0 0;font-size:13px;color:#5a7060;line-height:1.5;">Manejo de camadas, control de hembras y verracos, registro de eventos productivos y sanitarios por animal.</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+                <td class="animal-cell" width="50%" style="padding:0 0 12px 8px;vertical-align:top;">
+                  <table class="animal-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7f2;border-radius:8px;">
+                    <tr>
+                      <td class="animal-card-icon" style="display:block;font-size:18px;line-height:1;padding:0;">🐐</td>
+                      <td class="animal-card-body" style="display:block;padding:8px 0 0;">
+                        <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Caprinos — Ganado menor</p>
+                        <p style="margin:4px 0 0;font-size:13px;color:#5a7060;line-height:1.5;">Seguimiento individual con producción de leche, peso, eventos sanitarios y reproductivos.</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td class="animal-cell" colspan="2" style="padding:0;vertical-align:top;">
+                  <table class="animal-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7f2;border-radius:8px;">
+                    <tr>
+                      <td class="animal-card-icon" style="display:block;font-size:18px;line-height:1;padding:0;">🐴</td>
+                      <td class="animal-card-body" style="display:block;padding:8px 0 0;">
+                        <p style="margin:0;font-size:14px;font-weight:600;color:#2d6a4f;">Equinos</p>
+                        <p style="margin:4px 0 0;font-size:13px;color:#5a7060;line-height:1.5;">Ficha individual de équidos de trabajo y reproductores, con registro de herrajes, desparasitación y atención veterinaria.</p>
+                      </td>
+                    </tr>
+                  </table>
                 </td>
               </tr>
             </table>
@@ -98,15 +129,9 @@ export function buildWelcomeEmail(name: string): { subject: string; html: string
         <tr>
           <td style="padding:20px 40px 4px;">
             <div style="background:#e9f5ee;border-left:4px solid #2d6a4f;border-radius:0 8px 8px 0;padding:16px 20px;">
-              <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1b4332;">Perfiles de vacunación y recordatorios automatizados</p>
-              <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#3d5240;">
-                Cada animal cuenta con un <strong>perfil sanitario</strong> que registra el historial completo de vacunas aplicadas, dosis administradas, intervalos entre dosis y próximas fechas estimadas.
-              </p>
-              <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#3d5240;">
-                El sistema genera <strong>recordatorios automáticos</strong> cuando se aproxima la fecha de la siguiente dosis según el calendario sanitario configurado para cada especie (bovinos, porcinos, caprinos, equinos y aves de corral). Dichos avisos se publican en el panel principal para que el personal responsable pueda preparar el producto y coordinar la jornada de aplicación con antelación.
-              </p>
+              <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1b4332;">Perfiles de vacunación y recordatorios automáticos</p>
               <p style="margin:0;font-size:13px;line-height:1.6;color:#3d5240;">
-                El inventario de vacunas mantiene el stock en dosis, alerta sobre existencias agotadas o por debajo del umbral mínimo, y descuenta automáticamente las dosis aplicadas para mantener la coherencia entre el catálogo y las fichas individuales.
+                Cada animal cuenta con un perfil sanitario con su historial de vacunas. El sistema genera recordatorios automáticos antes de la próxima dosis y descuenta del inventario las dosis aplicadas, manteniendo la coherencia entre las fichas individuales y el catálogo.
               </p>
             </div>
           </td>
@@ -129,11 +154,8 @@ export function buildWelcomeEmail(name: string): { subject: string; html: string
           <td style="padding:20px 40px 4px;">
             <div style="background:#f3eefc;border-left:4px solid #6d4ed4;border-radius:0 8px 8px 0;padding:16px 20px;">
               <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#3b2a85;">TigrIA — Asistente inteligente integrado</p>
-              <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#3d3458;">
-                <strong>TigrIA</strong> es el módulo de inteligencia artificial integrado en la plataforma, disponible para <strong>docentes y administradores</strong>. Permite realizar consultas en lenguaje natural sobre el estado del hato, los perfiles sanitarios, el inventario de vacunas, las estadísticas reproductivas y la productividad de la finca, ofreciendo respuestas contextualizadas con la información registrada en la base de datos.
-              </p>
               <p style="margin:0;font-size:13px;line-height:1.6;color:#3d3458;">
-                TigrIA también genera <strong>resúmenes operativos con IA</strong> sobre los informes de la finca, apoyando la toma de decisiones del personal docente y administrativo. Por motivos de integridad académica y de datos, el acceso a TigrIA se encuentra restringido a los roles de docente y administrador; los estudiantes mantienen acceso al resto de módulos del sistema.
+                TigrIA es el módulo de IA de la plataforma, disponible para docentes y administradores. Permite consultar en lenguaje natural el estado del hato, los perfiles sanitarios, el inventario de vacunas, la reproducción y la productividad, y generar resúmenes operativos con IA para apoyar la toma de decisiones.
               </p>
             </div>
           </td>
