@@ -8,6 +8,7 @@ import { LogIn, Mail, Lock, Eye, EyeOff, Sun, Moon, Home } from 'lucide-react'
 import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
 import UpdateChecker from '@/components/pwa/UpdateChecker'
+import PWAInstallButton from '@/components/pwa/PWAInstallButton'
 
 // Inner component that safely uses useSearchParams
 function LoginContent() {
@@ -94,6 +95,8 @@ function LoginContent() {
           <h1 className="font-display text-3xl font-bold text-foreground tracking-tight">Finca Tigrillo</h1>
           <p className="text-muted mt-1.5 text-sm">Sistema de Gestión Ganadera</p>
         </div>
+
+        <PWAInstallButton variant="banner" className="mb-6" />
 
         {/* Card */}
         <div className="glass rounded-2xl p-8 shadow-xl">

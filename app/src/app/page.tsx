@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { getAccessToken } from '@/lib/auth/cookies'
+import PWAInstallButton from '@/components/pwa/PWAInstallButton'
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fincatigrillo.vercel.app'
 
@@ -207,6 +208,10 @@ export default async function HomePage() {
           <p className="mt-6 text-xs text-muted">
             Plataforma en español · Funciona en móvil, tablet y escritorio
           </p>
+
+          <div className="mt-4 flex justify-center">
+            <PWAInstallButton variant="inline" />
+          </div>
         </div>
       </section>
 

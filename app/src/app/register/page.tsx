@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { UserPlus, Mail, Lock, User, Eye, EyeOff, GraduationCap, BookOpen, Sun, Moon, ShieldCheck, Check, X, Home } from 'lucide-react'
 import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
+import PWAInstallButton from '@/components/pwa/PWAInstallButton'
 
 const CAREERS   = ['Agropecuaria']
 const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
@@ -170,6 +171,8 @@ export default function RegisterPage() {
               : 'Verificación de correo'}
           </p>
         </div>
+
+        <PWAInstallButton variant="banner" className="mb-6" />
 
         <div className="glass rounded-2xl p-8 shadow-xl">
 
