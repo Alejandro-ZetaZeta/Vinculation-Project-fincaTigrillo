@@ -1,13 +1,14 @@
 'use client'
 
 import { signOut } from '@/lib/auth/actions'
-import { LogOut, Sun, Moon, Palette, Camera, Loader2, ChevronDown } from 'lucide-react'
+import { LogOut, Sun, Moon, Palette, Camera, Loader2, ChevronDown, UserRound } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { useTheme } from '@/components/ThemeProvider'
 import { NotificationBell } from '@/components/layout/NotificationBell'
 import { Avatar } from '@/components/ui/Avatar'
 import { AvatarUploadModal } from '@/components/ui/AvatarUploadModal'
+import { NameEditModal } from '@/components/ui/NameEditModal'
 
 interface HeaderProps {
   userName: string
@@ -16,34 +17,57 @@ interface HeaderProps {
   userAvatarUrl?: string | null
 }
 
+type Cooldown = { can_change: boolean; days_until_change: number }
+
 export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderProps) {
-  const [menuOpen, setMenuOpen]       = useState(false)
-  const [avatarUrl, setAvatarUrl]     = useState(userAvatarUrl ?? null)
-  const [showModal, setShowModal]     = useState(false)
-  const [cooldown, setCooldown]       = useState<{ can_change: boolean; days_until_change: number } | null>(null)
-  const [cooldownLoading, setCooldownLoading] = useState(false)
+  const [menuOpen, setMenuOpen]         = useState(false)
+  const [avatarUrl, setAvatarUrl]       = useState(userAvatarUrl ?? null)
+  const [displayName, setDisplayName]   = useState(userName)
+  const [showAvatarModal, setShowAvatarModal] = useState(false)
+  const [showNameModal, setShowNameModal]     = useState(false)
+  const [avatarCooldown, setAvatarCooldown]     = useState<Cooldown | null>(null)
+  const [avatarCooldownLoading, setAvatarCooldownLoading] = useState(false)
+  const [nameCooldown, setNameCooldown]         = useState<Cooldown | null>(null)
+  const [nameCooldownLoading, setNameCooldownLoading]     = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const { theme, setTheme, toggleTheme } = useTheme()
 
   const isViewer  = userRole === 'viewer'
+  const isTeacher = userRole === 'teacher'
+  const canEditName = isViewer || isTeacher
   const roleLabel = userRole === 'admin' ? 'Administrador'
                   : userRole === 'teacher' ? 'Docente'
                   : 'Estudiante'
 
-  const fetchCooldown = useCallback(async () => {
-    setCooldownLoading(true)
+  const fetchAvatarCooldown = useCallback(async () => {
+    setAvatarCooldownLoading(true)
     try {
       const res  = await fetch('/api/profile/avatar')
       const data = await res.json()
-      setCooldown({ can_change: data.can_change, days_until_change: data.days_until_change })
+      setAvatarCooldown({ can_change: data.can_change, days_until_change: data.days_until_change })
     } catch { /* ignore */ } finally {
-      setCooldownLoading(false)
+      setAvatarCooldownLoading(false)
+    }
+  }, [])
+
+  const fetchNameCooldown = useCallback(async () => {
+    setNameCooldownLoading(true)
+    try {
+      const res  = await fetch('/api/profile/name')
+      const data = await res.json()
+      setNameCooldown({ can_change: data.can_change, days_until_change: data.days_until_change })
+    } catch { /* ignore */ } finally {
+      setNameCooldownLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    if (menuOpen && isViewer && cooldown === null && !cooldownLoading) fetchCooldown()
-  }, [menuOpen, isViewer, cooldown, cooldownLoading, fetchCooldown])
+    if (menuOpen && isViewer && avatarCooldown === null && !avatarCooldownLoading) fetchAvatarCooldown()
+  }, [menuOpen, isViewer, avatarCooldown, avatarCooldownLoading, fetchAvatarCooldown])
+
+  useEffect(() => {
+    if (menuOpen && canEditName && nameCooldown === null && !nameCooldownLoading) fetchNameCooldown()
+  }, [menuOpen, canEditName, nameCooldown, nameCooldownLoading, fetchNameCooldown])
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -60,7 +84,12 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
 
   function handleUploadSuccess(newUrl: string) {
     setAvatarUrl(newUrl)
-    setCooldown(null)
+    setAvatarCooldown(null)
+  }
+
+  function handleNameSuccess(newName: string) {
+    setDisplayName(newName)
+    setNameCooldown(null)
   }
 
   return (
@@ -151,7 +180,7 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
                          hover:bg-surface-hover border border-transparent hover:border-border
                          transition-all duration-200 min-h-[44px]"
               id="user-menu-toggle"
-              aria-label={`Menú de usuario: ${userName}`}
+              aria-label={`Menú de usuario: ${displayName}`}
               aria-haspopup="true"
               aria-expanded={menuOpen}
               aria-controls="user-dropdown"
@@ -163,11 +192,11 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
                 : 'bg-gradient-to-br from-amber-400 to-orange-500'
               }`}>
                 <div className="bg-header-bg rounded-full p-0.5">
-                  <Avatar src={avatarUrl} name={userName} size="sm" />
+                  <Avatar src={avatarUrl} name={displayName} size="sm" />
                 </div>
               </div>
               <div className="text-left hidden sm:block">
-                <p className="text-sm font-semibold text-foreground leading-tight">{userName}</p>
+                <p className="text-sm font-semibold text-foreground leading-tight">{displayName}</p>
                 <p className="text-[11px] text-muted leading-tight">{roleLabel}</p>
               </div>
               <ChevronDown
@@ -197,11 +226,11 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
                       : 'bg-gradient-to-br from-amber-400 to-orange-500'
                     }`}>
                       <div className="bg-surface rounded-full p-0.5">
-                        <Avatar src={avatarUrl} name={userName} size="lg" />
+                        <Avatar src={avatarUrl} name={displayName} size="lg" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
+                      <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
                       <p className="text-xs text-muted truncate mt-0.5">{userEmail}</p>
                       <span className={`inline-block mt-1.5 text-[11px] px-2.5 py-0.5 rounded-full font-semibold
                         ${userRole === 'admin'    ? 'bg-primary/12 text-primary'
@@ -214,28 +243,26 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
 
                   {/* Photo change — viewers only */}
                   {isViewer && (
-                    <>
-                      {cooldownLoading ? (
-                        <div className="flex items-center justify-center h-8">
-                          <Loader2 className="w-3.5 h-3.5 text-muted animate-spin" />
-                        </div>
-                      ) : cooldown?.can_change ? (
-                        <button
-                          onClick={() => { setMenuOpen(false); setShowModal(true) }}
-                          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium
-                                     rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                        >
-                          <Camera className="w-3.5 h-3.5" aria-hidden="true" />
-                          Cambiar la foto de perfil
-                        </button>
-                      ) : cooldown ? (
-                        <p className="text-[11px] text-muted text-center py-1.5 px-2 bg-surface-hover rounded-xl border border-border">
-                          Próximo cambio en{' '}
-                          <strong className="text-foreground">{cooldown.days_until_change}</strong>{' '}
-                          día{cooldown.days_until_change !== 1 ? 's' : ''}
-                        </p>
-                      ) : null}
-                    </>
+                    <CooldownAction
+                      loading={avatarCooldownLoading}
+                      cooldown={avatarCooldown}
+                      label="Cambiar la foto de perfil"
+                      icon={<Camera className="w-3.5 h-3.5" aria-hidden="true" />}
+                      onAction={() => { setMenuOpen(false); setShowAvatarModal(true) }}
+                    />
+                  )}
+
+                  {/* Name change — students + teachers */}
+                  {canEditName && (
+                    <div className="mt-2">
+                      <CooldownAction
+                        loading={nameCooldownLoading}
+                        cooldown={nameCooldown}
+                        label="Cambiar nombre de usuario"
+                        icon={<UserRound className="w-3.5 h-3.5" aria-hidden="true" />}
+                        onAction={() => { setMenuOpen(false); setShowNameModal(true) }}
+                      />
+                    </div>
                   )}
                 </div>
 
@@ -262,12 +289,69 @@ export function Header({ userName, userRole, userEmail, userAvatarUrl }: HeaderP
       </header>
 
       {/* Avatar upload modal */}
-      {showModal && (
+      {showAvatarModal && (
         <AvatarUploadModal
-          onClose={() => setShowModal(false)}
+          onClose={() => setShowAvatarModal(false)}
           onSuccess={handleUploadSuccess}
+        />
+      )}
+
+      {/* Name edit modal */}
+      {showNameModal && (
+        <NameEditModal
+          currentName={displayName}
+          onClose={() => setShowNameModal(false)}
+          onSuccess={handleNameSuccess}
         />
       )}
     </>
   )
+}
+
+/* ── CooldownAction ─────────────────────────────────────────────────────────
+   Inline dropdown row: shows a button if the action is allowed, a
+   "Próximo cambio en N día(s)" pill if blocked, or a spinner while loading.
+──────────────────────────────────────────────────────────────────────────── */
+function CooldownAction({
+  loading,
+  cooldown,
+  label,
+  icon,
+  onAction,
+}: {
+  loading: boolean
+  cooldown: Cooldown | null
+  label: string
+  icon: React.ReactNode
+  onAction: () => void
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-8">
+        <Loader2 className="w-3.5 h-3.5 text-muted animate-spin" />
+      </div>
+    )
+  }
+  if (cooldown?.can_change) {
+    return (
+      <button
+        onClick={onAction}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium
+                   rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+      >
+        {icon}
+        {label}
+      </button>
+    )
+  }
+  if (cooldown) {
+    return (
+      <p className="text-[11px] text-muted text-center py-1.5 px-2 bg-surface-hover rounded-xl border border-border">
+        Próximo cambio en{' '}
+        <strong className="text-foreground">{cooldown.days_until_change}</strong>{' '}
+        día{cooldown.days_until_change !== 1 ? 's' : ''}
+      </p>
+    )
+  }
+  return null
 }
