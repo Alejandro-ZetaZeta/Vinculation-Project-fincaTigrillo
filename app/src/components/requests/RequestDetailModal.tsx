@@ -30,10 +30,11 @@ interface Props {
 }
 
 /** Fetch the id→name maps needed to resolve ids in the read-only view. */
-function useResolverMaps(): ResolverMaps {
+function useResolverMaps(): ResolverMaps & { loading: boolean } {
   const [maps, setMaps] = useState<ResolverMaps>({
     animalTypes: {}, animals: {}, vaccines: {},
   })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -66,13 +67,14 @@ function useResolverMaps(): ResolverMaps {
       for (const v of vaxArr as { id: string; name: string }[]) vaccines[v.id] = v.name
 
       setMaps({ animalTypes, animals, vaccines })
+      setLoading(false)
     }
 
     load()
     return () => { cancelled = true }
   }, [])
 
-  return maps
+  return { ...maps, loading }
 }
 
 /** Drop UI-only keys before sending to the API. _typeSlug is kept because the
@@ -204,11 +206,22 @@ export function RequestDetailModal({ request, userRole, onClose, onActionDone }:
                   </button>
                 )}
               </div>
+            {resolvers.loading ? (
+              <div className="space-y-2.5 animate-pulse" aria-label="Cargando datos de la solicitud">
+                <div className="h-3 bg-surface rounded-full w-2/5" />
+                <div className="h-4 bg-surface rounded w-3/4" />
+                <div className="h-3 bg-surface rounded-full w-1/3 mt-3" />
+                <div className="h-4 bg-surface rounded w-1/2" />
+                <div className="h-3 bg-surface rounded-full w-2/5 mt-3" />
+                <div className="h-4 bg-surface rounded w-2/3" />
+              </div>
+            ) : (
               <ReadonlyPayload
                 requestType={request.request_type}
                 payload={request.payload}
                 resolvers={resolvers}
               />
+            )}
             </div>
           ) : (
             <div className="space-y-3">

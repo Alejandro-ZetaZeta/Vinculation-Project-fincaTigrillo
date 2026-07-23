@@ -120,3 +120,44 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { client, role } = await getAuthClient()
+    if (!client) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    if (role !== 'admin') return NextResponse.json({ error: 'Solo administradores pueden eliminar solicitudes' }, { status: 403 })
+
+    const body = await request.json()
+    const { ids } = body
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: 'Se requiere un arreglo de IDs' }, { status: 400 })
+    }
+
+    // Validate all are non-pending before deleting any
+    const { data: rows, error: fetchErr } = await client.database
+      .from('requests')
+      .select('id, status')
+      .in('id', ids)
+
+    if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 400 })
+
+    const foundRows = (rows || []) as { id: string; status: string }[]
+    const pendingIds = foundRows.filter(r => r.status === 'pending').map(r => r.id)
+    if (pendingIds.length > 0) {
+      return NextResponse.json({ error: 'No se pueden eliminar solicitudes pendientes' }, { status: 409 })
+    }
+
+    const { error: deleteErr } = await client.database
+      .from('requests')
+      .delete()
+      .in('id', ids)
+
+    if (deleteErr) return NextResponse.json({ error: deleteErr.message }, { status: 400 })
+
+    return NextResponse.json({ success: true, deleted: ids.length })
+  } catch (err) {
+    console.error('DELETE /api/requests:', err)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}

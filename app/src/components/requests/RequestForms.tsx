@@ -610,6 +610,13 @@ export function AnimalRecordForm({
             required maxLength={120} />
         </FormField>
 
+        <FormField label="Nombre"
+          hint={isAves ? 'Ej: Lote-Gallinas-01' : isLitter ? 'Ej: Camada-001' : 'Ej: Luna, Relámpago'}>
+          <TextInput value={String(value.name ?? '')} onChange={v => set('name', v || null)}
+            placeholder={isAves ? 'Ej: Lote-Gallinas-01' : isLitter ? 'Ej: Camada-001' : 'Ej: Luna, Relámpago'}
+            maxLength={120} />
+        </FormField>
+
         <FormField label="Sexo" required>
           <SelectInput value={sex} onChange={handleSexChange} required>
             <option value="">Seleccionar...</option>
@@ -934,6 +941,15 @@ export function ProductionEventForm({
 /*  vaccine_profile form                                                  */
 /* ────────────────────────────────────────────────────────────────────── */
 
+const REPRO_STATE_OPTS = [
+  { value: 'preñada', label: 'Preñada' },
+  { value: 'vacía',   label: 'Vacía' },
+  { value: 'lactando',label: 'Lactando' },
+  { value: 'seca',    label: 'Seca' },
+]
+
+const REPRO_TYPE_SLUGS = new Set(['bovino', 'equino', 'porcino', 'caprino'])
+
 export function VaccineProfileForm({
   value, onChange,
 }: {
@@ -951,29 +967,66 @@ export function VaccineProfileForm({
 
   const set = (key: string, v: unknown) => onChange({ ...value, [key]: v })
 
+  const targetTypeId = String(value.target_type_id ?? '')
+  const targetSex    = String(value.target_sex ?? 'any')
+  const selectedSlug = animalTypes.find(t => t.id === targetTypeId)?.slug ?? ''
+
+  const showReproStates =
+    !!selectedSlug && REPRO_TYPE_SLUGS.has(selectedSlug) && targetSex === 'hembra'
+
+  // Clear allowed_reproductive_states when condition disappears
+  useEffect(() => {
+    if (!showReproStates && value.allowed_reproductive_states != null) {
+      onChange({ ...value, allowed_reproductive_states: null })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showReproStates])
+
+  const allowedStates: string[] = Array.isArray(value.allowed_reproductive_states)
+    ? value.allowed_reproductive_states as string[]
+    : []
+
+  function toggleReproState(v: string) {
+    const next = allowedStates.includes(v)
+      ? allowedStates.filter(s => s !== v)
+      : [...allowedStates, v]
+    set('allowed_reproductive_states', next.length > 0 ? next : null)
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <FormField label="Nombre de la Vacuna" required>
         <TextInput value={String(value.name ?? '')} onChange={v => set('name', v)}
           placeholder="Ej: Fiebre Aftosa Bivalente" required maxLength={120} />
       </FormField>
-      <FormField label="Tipo de Animal Objetivo">
-        <SelectInput value={String(value.target_type_id ?? '')} onChange={v => set('target_type_id', v || null)}>
-          <option value="">Todos los tipos</option>
+      <FormField label="Tipo de Animal Objetivo" required hint="Habilita filtrado automático por especie">
+        <SelectInput value={targetTypeId} onChange={v => {
+          const slug = animalTypes.find(t => t.id === v)?.slug ?? ''
+          // If non-poultry type selected and sex is 'mixto', reset to 'any'
+          const currentSex = String(value.target_sex ?? 'any')
+          const nextSex = slug !== 'aves-de-corral' && currentSex === 'mixto' ? 'any' : currentSex
+          onChange({ ...value, target_type_id: v || null, target_sex: nextSex })
+        }} required>
+          <option value="">Seleccionar tipo...</option>
           {animalTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </SelectInput>
       </FormField>
       <FormField label="Sexo Objetivo">
-        <SelectInput value={String(value.target_sex ?? 'any')} onChange={v => set('target_sex', v)}>
+        <SelectInput value={targetSex} onChange={v => set('target_sex', v)}>
           <option value="any">Cualquiera</option>
           <option value="macho">Macho</option>
           <option value="hembra">Hembra</option>
-          <option value="mixto">Mixto</option>
+          {selectedSlug === 'aves-de-corral' && <option value="mixto">Mixto</option>}
         </SelectInput>
       </FormField>
       <FormField label="Días hasta siguiente dosis">
         <TextInput type="number" value={String(value.default_next_dose_days ?? '')}
           onChange={v => set('default_next_dose_days', v ? parseInt(v, 10) : null)} placeholder="0 = dosis única" min="0" step="1" />
+      </FormField>
+      <FormField label="Nº total de dosis" hint={!value.default_next_dose_days ? 'Disponible cuando hay intervalo de dosis' : undefined}>
+        <TextInput type="number" value={String(value.total_doses ?? '')}
+          onChange={v => set('total_doses', v ? parseInt(v, 10) : null)}
+          placeholder="(vacío = ilimitado)" min="1" step="1" />
       </FormField>
       <FormField label="Edad mínima (días)">
         <TextInput type="number" value={String(value.age_min_days ?? '')}
@@ -983,6 +1036,33 @@ export function VaccineProfileForm({
         <TextInput type="number" value={String(value.age_max_days ?? '')}
           onChange={v => set('age_max_days', v ? parseInt(v, 10) : null)} placeholder="Sin límite" min="0" step="1" />
       </FormField>
+
+      {/* Conditional: reproductive states restriction (repro-type hembras only) */}
+      {showReproStates && (
+        <div className="col-span-full">
+          <div className="bg-background border border-border rounded-xl p-4 space-y-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Estados reproductivos permitidos</p>
+              <p className="text-xs text-muted mt-0.5">Si no seleccionas ninguno, aplica para cualquier estado.</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {REPRO_STATE_OPTS.map(opt => (
+                <label key={opt.value}
+                  className="flex items-center gap-2 text-sm text-foreground px-3 py-2 rounded-xl bg-surface border border-border hover:bg-surface/80 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allowedStates.includes(opt.value)}
+                    onChange={() => toggleReproState(opt.value)}
+                    className="accent-primary"
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="col-span-full">
         <FormField label="Descripción">
           <TextArea value={String(value.description ?? '')} onChange={v => set('description', v || null)} rows={3} maxLength={2000} />
@@ -1287,12 +1367,12 @@ export function ReadonlyPayload({
         case 'number': display = String(raw); break
         case 'bool':   display = raw === true ? 'Sí' : 'No'; break
         case 'enum':   display = f.map?.[String(raw)] ?? String(raw); break
-        case 'animal': display = resolvers.animals[String(raw)] ?? String(raw); break
-        case 'type':   display = resolvers.animalTypes[String(raw)] ?? String(raw); break
-        case 'vaccine':display = resolvers.vaccines[String(raw)] ?? String(raw); break
+        case 'animal': display = resolvers.animals[String(raw)] ?? '(animal no encontrado)'; break
+        case 'type':   display = resolvers.animalTypes[String(raw)] ?? '(tipo no encontrado)'; break
+        case 'vaccine':display = resolvers.vaccines[String(raw)] ?? '(vacuna no encontrada)'; break
         case 'array_animals': {
           const ids = Array.isArray(raw) ? raw as string[] : []
-          display = ids.map(id => resolvers.animals[id] ?? id).join(', ')
+          display = ids.map(id => resolvers.animals[id] ?? '(no encontrado)').join(', ')
           break
         }
         case 'array_text': display = Array.isArray(raw) ? (raw as string[]).join(', ') : String(raw); break
@@ -1371,12 +1451,17 @@ export function clientSideValidate(
       if (!data.event_date)  return 'La fecha es obligatoria'
       if (!data.quantity)    return 'La cantidad de bajas es obligatoria'
       return null
-    case 'production_event':
+    case 'production_event': {
       if (!data.animal_id)     return 'Selecciona un animal'
       if (!data.recorded_date) return 'La fecha de registro es obligatoria'
+      const am = typeof data.liters_am === 'number' ? data.liters_am : parseFloat(String(data.liters_am ?? '0'))
+      const pm = typeof data.liters_pm === 'number' ? data.liters_pm : parseFloat(String(data.liters_pm ?? '0'))
+      if ((isNaN(am) || am <= 0) && (isNaN(pm) || pm <= 0)) return 'Ingresa al menos una medición de leche mayor a 0'
       return null
+    }
     case 'vaccine_profile':
       if (!data.name || String(data.name).trim() === '') return 'El nombre de la vacuna es obligatorio'
+      if (!data.target_type_id) return 'Selecciona el tipo de animal objetivo'
       return null
     case 'vaccine_assignment':
       if (!data.vaccine_id)  return 'Selecciona una vacuna'

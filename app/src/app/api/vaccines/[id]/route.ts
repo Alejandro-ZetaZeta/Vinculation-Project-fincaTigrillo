@@ -60,11 +60,28 @@ export async function PUT(
     delete body.id
     delete body.created_by
     delete body.created_at
+    delete body.stock_doses  // managed exclusively through /stock endpoint
 
     if (typeof body.name === 'string') body.name = body.name.trim()
 
     if ('allowed_reproductive_states' in body) {
       body.allowed_reproductive_states = normalizeAllowedReproStates(body.allowed_reproductive_states)
+    }
+
+    if ('min_stock' in body) {
+      const raw = body.min_stock
+      if (raw === null || raw === '' || raw === undefined) {
+        body.min_stock = null
+      } else {
+        const n = Number(raw)
+        if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+          return NextResponse.json(
+            { error: 'min_stock debe ser un entero >= 0 o null' },
+            { status: 400 }
+          )
+        }
+        body.min_stock = n
+      }
     }
 
     const { data, error: dbError } = await client.database

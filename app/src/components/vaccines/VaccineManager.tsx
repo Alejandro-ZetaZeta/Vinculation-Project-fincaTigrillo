@@ -1,50 +1,79 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Plus, Trash2, Save, X, Syringe, Loader2, PackagePlus, Package, Pencil } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Plus, Trash2, Save, X, Syringe, Loader2, PackagePlus, Package, Pencil, History, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react'
 import { AssignVaccineModal } from './AssignVaccineModal'
+import { MovementModal, type ManualReason } from './MovementModal'
+import { VaccineFormModal } from './VaccineFormModal'
 import { formatVaccineAgeText } from '@/lib/vaccines/format'
+import {
+  type Vaccine,
+  type TargetSex,
+  type AnimalTypeOption,
+  asTargetSex,
+  REPRO_TYPES,
+  POULTRY_SLUG,
+  REPRO_STATE_OPTIONS,
+} from './types'
 
-type TargetSex = 'any' | 'macho' | 'hembra' | 'mixto'
-
-function asTargetSex(v: string): TargetSex {
-  if (v === 'macho' || v === 'hembra' || v === 'mixto' || v === 'any') return v
-  return 'any'
-}
-
-interface Vaccine {
+interface StockMovement {
   id: string
-  name: string
-  description: string | null
-  target_type_id: string | null
-  target_sex: TargetSex
-  age_min_days: number | null
-  age_max_days: number | null
-  allowed_reproductive_states: string[] | null
-  default_next_dose_days: number | null
-  total_doses: number | null
-  is_active: boolean
-  stock_doses: number
+  vaccine_id: string
+  delta: number
+  reason: ManualReason | 'Aplicación'
+  notes: string | null
+  related_vaccination_id: string | null
+  created_at: string
+  created_by: string | null
 }
 
-const REPRO_TYPES = new Set(['bovino', 'equino', 'porcino', 'caprino'])
-const POULTRY_SLUG = 'aves-de-corral'
-const REPRO_STATE_OPTIONS: { value: string; label: string }[] = [
-  { value: 'preñada', label: 'Preñada' },
-  { value: 'vacía', label: 'Vacía' },
-  { value: 'lactando', label: 'Lactando' },
-  { value: 'seca', label: 'Seca' },
-]
+function stockBadgeClasses(stock: number, minStock: number | null | undefined): string {
+  if (stock === 0) {
+    return 'bg-danger/10 text-danger'
+  }
+  if (minStock != null && stock <= minStock) {
+    return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+  }
+  return 'bg-success/10 text-success'
+}
+
+function reasonBadgeClasses(reason: string): string {
+  switch (reason) {
+    case 'Compra':                return 'bg-success/10 text-success'
+    case 'Aplicación':            return 'bg-primary/10 text-primary'
+    case 'Ajuste de inventario':  return 'bg-accent/10 text-accent'
+    case 'Vencimiento':           return 'bg-warning/10 text-warning'
+    case 'Pérdida':
+    case 'Daño':                  return 'bg-danger/10 text-danger'
+    default:                      return 'bg-muted/10 text-muted'
+  }
+}
+
+function formatRelative(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const diffMs = Date.now() - d.getTime()
+  const mins = Math.floor(diffMs / 60000)
+  if (mins < 1) return 'ahora'
+  if (mins < 60) return `hace ${mins} min`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `hace ${hours} h`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `hace ${days} d`
+  return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 
 export function VaccineManager({ userRole }: { userRole?: string }) {
   const isAdmin = userRole === 'admin'
   const [vaccines, setVaccines] = useState<Vaccine[]>([])
+  const [movementsByVaccine, setMovementsByVaccine] = useState<Record<string, StockMovement[]>>({})
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const [types, setTypes] = useState<{ id: string; name: string; slug: string; category_id: string }[]>([])
+  const [types, setTypes] = useState<AnimalTypeOption[]>([])
 
   // minimal create form
   const [name, setName] = useState('')
@@ -65,23 +94,39 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
   const [assignOpen, setAssignOpen] = useState(false)
   const [filterTypeId, setFilterTypeId] = useState<string>('')
 
-  // Stock replenishment state per-card
-  const [stockOpen, setStockOpen] = useState<string | null>(null)   // vaccine id
-  const [stockInput, setStockInput] = useState('')
-  const [stockSaving, setStockSaving] = useState(false)
+  // Movement modal per-vaccine
+  const [movementFor, setMovementFor] = useState<Vaccine | null>(null)
 
-  async function fetchVaccines() {
+  const fetchVaccines = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/vaccines?active_only=0')
       const json = await res.json()
-      setVaccines(Array.isArray(json?.data) ? json.data : [])
+      const list: Vaccine[] = Array.isArray(json?.data) ? json.data : []
+      setVaccines(list)
+      // Prefetch last 3 movements per vaccine (admin only — server returns empty for others)
+      if (isAdmin) {
+        const entries = await Promise.all(
+          list.map(async (v) => {
+            try {
+              const r = await fetch(`/api/vaccines/${v.id}/movements?limit=3`)
+              const j = await r.json()
+              return [v.id, Array.isArray(j?.data) ? j.data as StockMovement[] : []] as const
+            } catch {
+              return [v.id, [] as StockMovement[]] as const
+            }
+          })
+        )
+        const map: Record<string, StockMovement[]> = {}
+      for (const [id, mv] of entries) map[id] = mv
+      setMovementsByVaccine(map)
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAdmin])
 
-  useEffect(() => { fetchVaccines() }, [])
+  useEffect(() => { fetchVaccines() }, [fetchVaccines])
 
   useEffect(() => {
     fetch('/api/animal-types')
@@ -101,15 +146,6 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
       setAllowedReproStates([])
     }
   }, [showCreateReproRestriction, allowedReproStates.length])
-
-  useEffect(() => {
-    if (!editing) return
-    const editTypeSlug = types.find(t => t.id === editing.target_type_id)?.slug
-    const showEdit = !!editTypeSlug && REPRO_TYPES.has(editTypeSlug) && editing.target_sex === 'hembra'
-    if (!showEdit && editing.allowed_reproductive_states != null) {
-      setEditing({ ...editing, allowed_reproductive_states: null })
-    }
-  }, [editing, types])
 
   async function createVaccine(e: React.FormEvent) {
     e.preventDefault()
@@ -154,40 +190,6 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
     }
   }
 
-  async function updateVaccine(e: React.FormEvent) {
-    e.preventDefault()
-    if (!editing) return
-    setError('')
-    if (!editing.name.trim()) { setError('El nombre es obligatorio'); return }
-    setSaving(true)
-    try {
-      const res = await fetch(`/api/vaccines/${editing.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: editing.name.trim(),
-          description: editing.description || null,
-          target_type_id: editing.target_type_id || null,
-          target_sex: editing.target_sex,
-          age_min_days: editing.age_min_days,
-          age_max_days: editing.age_max_days,
-          allowed_reproductive_states: editing.allowed_reproductive_states ?? null,
-          default_next_dose_days: editing.default_next_dose_days,
-          total_doses: editing.total_doses,
-          is_active: editing.is_active,
-        })
-      })
-      const json = await res.json()
-      if (!res.ok) { setError(json?.error || 'Error al actualizar'); return }
-      setEditing(null)
-      await fetchVaccines()
-    } catch {
-      setError('Error de conexión')
-    } finally {
-      setSaving(false)
-    }
-  }
-
   async function deleteVaccine(id: string) {
     setDeleting(true)
     try {
@@ -201,31 +203,17 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
     }
   }
 
-  async function addStock(vaccineId: string) {
-    const doses = parseInt(stockInput, 10)
-    if (!Number.isFinite(doses) || doses <= 0) {
-      setError('Ingresa un número de dosis válido (> 0)')
-      return
-    }
-    setError('')
-    setStockSaving(true)
-    try {
-      const res = await fetch(`/api/vaccines/${vaccineId}/stock`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ add_doses: doses }),
-      })
-      const json = await res.json()
-      if (!res.ok) { setError(json?.error || 'Error al actualizar stock'); return }
-      setVaccines(prev =>
-        prev.map(v => v.id === vaccineId ? { ...v, stock_doses: json.stock_doses } : v)
-      )
-      setStockOpen(null)
-      setStockInput('')
-    } catch {
-      setError('Error de conexión')
-    } finally {
-      setStockSaving(false)
+  async function onMovementSaved(vaccineId: string, newStock: number) {
+    setVaccines(prev => prev.map(v => v.id === vaccineId ? { ...v, stock_doses: newStock } : v))
+    // Refresh just that vaccine's recent movements
+    if (isAdmin) {
+      try {
+        const r = await fetch(`/api/vaccines/${vaccineId}/movements?limit=3`)
+        const j = await r.json()
+        if (Array.isArray(j?.data)) {
+          setMovementsByVaccine(prev => ({ ...prev, [vaccineId]: j.data as StockMovement[] }))
+        }
+      } catch { /* silent */ }
     }
   }
 
@@ -241,6 +229,29 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
         defaultMode="group"
         hideModeToggle={true}
       />
+
+      {movementFor && (
+        <MovementModal
+          open={!!movementFor}
+          vaccineId={movementFor.id}
+          vaccineName={movementFor.name}
+          currentStock={movementFor.stock_doses}
+          onClose={() => setMovementFor(null)}
+          onSaved={(newStock) => onMovementSaved(movementFor.id, newStock)}
+        />
+      )}
+
+      {editing && (
+        <VaccineFormModal
+          open={!!editing}
+          vaccine={editing}
+          types={types}
+          onClose={() => setEditing(null)}
+          onSaved={(updated) => {
+            setVaccines(prev => prev.map(v => v.id === updated.id ? { ...v, ...updated } : v))
+          }}
+        />
+      )}
 
       <div className="flex items-center justify-between">
         <div>
@@ -444,216 +455,6 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
         </form>
       )}
 
-      {/* ── Edit modal ─────────────────────────────────────────────────── */}
-      {isAdmin && editing && (
-        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Editar vacuna">
-          {/* Blurred backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setEditing(null)}
-            aria-hidden="true"
-          />
-
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-surface border border-border rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
-
-              {/* Header */}
-              <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2">
-                  <Pencil className="w-5 h-5 text-primary" aria-hidden="true" />
-                  <h3 className="text-base font-semibold text-foreground">Editar vacuna</h3>
-                </div>
-                <button type="button" onClick={() => setEditing(null)} className="p-2 rounded-xl hover:bg-surface-hover text-muted" aria-label="Cerrar">
-                  <X className="w-5 h-5" aria-hidden="true" />
-                </button>
-              </div>
-
-              {/* Scrollable body */}
-              <form onSubmit={updateVaccine} id="vaccine-edit-form" className="flex flex-col flex-1 min-h-0">
-                <div className="overflow-y-auto flex-1 p-5 space-y-4">
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium">Nombre *</label>
-                      <input
-                        value={editing.name}
-                        onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        required
-                        autoFocus
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium">Tipo objetivo *</label>
-                      <select
-                        value={editing.target_type_id || ''}
-                        onChange={(e) => {
-                          const newSlug = types.find(t => t.id === e.target.value)?.slug
-                          const newSex = newSlug !== POULTRY_SLUG && editing.target_sex === 'mixto' ? 'any' : editing.target_sex
-                          setEditing({ ...editing, target_type_id: e.target.value || null, target_sex: newSex })
-                        }}
-                        className="w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        required
-                      >
-                        <option value="">Seleccionar</option>
-                        {types.map(t => (
-                          <option key={t.id} value={t.id}>{t.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {(() => {
-                    const editTypeSlug = types.find(t => t.id === editing.target_type_id)?.slug
-                    const showEdit = !!editTypeSlug && REPRO_TYPES.has(editTypeSlug) && editing.target_sex === 'hembra'
-                    const current = Array.isArray(editing.allowed_reproductive_states) ? editing.allowed_reproductive_states : []
-                    return (
-                      <div
-                        className={[
-                          'overflow-hidden transition-all duration-200',
-                          showEdit ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
-                        ].join(' ')}
-                        aria-hidden={!showEdit}
-                      >
-                        <div className="pt-1">
-                          <div className="bg-background border border-border rounded-2xl p-4">
-                            <p className="text-sm font-medium text-foreground">Estados reproductivos permitidos</p>
-                            <p className="text-xs text-muted mt-1">Si no seleccionas ninguno, se asume que aplica para cualquier estado.</p>
-                            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                              {REPRO_STATE_OPTIONS.map(opt => (
-                                <label key={opt.value} className="flex items-center gap-2 text-sm text-foreground px-3 py-2 rounded-xl bg-surface border border-border hover:bg-surface-hover">
-                                  <input
-                                    type="checkbox"
-                                    checked={current.includes(opt.value)}
-                                    onChange={(e) => {
-                                      const checked = e.target.checked
-                                      const next = checked ? [...current, opt.value] : current.filter(v => v !== opt.value)
-                                      setEditing({
-                                        ...editing,
-                                        allowed_reproductive_states: showEdit && next.length > 0 ? next : null,
-                                      })
-                                    }}
-                                    className="accent-[color:var(--color-primary)]"
-                                  />
-                                  {opt.label}
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })()}
-
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-medium">Descripción</label>
-                    <input
-                      value={editing.description || ''}
-                      onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium">Sexo objetivo</label>
-                      <select
-                        value={editing.target_sex}
-                        onChange={(e) => setEditing({ ...editing, target_sex: asTargetSex(e.target.value) })}
-                        className="w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      >
-                        <option value="any">Cualquiera</option>
-                        <option value="macho">Macho</option>
-                        <option value="hembra">Hembra</option>
-                        {types.find(t => t.id === editing.target_type_id)?.slug === POULTRY_SLUG && (
-                          <option value="mixto">Mixto</option>
-                        )}
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium">Activa</label>
-                      <label className="flex items-center gap-2 text-sm text-foreground px-3 py-2.5 rounded-xl bg-background border border-border cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={editing.is_active}
-                          onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })}
-                          className="accent-[color:var(--color-primary)]"
-                        />
-                        Visible para asignación
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium">Edad mínima (días)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={editing.age_min_days ?? ''}
-                        onChange={(e) => setEditing({ ...editing, age_min_days: toIntOrNull(e.target.value) })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium">Edad máxima (días)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={editing.age_max_days ?? ''}
-                        onChange={(e) => setEditing({ ...editing, age_max_days: toIntOrNull(e.target.value) })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium">Intervalo próxima dosis (días)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={editing.default_next_dose_days ?? ''}
-                        onChange={(e) => setEditing({ ...editing, default_next_dose_days: toIntOrNull(e.target.value) })}
-                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-medium">Nº total de dosis</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={editing.total_doses ?? ''}
-                        onChange={(e) => setEditing({ ...editing, total_doses: toIntOrNull(e.target.value) })}
-                        placeholder="(vacío = ilimitado)"
-                        disabled={editing.default_next_dose_days == null}
-                        className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-40 disabled:cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sticky footer */}
-                <div className="px-5 py-4 border-t border-border flex items-center justify-end gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(null)}
-                    className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-surface-hover"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary-dark disabled:opacity-50 inline-flex items-center gap-2"
-                  >
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Save className="w-4 h-4" aria-hidden="true" />}
-                    Guardar cambios
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
       {!loading && types.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold text-muted uppercase tracking-wider">Filtrar por especie</p>
@@ -703,7 +504,6 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
               )
             })}
             </div>
-            {/* Fade hint — visible only when content overflows */}
             <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-background to-transparent" />
           </div>
         </div>
@@ -719,12 +519,19 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
         </div>
       ) : visible.length > 0 ? (
         <div className="space-y-3">
-          {visible.map(v => (
+          {visible.map(v => {
+            const recent = movementsByVaccine[v.id] || []
+            return (
             <div key={v.id} className="bg-surface border border-border rounded-2xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-foreground truncate">{v.name}</h3>
+                    <Link
+                      href={`/dashboard/vaccines/${v.id}`}
+                      className="text-base font-semibold text-foreground truncate hover:text-primary transition-colors"
+                    >
+                      {v.name}
+                    </Link>
                     {!v.is_active && (
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted/10 text-muted">Inactiva</span>
                     )}
@@ -750,15 +557,15 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                         {v.total_doses != null ? `Serie: ${v.total_doses} dosis` : 'Dosis recurrente'}
                       </span>
                     )}
-                    {/* Stock badge */}
+                    {v.min_stock != null && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-muted/10 text-muted font-medium">
+                        Mínimo: {v.min_stock}
+                      </span>
+                    )}
                     <span
                       className={[
                         'inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-semibold',
-                        v.stock_doses === 0
-                          ? 'bg-danger/10 text-danger'
-                          : v.stock_doses < 5
-                          ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
-                          : 'bg-success/10 text-success',
+                        stockBadgeClasses(v.stock_doses, v.min_stock),
                       ].join(' ')}
                       title="Dosis en inventario"
                     >
@@ -767,62 +574,63 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                     </span>
                   </div>
 
-                  {/* Inline stock replenishment form */}
-                  {isAdmin && stockOpen === v.id && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={1}
-                        value={stockInput}
-                        onChange={e => setStockInput(e.target.value)}
-                        placeholder="Nº dosis"
-                        className="w-28 px-3 py-1.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        autoFocus
-                        onKeyDown={e => { if (e.key === 'Enter') addStock(v.id) }}
-                        id={`stock-input-${v.id}`}
-                        aria-label={`Añadir dosis a ${v.name}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => addStock(v.id)}
-                        disabled={stockSaving}
-                        className="px-3 py-1.5 rounded-xl bg-success text-white text-xs font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
-                      >
-                        {stockSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Save className="w-3.5 h-3.5" aria-hidden="true" />}
-                        Confirmar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setStockOpen(null); setStockInput('') }}
-                        className="p-1.5 rounded-xl hover:bg-surface-hover text-muted"
-                        aria-label="Cancelar"
-                      >
-                        <X className="w-4 h-4" aria-hidden="true" />
-                      </button>
+                  {/* Recent movements (admin only) */}
+                  {isAdmin && recent.length > 0 && (
+                    <div className="mt-4 pt-3 border-t border-border/60">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
+                          <History className="w-3 h-3" aria-hidden="true" />
+                          Movimientos recientes
+                        </p>
+                        <Link
+                          href={`/dashboard/vaccines/${v.id}`}
+                          className="text-xs text-primary font-semibold inline-flex items-center gap-0.5 hover:underline"
+                        >
+                          Ver historial completo
+                          <ChevronRight className="w-3 h-3" aria-hidden="true" />
+                        </Link>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {recent.map(m => (
+                          <li key={m.id} className="flex items-center gap-2 text-xs">
+                            <span
+                              className={[
+                                'inline-flex items-center gap-0.5 font-mono font-bold w-12 shrink-0',
+                                m.delta > 0 ? 'text-success' : 'text-danger',
+                              ].join(' ')}
+                            >
+                              {m.delta > 0 ? <ArrowUp className="w-3 h-3" aria-hidden="true" /> : <ArrowDown className="w-3 h-3" aria-hidden="true" />}
+                              {m.delta > 0 ? '+' : ''}{m.delta}
+                            </span>
+                            <span className={['inline-flex px-1.5 py-0.5 rounded-md text-[10px] font-semibold', reasonBadgeClasses(m.reason)].join(' ')}>
+                              {m.reason}
+                            </span>
+                            <span className="text-muted truncate flex-1" title={m.notes ?? ''}>
+                              {m.notes || '—'}
+                            </span>
+                            <span className="text-muted text-[10px] shrink-0">{formatRelative(m.created_at)}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>
 
                 {isAdmin && (
                 <div className="flex flex-col items-end gap-2">
-                  {/* + Stock button */}
                   <button
                     type="button"
-                    onClick={() => {
-                      setStockOpen(stockOpen === v.id ? null : v.id)
-                      setStockInput('')
-                    }}
+                    onClick={() => setMovementFor(v)}
                     className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-success/10 text-success hover:bg-success/20 transition-colors"
-                    aria-label={`Añadir stock a ${v.name}`}
+                    aria-label={`Registrar movimiento para ${v.name}`}
                   >
                     <PackagePlus className="w-3.5 h-3.5" aria-hidden="true" />
-                    + Stock
+                    Movimiento
                   </button>
                   <button
                     onClick={() => {
                       setEditing(v)
                       setShowForm(false)
-                      setStockOpen(null)
                     }}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                     type="button"
@@ -860,7 +668,7 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
                 )}
               </div>
             </div>
-          ))}
+          )})}
         </div>
       ) : (
         <div className="bg-surface border border-border rounded-2xl p-12 text-center">
@@ -876,10 +684,4 @@ export function VaccineManager({ userRole }: { userRole?: string }) {
       })()}
     </div>
   )
-}
-
-function toIntOrNull(v: string): number | null {
-  if (v.trim() === '') return null
-  const n = parseInt(v, 10)
-  return Number.isFinite(n) ? n : null
 }
